@@ -21,6 +21,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 
 Route::get('/', function () {
+    if (in_array(request('auth'), ['login', 'register'], true)) session()->keep(['errors', '_old_input', 'status']);
     $dojos = Dojo::query()
         ->with(['city.province'])
         ->where('is_active', true)

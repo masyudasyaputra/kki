@@ -38,15 +38,15 @@ class DashboardController extends Controller
         } elseif (count(array_intersect(['pengprov', 'admin_pengprov'], $allRoles)) > 0) {
             $role = 'pengprov';
             $title = 'Dashboard Pengurus Provinsi';
-            $memberQuery->where('province_id', $user->province_id);
+            $memberQuery->where('province_id', $user->province_id ?? -1);
         } elseif (count(array_intersect(['pengcab', 'admin_pengcab'], $allRoles)) > 0) {
             $role = 'pengcab';
             $title = 'Dashboard Pengurus Cabang';
-            $memberQuery->where('city_id', $user->city_id);
+            $memberQuery->where('city_id', $user->city_id ?? -1);
         } elseif (in_array('admin_dojo', $allRoles, true)) {
             $role = 'admin_dojo';
             $title = 'Dashboard Dojo';
-            $memberQuery->where('dojo_id', $user->dojo_id);
+            $memberQuery->where('dojo_id', $user->dojo_id ?? -1);
         } else {
             $role = 'member';
             $title = 'Dashboard Member';
@@ -76,7 +76,10 @@ class DashboardController extends Controller
 
         // Filter Status (selalu boleh)
         if ($request->has('status') && $request->status !== null && $request->status !== '') {
-            $memberQuery->where('is_active', (int) $request->status);
+            $status = is_string($request->status) ? (['active' => 1, 'inactive' => 0, '1' => 1, '0' => 0][$request->status] ?? null) : null;
+            if ($status !== null) {
+                $memberQuery->where('is_active', $status);
+            }
         }
 
         // Filter wilayah/dojo: dibatasi berdasarkan role
@@ -113,17 +116,18 @@ class DashboardController extends Controller
             // member: sudah fixed id
         }
 
-        // 5. Hitung Statistik (gunakan clone agar tidak mengganggu query utama)
-        $stats = [
-            'total_members' => (clone $memberQuery)->count(),
-            'active_members' => (clone $memberQuery)->where('is_active', true)->count(),
-            'total_revenue' => Payment::whereIn('user_id', (clone $memberQuery)->select('id'))
-                ->where('status', 'paid')
-                ->sum('amount'),
-            'pending_payments' => Payment::whereIn('user_id', (clone $memberQuery)->select('id'))
-                ->where('status', 'pending')
-                ->count(),
-        ];
+        $request->validate(['month' => ['nullable', 'date_format:Y-m']]);
+        $month = $request->filled('month')
+            ? \Carbon\CarbonImmutable::createFromFormat('!Y-m', $request->string('month')->toString())
+            : \Carbon\CarbonImmutable::now()->startOfMonth();
+        $summary = app(\App\Services\Dashboard\DashboardSummary::class)->build($user, $role, $month);
+        $organization = $summary['organization'];
+        $finance = $summary['finance'];
+        $examSummary = $summary['examSummary'];
+        $upcomingExams = $summary['upcomingExams'];
+        $beltCounts = $summary['beltCounts'];
+        $branchDojos = $summary['branchDojos'];
+        $stats = ['total_members' => $organization['members'], 'active_members' => $organization['active_members']];
 
         /**
          * 6. Data Dropdown untuk Form Filter
@@ -168,9 +172,10 @@ class DashboardController extends Controller
             ->get();
 
         // 7. Ambil Data Akhir
-        $members = $memberQuery
-            ->with(['province', 'city', 'dojo', 'beltLevel'])
-            ->latest()
+        $members = \App\Support\TableSort::apply(
+            $memberQuery->with(['province', 'city', 'dojo', 'beltLevel']), $request,
+            ['name' => 'name', 'belt' => ['beltLevel', 'order'], 'dojo' => ['dojo', 'name'], 'status' => 'is_active']
+        )
             ->paginate(10)
             ->appends($request->query());
 
@@ -182,7 +187,7 @@ class DashboardController extends Controller
             'cities',
             'provinces',
             'dojos',
-            'beltLevels'
+            'beltLevels', 'organization', 'finance', 'examSummary', 'upcomingExams', 'beltCounts', 'month', 'branchDojos'
         ));
     }
 }

@@ -24,6 +24,11 @@ class ExamParticipant extends Model
      * Relasi ke User (Peserta)
      * Ini yang menyebabkan error jika tidak ada atau namanya berbeda
      */
+    public function exam()
+    {
+        return $this->belongsTo(Exam::class);
+    }
+
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');

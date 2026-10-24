@@ -2,10 +2,10 @@
     <x-slot name="header">
         <div class="flex items-start sm:items-center justify-between gap-3 px-1 sm:px-2">
             <div class="min-w-0">
-                <h2 class="font-black text-xl sm:text-3xl text-slate-900 leading-tight tracking-tighter uppercase">
+                <h1 class="page-title">
                     Scoring <span class="text-red-600">Ujian</span>
-                </h2>
-                <p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
+                </h1>
+                <p class="page-subtitle">
                     {{ $exam->name }}
                 </p>
             </div>
@@ -157,13 +157,13 @@
 
                         {{-- Reset di sebelah layout --}}
                         <button type="button" onclick="window.location.reload()"
-                            class="inline-flex items-center justify-center bg-white border-2 border-slate-200 text-slate-500 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
+                            class="btn btn-secondary inline-flex">
                             Reset
                         </button>
 
                         {{-- Finalisasi --}}
                         <button type="button" @click="openResume()"
-                            class="inline-flex items-center justify-center px-5 py-3 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all border-b-4 border-slate-700 hover:border-red-800 active:translate-y-1">
+                            class="btn btn-primary inline-flex">
                             Finalisasi
                         </button>
                     </div>
@@ -364,7 +364,7 @@
 
                 <div class="px-6 py-4 border-t border-slate-200/80 flex items-center justify-end gap-3 bg-slate-50/80">
                     <button @click="showModal = false"
-                        class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-all">
+                        class="btn btn-secondary">
                         Kembali
                     </button>
 
@@ -372,7 +372,7 @@
                         <form action="{{ route('admin.exams.scoring.finalize', $exam) }}" method="POST">
                             @csrf
                             <button type="submit" onclick="return confirm('Finalisasi hasil ujian sekarang?')"
-                                class="px-5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-sm">
+                                class="btn btn-primary">
                                 Finalisasi & Simpan
                             </button>
                         </form>

@@ -1,11 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-bold text-2xl text-gray-800 leading-tight flex items-center gap-2">
-            <span class="w-2 h-8 bg-red-600 rounded-full"></span>
+        <h1 class="page-title">
+            
             {{ __('Manajemen Profil Pengurus') }}
-        </h2>
+        </h1>
     </x-slot>
 
+    <div class="mx-auto mt-4 flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
+        <div><h3 class="text-sm font-semibold text-slate-900">Akun Google</h3><p class="text-xs text-slate-500">{{ auth()->user()->google_id ? 'Akun Google sudah terhubung.' : 'Hubungkan Google dengan email yang sama untuk pilihan masuk tambahan.' }}</p>@if ($errors->has('google'))<p class="text-xs text-red-600">{{ $errors->first('google') }}</p>@endif @if (session('status') === 'google-connected')<p class="text-xs text-emerald-700">Google berhasil dihubungkan.</p>@endif</div>
+        @if (!auth()->user()->google_id && config('services.google.client_id') && config('services.google.client_secret'))<a href="{{ route('google.connect') }}" class="btn btn-secondary">Hubungkan Google</a>@endif
+    </div>
     <div class="py-10 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 

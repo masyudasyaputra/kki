@@ -7,10 +7,10 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">
-                <h2 class="font-bold text-xl sm:text-2xl text-slate-900 tracking-tight">
+                <h1 class="page-title">
                     Pendaftaran <span class="text-red-600">Kolektif</span>
-                </h2>
-                <p class="text-xs text-slate-500 mt-1 flex items-center gap-1.5 font-medium">
+                </h1>
+                <p class="page-subtitle">
                     <span>Dojo:</span>
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">
                         {{ auth()->user()->dojo->name ?? 'DOJO' }}
@@ -19,7 +19,7 @@
             </div>
             <div>
                 <a href="{{ route('admin.dashboard') }}"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg text-xs font-medium shadow-sm transition-all">
+                    class="btn btn-secondary inline-flex">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -29,17 +29,7 @@
         </div>
     </x-slot>
 
-    {{-- Floating Action Button (mobile) --}}
-    <div class="fixed bottom-6 right-6 z-50 md:hidden" x-data>
-        <button type="button" @click="$dispatch('add-member')"
-            class="flex items-center justify-center w-12 h-12 bg-red-600 text-white rounded-full shadow-lg shadow-red-600/30 hover:bg-red-700 active:scale-95 transition-all">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
-            </svg>
-        </button>
-    </div>
-
-    <div class="py-6 sm:py-8 bg-slate-50 min-h-screen" x-data="{
+    <div class="member-registration py-4 bg-slate-50 min-h-screen" x-data="{
         members: [],
         showPass: false,
         rawDojoName: '{{ auth()->user()->dojo->name ?? 'DOJO' }}',
@@ -126,7 +116,7 @@
             {{-- Info Login Card --}}
             <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <button type="button"
-                    class="w-full text-left px-5 sm:px-6 py-4 flex items-center justify-between gap-4 bg-slate-900 text-white hover:bg-slate-800 transition-colors"
+                    class="btn btn-primary w-full flex"
                     @click="showPass = !showPass">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-red-400 shrink-0">
@@ -151,7 +141,7 @@
                     </span>
                 </button>
 
-                <div x-show="showPass" x-transition class="px-5 sm:px-6 py-4 bg-white border-t border-slate-200/80 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div x-show="showPass" x-transition class="px-3 sm:px-4 py-4 bg-white border-t border-slate-200/80 grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-slate-50 p-4 rounded-lg border border-slate-200/70">
                         <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
                             Metode Login
@@ -176,7 +166,7 @@
 
                 {{-- Lokasi & Organisasi Card --}}
                 <div class="mb-6 bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-                    <div class="px-5 sm:px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
+                    <div class="px-3 sm:px-4 py-4 border-b border-slate-200/80 flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">1</span>
                             <div>
@@ -188,7 +178,7 @@
                         </div>
                     </div>
 
-                    <div class="p-5 sm:p-6">
+                    <div class="p-3 sm:p-4">
                         <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
                             {{-- PROVINSI --}}
                             <div class="md:col-span-4">
@@ -250,7 +240,7 @@
                 </div>
 
                 {{-- Toolbar Input Kolektif --}}
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-3">
+                <div class="table-toolbar">
                     <div class="flex items-center gap-3">
                         <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">2</span>
                         <div>
@@ -264,7 +254,7 @@
                     </div>
 
                     <button type="button" @click="addMember()"
-                        class="hidden md:inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition-all">
+                        class="btn btn-primary ml-auto shrink-0">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
@@ -280,7 +270,7 @@
                             <input type="hidden" :name="'members[' + index + '][password]'" :value="defaultPass">
 
                             {{-- Card Header --}}
-                            <div class="px-5 sm:px-6 py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between gap-4">
+                            <div class="px-3 sm:px-4 py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between gap-4">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <span class="w-7 h-7 rounded-md bg-white border border-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center shadow-xs shrink-0"
                                         x-text="index + 1"></span>
@@ -299,17 +289,11 @@
                                         <span x-text="member.errorWa ? 'Periksa WA' : (member.whatsapp ? 'Valid' : 'Draft')"></span>
                                     </span>
 
-                                    <button type="button" x-show="members.length > 1" @click="removeMember(member.id)"
-                                        class="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-300 hover:bg-rose-50 transition-all ml-1"
-                                        title="Hapus baris ini">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                                    <x-action-button type="button" x-show="members.length > 1" @click="removeMember(member.id)" icon="delete" label="Hapus" />
                                 </div>
                             </div>
 
-                            <div class="p-5 sm:p-6 space-y-4">
+                            <div class="p-3 sm:p-4 space-y-4">
                                 {{-- WA Error Alert --}}
                                 <div x-show="member.errorWa" x-cloak
                                     class="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-3">
@@ -417,7 +401,7 @@
 
                 {{-- Action Bar Summary --}}
                 <div class="mt-8 mb-20 md:mb-10">
-                    <div class="bg-slate-900 text-white rounded-xl p-5 sm:p-6 shadow-md border border-slate-800">
+                    <div class="bg-slate-900 text-white rounded-xl p-3 sm:p-4 shadow-md border border-slate-800">
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div class="min-w-0">
                                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Ringkasan Pendaftaran</p>
@@ -432,13 +416,13 @@
                             <div class="flex flex-col sm:flex-row gap-2.5 shrink-0">
                                 <button type="button"
                                     @click="if(confirm('Kosongkan semua data yang telah diinput?')){ members = []; addMember(); localStorage.removeItem('dojo_collective_2026'); }"
-                                    class="inline-flex items-center justify-center px-4 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white transition-all text-xs font-semibold">
+                                    class="btn btn-secondary inline-flex">
                                     Reset Form
                                 </button>
 
                                 <button type="submit"
                                     :disabled="members.some(m => !m.name || !m.parent_name || !m.belt_level_id || m.errorWa || !m.whatsapp) || (!province_id)"
-                                    class="inline-flex items-center justify-center gap-2 bg-red-600 hover:bg-red-500 text-white px-6 py-2.5 rounded-lg font-semibold text-xs tracking-wide transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed">
+                                    class="btn btn-primary inline-flex">
                                     <span>Lanjut Ke Review</span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />

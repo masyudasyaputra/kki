@@ -2,52 +2,22 @@
     <x-slot name="header">
         <div class="flex items-center gap-3">
             <div>
-                <h2 class="font-black text-xl sm:text-3xl text-slate-900 leading-tight tracking-tighter uppercase">
+                <h1 class="page-title">
                     {{ __('Manajemen') }} <span class="text-red-600">User</span>
-                </h2>
-                <p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">
+                </h1>
+                <p class="page-subtitle">
                     Kelola akses akun sistem
                 </p>
             </div>
         </div>
     </x-slot>
 
-    {{-- Floating Action Button for Mobile --}}
-    <div class="fixed bottom-6 right-6 z-50 md:hidden">
-        <a href="{{ route('admin.users.create') }}"
-            class="flex items-center justify-center w-14 h-14 bg-red-600 text-white rounded-2xl shadow-[0_10px_25px_rgba(220,38,38,0.4)] active:scale-90 transition-transform border-b-4 border-red-800">
-            <svg class="w-7 h-7 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="square" stroke-linejoin="square" d="M12 4v16m8-8H4"></path>
-            </svg>
-        </a>
-    </div>
-
     <div class="py-6 bg-slate-50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
 
-            {{-- Toolbar Desktop (ikuti pola Dojo/Pengurus) --}}
-            <div class="hidden md:flex justify-between items-end">
-                <div>
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">
-                        Daftar Akun Sistem
-                    </h3>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">
-                        Total: {{ $users->total() }} Akun Terdaftar
-                    </p>
-                </div>
-
-                <a href="{{ route('admin.users.create') }}"
-                    class="inline-flex items-center bg-slate-900 hover:bg-red-600 text-white px-5 py-3 rounded-xl text-[10px] font-black transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-slate-200 uppercase tracking-[0.15em] border-b-4 border-slate-700 hover:border-red-800">
-                    <svg class="w-4 h-4 me-2 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="square" stroke-linejoin="square" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Tambah User Baru
-                </a>
-            </div>
-
             {{-- FILTER / SEARCH (AUTO SUBMIT) --}}
             <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-4 sm:p-5">
-                <form id="filterForm" method="GET" action="{{ route('admin.users.index') }}" class="space-y-3">
+                <form data-table-filters="true" id="filterForm" method="GET" action="{{ route('admin.users.index') }}" class="space-y-3">
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
                         {{-- Search --}}
                         <div class="md:col-span-6">
@@ -111,6 +81,11 @@
                         </div>
                     </div>
 
+                    <select name="status" aria-label="Status akun">
+                        <option value="">Semua status</option>
+                        <option value="1" @selected(request('status') === '1')>Aktif</option>
+                        <option value="0" @selected(request('status') === '0')>Nonaktif</option>
+                    </select>
                     {{-- footer kecil --}}
                     <div class="flex items-center justify-between gap-3">
                         <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
@@ -119,7 +94,7 @@
 
                         @if (request('search') || request('role') || request('province_id'))
                             <a href="{{ route('admin.users.index') }}"
-                                class="inline-flex items-center justify-center bg-white border-2 border-slate-200 text-slate-500 px-4 py-2.5 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
+                                class="btn btn-secondary inline-flex">
                                 Reset
                             </a>
                         @endif
@@ -127,19 +102,22 @@
                 </form>
             </div>
 
+            <x-table-toolbar title="Daftar Pengguna">
+                <x-button-add href="{{ route('admin.users.create') }}">Tambah User</x-button-add>
+            </x-table-toolbar>
+
             {{-- DESKTOP TABLE --}}
-            <div
-                class="hidden md:block bg-white rounded-[2rem] border-2 border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-                <table class="min-w-full">
+            <div class="hidden md:block bg-white rounded-[2rem] border-2 border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden table-surface">
+                <table data-server-sort="true" class="data-table min-w-full">
                     <thead>
                         <tr class="bg-slate-900 text-white">
-                            <th class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Pengguna
+                            <th data-sort-key="name" class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Pengguna
                             </th>
-                            <th class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Role &
+                            <th data-sort-key="role" class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Role &
                                 Akses</th>
-                            <th class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Wilayah /
+                            <th data-sort-key="province" class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Wilayah /
                                 Unit</th>
-                            <th class="px-8 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em]">Status
+                            <th data-sort-key="status" class="px-8 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em]">Status
                             </th>
                             <th class="px-8 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em]">Aksi</th>
                         </tr>
@@ -221,18 +199,12 @@
 
                                 <td class="px-8 py-6">
                                     <div class="flex justify-end items-center gap-2">
-                                        <a href="{{ route('admin.users.edit', $user->id) }}"
-                                            class="inline-flex items-center justify-center px-4 py-2 rounded-2xl bg-white border-2 border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-widest hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all">
-                                            Edit
-                                        </a>
+                                        <x-action-button href="{{ route('admin.users.edit', $user->id) }}" icon="edit" label="Edit" />
 
                                         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
                                             onsubmit="return confirm('Hapus user?')">
                                             @csrf @method('DELETE')
-                                            <button type="submit"
-                                                class="inline-flex items-center justify-center px-4 py-2 rounded-2xl bg-white border-2 border-slate-200 text-rose-600 text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white hover:border-rose-700 transition-all">
-                                                Hapus
-                                            </button>
+                                            <x-action-button type="submit" icon="delete" label="Hapus" />
                                         </form>
                                     </div>
                                 </td>
@@ -340,17 +312,11 @@
                             </div>
 
                             <div class="flex gap-2">
-                                <a href="{{ route('admin.users.edit', $user->id) }}"
-                                    class="px-4 py-2 bg-white text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
-                                    Edit
-                                </a>
+                                <x-action-button href="{{ route('admin.users.edit', $user->id) }}" icon="edit" label="Edit" />
                                 <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
                                     onsubmit="return confirm('Hapus user?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit"
-                                        class="px-4 py-2 bg-rose-50 text-rose-700 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all">
-                                        Hapus
-                                    </button>
+                                    <x-action-button type="submit" icon="delete" label="Hapus" />
                                 </form>
                             </div>
                         </div>
@@ -370,47 +336,4 @@
     </div>
 
     {{-- AUTO SUBMIT SCRIPT --}}
-    <script>
-        (function() {
-            const form = document.getElementById('filterForm');
-            const search = document.getElementById('searchInput');
-            const role = document.getElementById('roleSelect');
-            const prov = document.getElementById('provinceSelect');
-            if (!form) return;
-
-            const clearPageParam = () => {
-                const url = new URL(window.location.href);
-                if (url.searchParams.has('page')) url.searchParams.delete('page');
-                window.history.replaceState({}, '', url.toString());
-            };
-
-            const debounce = (fn, delay = 400) => {
-                let t;
-                return (...args) => {
-                    clearTimeout(t);
-                    t = setTimeout(() => fn(...args), delay);
-                };
-            };
-
-            const submitNow = () => {
-                clearPageParam();
-                form.submit();
-            };
-
-            if (search) {
-                const debouncedSubmit = debounce(submitNow, 400);
-
-                search.addEventListener('input', () => debouncedSubmit());
-                search.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        submitNow();
-                    }
-                });
-            }
-
-            if (role) role.addEventListener('change', submitNow);
-            if (prov) prov.addEventListener('change', submitNow);
-        })();
-    </script>
 </x-app-layout>

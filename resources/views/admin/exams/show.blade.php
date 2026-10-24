@@ -2,16 +2,16 @@
     <x-slot name="header">
         <div class="flex items-start sm:items-center justify-between gap-3">
             <div class="min-w-0">
-                <h2 class="font-black text-xl sm:text-3xl text-slate-900 leading-tight tracking-tighter uppercase">
+                <h1 class="page-title">
                     Manajemen <span class="text-red-600">Sesi Ujian</span>
-                </h2>
-                <p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
+                </h1>
+                <p class="page-subtitle">
                     Detail • pendaftaran peserta • penilaian • rekap
                 </p>
             </div>
 
             <a href="{{ route('admin.exams.index') }}"
-                class="shrink-0 inline-flex items-center gap-2 bg-white border-2 border-slate-200 text-slate-500 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
+                class="btn btn-secondary inline-flex">
                 <span
                     class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-slate-50 border border-slate-200">
                     ←
@@ -131,13 +131,13 @@
             <div
                 class="flex p-1 bg-slate-200/60 rounded-2xl w-full md:w-fit mx-auto border border-slate-200 shadow-inner">
                 <button @click="tab = 'operasional'"
-                    :class="tab === 'operasional' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'"
-                    class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                    :class="tab === 'operasional' ? 'btn-primary' : 'btn-secondary'"
+                    class="btn">
                     Pendaftaran
                 </button>
                 <button @click="tab = 'rekap'"
-                    :class="tab === 'rekap' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-500'"
-                    class="px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
+                    :class="tab === 'rekap' ? 'btn-primary' : 'btn-secondary'"
+                    class="btn">
                     Rekap Keuangan
                 </button>
             </div>
@@ -197,7 +197,7 @@
                                     </select>
                                 </div>
                                 <button type="submit"
-                                    class="md:w-auto inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-xs transition-all shadow-sm">
+                                    class="btn btn-primary inline-flex">
                                     Daftarkan
                                 </button>
                             </div>
@@ -223,7 +223,7 @@
                             <form action="{{ route('admin.exams.bulk-payment', $exam->id) }}" method="POST">
                                 @csrf
                                 <button type="submit"
-                                    class="px-5 py-2.5 bg-white hover:bg-slate-100 text-slate-900 rounded-lg font-semibold text-xs transition-all shadow-sm flex items-center gap-2">
+                                    class="btn btn-secondary flex">
                                     <span>Lanjutkan Pembayaran</span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -235,7 +235,7 @@
                 @endif
 
                 {{-- FILTER PANEL --}}
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/80 grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div data-inline-filters class="bg-white p-4 rounded-xl shadow-sm border border-slate-200/80 grid grid-cols-2 md:grid-cols-4 gap-3">
                     <div class="col-span-2 md:col-span-1">
                         <label class="text-[11px] font-semibold text-slate-600 uppercase mb-1 block">Cari Nama</label>
                         <input type="text" x-model="search" placeholder="Cari..."
@@ -293,7 +293,7 @@
                                 <input type="hidden" name="participant_ids[]" :value="id">
                             </template>
                             <button type="submit"
-                                class="px-4 py-2 bg-white text-rose-600 rounded-xl font-black text-[9px] uppercase tracking-widest shadow-md">
+                                class="btn btn-danger">
                                 Hapus Masal
                             </button>
                         </form>
@@ -383,14 +383,7 @@
                                         <form action="{{ route('admin.exams.remove-member', $p->id) }}"
                                             method="POST" onsubmit="return confirm('Hapus peserta ini?')">
                                             @csrf @method('DELETE')
-                                            <button
-                                                class="inline-flex items-center justify-center p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-700 hover:bg-rose-600 hover:text-white transition-all">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                </svg>
-                                            </button>
+                                            <x-action-button type="submit"  icon="delete" label="Hapus" />
                                         </form>
                                     @else
                                         <span title="Sudah dinilai tidak bisa dihapus"
@@ -518,27 +511,18 @@
 
                                     <div class="flex gap-2" @click.stop>
                                         @if ($scoreData)
-                                            <button type="button"
-                                                @click="openDetail('{{ addslashes($p->user->name) }}', {{ $scoreData->toJson() }})"
-                                                class="px-4 py-2 bg-white text-slate-900 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-red-600 hover:text-white transition-all">
-                                                Detail
-                                            </button>
+                                            <x-action-button type="button"
+                                                @click="openDetail('{{ addslashes($p->user->name) }}', {{ $scoreData->toJson() }})" icon="view" label="Detail" />
                                         @endif
 
                                         @if (!$scoreData)
                                             <form action="{{ route('admin.exams.remove-member', $p->id) }}"
                                                 method="POST" onsubmit="return confirm('Hapus peserta ini?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit"
-                                                    class="px-4 py-2 bg-rose-50 text-rose-700 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all">
-                                                    Hapus
-                                                </button>
+                                                <x-action-button type="submit" icon="delete" label="Hapus" />
                                             </form>
                                         @else
-                                            <button type="button"
-                                                class="px-4 py-2 bg-white/10 text-white/70 rounded-xl text-[9px] font-black uppercase tracking-widest border border-white/10 cursor-not-allowed">
-                                                Terkunci
-                                            </button>
+                                            <x-action-button icon="lock" label="Terkunci" disabled />
                                         @endif
                                     </div>
                                 </div>
@@ -780,7 +764,7 @@
                                     Penilaian Ujian</p>
                             </div>
                             <button @click="showModal = false"
-                                class="p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-900 hover:text-white transition-all">
+                                class="btn btn-primary">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M6 18L18 6M6 6l12 12" />
@@ -828,7 +812,7 @@
                         </div>
 
                         <button @click="showModal = false"
-                            class="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-red-600 transition-all border-b-4 border-slate-700 hover:border-red-800 active:translate-y-1">
+                            class="btn btn-primary w-full">
                             Tutup Detail
                         </button>
                     </div>

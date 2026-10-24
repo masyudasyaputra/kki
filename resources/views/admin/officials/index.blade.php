@@ -2,10 +2,10 @@
     <x-slot name="header">
         <div class="flex items-center gap-3">
             <div>
-                <h2 class="font-black text-xl sm:text-3xl text-slate-900 leading-tight tracking-tighter uppercase">
+                <h1 class="page-title">
                     {{ __('Manajemen') }} <span class="text-red-600">Pengurus</span>
-                </h2>
-                <p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">
+                </h1>
+                <p class="page-subtitle">
                     @if (auth()->user()->role === 'pengprov')
                         Wilayah {{ auth()->user()->province->name ?? '' }}
                     @else
@@ -16,36 +16,8 @@
         </div>
     </x-slot>
 
-    {{-- Floating Action Button for Mobile --}}
-    <div class="fixed bottom-6 right-6 z-50 md:hidden">
-        <a href="{{ route('admin.officials.create') }}"
-            class="flex items-center justify-center w-14 h-14 bg-red-600 text-white rounded-2xl shadow-[0_10px_25px_rgba(220,38,38,0.4)] active:scale-90 transition-transform border-b-4 border-red-800">
-            <svg class="w-7 h-7 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="square" stroke-linejoin="square" d="M12 4v16m8-8H4"></path>
-            </svg>
-        </a>
-    </div>
-
     <div class="py-6 bg-slate-50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            {{-- Toolbar Desktop --}}
-            <div class="hidden md:flex justify-between items-end mb-6">
-                <div>
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Daftar Inventaris Pengurus
-                    </h3>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Total: {{ $officials->count() }}
-                        Personel Terdaftar</p>
-                </div>
-
-                <a href="{{ route('admin.officials.create') }}"
-                    class="inline-flex items-center bg-slate-900 hover:bg-red-600 text-white px-5 py-3 rounded-xl text-[10px] font-black transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-slate-200 uppercase tracking-[0.15em] border-b-4 border-slate-700 hover:border-red-800">
-                    <svg class="w-4 h-4 me-2 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="square" stroke-linejoin="square" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Tambah Pengurus Baru
-                </a>
-            </div>
 
             {{-- 1. NOTIFIKASI SK --}}
             @php
@@ -77,10 +49,13 @@
                 </div>
             @endif
 
+            <x-table-toolbar title="Daftar Pengurus">
+                <x-button-add href="{{ route('admin.officials.create') }}">Tambah Pengurus</x-button-add>
+            </x-table-toolbar>
+
             {{-- 2. VIEW DESKTOP --}}
-            <div
-                class="hidden md:block bg-white rounded-[1.5rem] border-2 border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-                <table class="min-w-full">
+            <div class="hidden md:block bg-white rounded-[1.5rem] border-2 border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden table-surface">
+                <table class="data-table min-w-full">
                     <thead>
                         <tr class="bg-slate-900 text-white">
                             <th class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Data
@@ -96,7 +71,7 @@
                     </thead>
                     <tbody class="divide-y divide-slate-100">
                         @forelse ($officials as $official)
-                            <tr class="hover:bg-slate-50 transition-all group">
+                            <tr data-record-key="{{ $official->id }}" class="hover:bg-slate-50 transition-all group">
                                 <td class="px-8 py-6">
                                     <div class="flex flex-col">
                                         <span
@@ -150,8 +125,7 @@
             {{-- 3. VIEW MOBILE (RE-DESIGNED) --}}
             <div class="md:hidden space-y-5">
                 @foreach ($officials as $official)
-                    <div
-                        class="relative bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden active:scale-[0.98] transition-transform">
+                    <div data-card-key="{{ $official->id }}"                         class="relative bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden active:scale-[0.98] transition-transform">
                         {{-- Top Section --}}
                         <div class="p-5 pb-4">
                             <div class="flex justify-between items-start gap-4 mb-3">
@@ -241,8 +215,6 @@
                     </div>
                 @endforeach
             </div>
-
-            <div class="h-20 md:hidden"></div>
         </div>
     </div>
 </x-app-layout>

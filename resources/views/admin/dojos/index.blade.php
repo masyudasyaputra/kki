@@ -2,10 +2,10 @@
     <x-slot name="header">
         <div class="flex items-center gap-3">
             <div>
-                <h2 class="font-black text-xl sm:text-3xl text-slate-900 leading-tight tracking-tighter uppercase">
+                <h1 class="page-title">
                     {{ __('Manajemen') }} <span class="text-red-600">Dojo</span>
-                </h2>
-                <p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-0.5">
+                </h1>
+                <p class="page-subtitle">
                     @if (auth()->user()->role === 'pengprov')
                         Wilayah {{ auth()->user()->province->name ?? '' }}
                     @elseif (auth()->user()->role === 'pengcab')
@@ -18,35 +18,8 @@
         </div>
     </x-slot>
 
-    {{-- Floating Action Button for Mobile --}}
-    <div class="fixed bottom-6 right-6 z-50 md:hidden">
-        <a href="{{ route('admin.dojos.create') }}"
-            class="flex items-center justify-center w-14 h-14 bg-red-600 text-white rounded-2xl shadow-[0_10px_25px_rgba(220,38,38,0.4)] active:scale-90 transition-transform border-b-4 border-red-800">
-            <svg class="w-7 h-7 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="square" stroke-linejoin="square" d="M12 4v16m8-8H4"></path>
-            </svg>
-        </a>
-    </div>
-
     <div class="py-6 bg-slate-50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            {{-- Toolbar Desktop --}}
-            <div class="hidden md:flex justify-between items-end mb-6">
-                <div>
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">Inventaris Dojo Aktif</h3>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">Total: {{ $dojos->count() }} Dojo
-                        Terverifikasi</p>
-                </div>
-
-                <a href="{{ route('admin.dojos.create') }}"
-                    class="inline-flex items-center bg-slate-900 hover:bg-red-600 text-white px-5 py-3 rounded-xl text-[10px] font-black transition-all duration-300 hover:-translate-y-1 shadow-lg shadow-slate-200 uppercase tracking-[0.15em] border-b-4 border-slate-700 hover:border-red-800">
-                    <svg class="w-4 h-4 me-2 stroke-[3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="square" stroke-linejoin="square" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Tambah Dojo Baru
-                </a>
-            </div>
 
             {{-- 1. NOTIFIKASI SK --}}
             @if ($warningDojos->count() > 0)
@@ -71,51 +44,46 @@
                 </div>
             @endif
 
-            {{-- 2. SECTION FILTER --}}
-            <div class="mb-8 bg-white p-4 sm:p-6 rounded-2xl border-2 border-slate-100 shadow-sm">
-                <form action="{{ route('admin.dojos.index') }}" method="GET" class="flex flex-col gap-4">
-                    <div class="relative">
-                        <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Cari Nama Dojo..."
-                            class="w-full bg-slate-50 border-none rounded-xl py-3 px-4 text-xs font-bold uppercase tracking-widest focus:ring-2 focus:ring-red-600/20 placeholder:text-slate-400">
-                    </div>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
-                        <select name="city_id" onchange="this.form.submit()"
-                            class="bg-slate-50 border-none rounded-xl text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-red-600/20 cursor-pointer text-slate-700">
-                            <option value="">Semua Wilayah</option>
-                            @foreach ($cities as $city)
-                                <option value="{{ $city->id }}"
-                                    {{ request('city_id') == $city->id ? 'selected' : '' }}>{{ $city->name }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <button type="submit"
-                            class="bg-slate-900 text-white rounded-xl text-[10px] font-black uppercase tracking-[0.1em] hover:bg-black active:scale-95 transition-all py-3">
-                            Terapkan
-                        </button>
-                        <a href="{{ route('admin.dojos.index') }}"
-                            class="col-span-2 md:col-span-1 flex items-center justify-center bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase hover:bg-slate-200 py-3 transition-colors">
-                            Reset Filter
-                        </a>
-                    </div>
+            {{-- Compact filters; moved into a dialog on mobile. --}}
+            <div class="table-filter-host mb-3 rounded-xl border border-slate-200 bg-white p-3">
+                <form data-table-filters="true" action="{{ route('admin.dojos.index') }}" method="GET" class="table-filter-fields">
+                    <input type="search" name="search" value="{{ request('search') }}"
+                        placeholder="Cari nama dojo..." aria-label="Cari nama dojo">
+                    <select name="sk_status" aria-label="Status SK">
+                        <option value="">Semua status SK</option>
+                        <option value="active" @selected(request('sk_status') === 'active')>Aktif</option>
+                        <option value="expiring" @selected(request('sk_status') === 'expiring')>Hampir habis</option>
+                        <option value="expired" @selected(request('sk_status') === 'expired')>Demisioner</option>
+                    </select>
+                    <select name="city_id" aria-label="Wilayah dojo">
+                        <option value="">Semua wilayah</option>
+                        @foreach ($cities as $city)
+                            <option value="{{ $city->id }}" @selected((string) request('city_id') === (string) $city->id)>{{ $city->name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="btn btn-primary">Terapkan</button>
+                    <a href="{{ route('admin.dojos.index') }}" class="btn btn-secondary">Reset</a>
                 </form>
             </div>
 
+            <x-table-toolbar title="Daftar Dojo">
+                <x-button-add href="{{ route('admin.dojos.create') }}">Tambah Dojo</x-button-add>
+            </x-table-toolbar>
+
             {{-- 3. VIEW DESKTOP --}}
-            <div
-                class="hidden md:block bg-white rounded-[1.5rem] border-2 border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-                <table class="min-w-full">
+            <div class="hidden md:block bg-white rounded-[1.5rem] border-2 border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden table-surface">
+                <table data-server-sort="true" class="data-table min-w-full">
                     <thead>
                         <tr class="bg-slate-900 text-white">
-                            <th class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Info Dojo
+                            <th data-sort-key="name" class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Info Dojo
                             </th>
-                            <th class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Wilayah
+                            <th data-sort-key="city" class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Wilayah
                             </th>
-                            <th class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Sensei
+                            <th data-sort-key="sensei" class="px-8 py-5 text-left text-[10px] font-black uppercase tracking-[0.2em]">Sensei
                             </th>
-                            <th class="px-8 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em]">Anggota
+                            <th data-sort-key="members" class="px-8 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em]">Anggota
                             </th>
-                            <th class="px-8 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em]">Status &
+                            <th data-sort-key="expiry" class="px-8 py-5 text-center text-[10px] font-black uppercase tracking-[0.2em]">Status &
                                 Periode SK</th>
                             <th class="px-8 py-5 text-right text-[10px] font-black uppercase tracking-[0.2em]">Aksi</th>
                         </tr>
@@ -269,8 +237,6 @@
                     </div>
                 @endforeach
             </div>
-
-            <div class="h-20 md:hidden"></div>
 
             <div class="mt-6">
                 {{ $dojos->links() }}

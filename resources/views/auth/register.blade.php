@@ -1,303 +1,63 @@
-{{-- File: resources/views/auth/register.blade.php --}}
 <x-guest-layout>
-    {{-- Menggunakan min-h-screen agar jika konten lebih panjang dari layar (di HP), tidak terpotong --}}
-    <div class="w-full max-w-[98%] mx-auto px-2 min-h-screen flex flex-col justify-center" x-data="{
-        formData: {
-            province_id: '{{ old('province_id') }}',
-            province_name: '',
-            city_id: '{{ old('city_id') }}',
-            city_name: '',
-            dojo_id: '{{ old('dojo_id') }}',
-            dojo_name: ''
-        },
-        searchProvince: '',
-        searchCity: '',
-        searchDojo: '',
-        openProv: false,
-        openCity: false,
-        openDojo: false,
-        provinces: @js($provinces),
-        cities: [],
-        dojos: [],
-        loadingCities: false,
-        loadingDojos: false,
-    
-        get filteredProvinces() {
-            return this.provinces.filter(p => p.name.toLowerCase().includes(this.searchProvince.toLowerCase()))
-        },
-        get filteredCities() {
-            return this.cities.filter(c => c.name.toLowerCase().includes(this.searchCity.toLowerCase()))
-        },
-        get filteredDojos() {
-            return this.dojos.filter(d => d.name.toLowerCase().includes(this.searchDojo.toLowerCase()))
-        },
-    
-        async selectProvince(id, name) {
-            this.formData.province_id = id;
-            this.formData.province_name = name;
-            this.openProv = false;
-            this.formData.city_id = '';
-            this.formData.city_name = '';
+    @php($googleIdentity = $googleIdentity ?? null)
+    <div class="auth-heading auth-heading-with-logo"><img src="{{ asset('images/logo-shokaido.webp') }}" alt="Logo Shokaido" width="64" height="64" class="auth-heading-logo"><div><span class="auth-eyebrow">Bergabung bersama Shokaido</span><h1>Pendaftaran anggota</h1><p>Lengkapi identitas, pilih dojo, lalu buat akses akun Anda.</p></div></div>
+    @if ($googleIdentity)
+        <p class="auth-status">Google terverifikasi: {{ $googleIdentity['email'] }}. Lengkapi profil anggota di bawah ini.</p>
+    @else
+        <x-google-auth-button mode="register" />
+        <div class="auth-divider">atau daftar dengan email</div>
+    @endif
+    <p class="mb-3 text-xs leading-relaxed text-slate-500">Nama dan email wajib diisi. Isian bertanda opsional boleh dikosongkan. Jika wilayah, dojo, atau sabuk belum tersedia, pilih &quot;Belum tersedia / belum tahu&quot;; data dapat dilengkapi kemudian.</p>
+    <form method="POST" action="{{ route('register', (request()->boolean('_auth_modal') || request()->header('Sec-Fetch-Dest') === 'iframe') ? ['_auth_modal' => 1] : []) }}" class="auth-form" x-data="{
+        province: @js((string) old('province_id', '')), city: @js((string) old('city_id', '')), dojo: @js((string) old('dojo_id', '')),
+        cities: [], dojos: [], loadingCities: false, loadingDojos: false, regionError: '', visible: false,
+        async loadCities(restore = false) {
+            const selected = this.province;
+            if (!restore) { this.city = ''; this.dojo = ''; this.dojos = []; }
+            this.cities = []; this.regionError = '';
+            if (!selected) return;
             this.loadingCities = true;
-            try {
-                const res = await fetch(`/api/cities/${id}`);
-                this.cities = await res.json();
-            } finally { this.loadingCities = false; }
+            try { const response = await fetch(@js(url('/api/cities')) + '/' + selected); if (!response.ok) throw new Error(); const data = await response.json(); if (this.province === selected) this.cities = data; }
+            catch { this.regionError = 'Daftar cabang gagal dimuat. Silakan pilih ulang provinsi.'; }
+            finally { this.loadingCities = false; }
         },
-        async selectCity(id, name) {
-            this.formData.city_id = id;
-            this.formData.city_name = name;
-            this.openCity = false;
-            this.formData.dojo_id = '';
-            this.formData.dojo_name = '';
+        async loadDojos(restore = false) {
+            const selected = this.city;
+            if (!restore) this.dojo = '';
+            this.dojos = []; this.regionError = '';
+            if (!selected) return;
             this.loadingDojos = true;
-            try {
-                const res = await fetch(`/api/dojos/${id}`);
-                this.dojos = await res.json();
-            } finally { this.loadingDojos = false; }
-        }
+            try { const response = await fetch(@js(url('/api/dojos')) + '/' + selected); if (!response.ok) throw new Error(); const data = await response.json(); if (this.city === selected) this.dojos = data; }
+            catch { this.regionError = 'Daftar dojo gagal dimuat. Silakan pilih ulang cabang.'; }
+            finally { this.loadingDojos = false; }
+        },
+        async init() { await this.loadCities(true); await this.loadDojos(true); }
     }">
-
-        {{-- Header Section: Ditambah margin top di mobile agar tidak mepet status bar --}}
-        <div class="mb-6 lg:mb-8 text-center shrink-0 mt-8 lg:mt-0">
-            <h2 class="text-2xl md:text-3xl lg:text-4xl font-black text-white tracking-tighter uppercase leading-tight">
-                Registrasi <span class="gold-gradient-text">Anggota Baru</span>
-            </h2>
-            <div class="h-1 w-16 bg-gradient-to-r from-[#bf953f] via-red-600 to-transparent mx-auto mt-2 rounded-full">
+        @csrf
+        @if ($errors->any())<div role="alert" class="auth-error-summary"><p class="font-semibold">Periksa kembali data Anda.</p><ul class="mt-1 list-inside list-disc">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+        <fieldset class="auth-section"><legend>Identitas anggota</legend>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div><x-input-label for="name" value="Nama lengkap anggota *" /><x-text-input id="name" name="name" type="text" :value="old('name', $googleIdentity['name'] ?? '')" required autocomplete="name" placeholder="Nama lengkap" /></div>
+                <div><x-input-label for="parent_name" value="Nama orang tua / wali (opsional)" /><x-text-input id="parent_name" name="parent_name" type="text" :value="old('parent_name')" placeholder="Kosongkan jika tidak ada" /></div>
+                <div><x-input-label for="whatsapp" value="Nomor WhatsApp (opsional)" /><x-text-input id="whatsapp" name="whatsapp" type="tel" inputmode="tel" :value="old('whatsapp')" autocomplete="tel" placeholder="08xxxxxxxxxx" /></div>
+                <div><x-input-label for="email" value="Alamat email *" /><x-text-input id="email" name="email" type="email" :value="old('email', $googleIdentity['email'] ?? '')" :readonly="(bool) $googleIdentity" required autocomplete="email" placeholder="nama@email.com" /></div>
             </div>
-        </div>
-
-        <form method="POST" action="{{ route('register') }}" class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
-            @csrf
-
-            {{-- Kolom Kiri: Identitas --}}
-            <div class="lg:col-span-8 flex">
-                <div
-                    class="w-full bg-white/5 p-5 md:p-6 lg:p-8 rounded-[2rem] border border-white/10 backdrop-blur-md flex flex-col">
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="h-5 w-1.5 bg-red-600 rounded-full shadow-[0_0_8px_#dc2626]"></div>
-                        <h3 class="text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.2em] text-white/90">Data
-                            Identitas Murid & Wali</h3>
-                    </div>
-
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-5">
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Nama
-                                Lengkap Murid</label>
-                            <x-text-input name="name"
-                                class="block w-full !rounded-xl bg-white/5 border-white/10 text-white py-3 px-4 text-sm focus:bg-white/10 transition-all focus:border-red-500/50"
-                                type="text" :value="old('name')" required />
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Orang Tua
-                                / Wali</label>
-                            <x-text-input name="parent_name"
-                                class="block w-full !rounded-xl bg-white/5 border-white/10 text-white py-3 px-4 text-sm focus:bg-white/10 transition-all focus:border-red-500/50"
-                                type="text" :value="old('parent_name')" required />
-                        </div>
-
-                        <div class="space-y-1">
-                            <label
-                                class="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">WhatsApp</label>
-                            <div class="relative">
-                                <span
-                                    class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold border-r pr-2 border-white/10">08</span>
-                                <x-text-input name="whatsapp"
-                                    class="block w-full pl-12 !rounded-xl bg-white/5 border-white/10 text-white py-3 text-sm focus:border-red-500/50"
-                                    type="number" required />
-                            </div>
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Email
-                                Aktif</label>
-                            <x-text-input name="email"
-                                class="block w-full !rounded-xl bg-white/5 border-white/10 text-white py-3 px-4 text-sm focus:border-red-500/50"
-                                type="email" />
-                        </div>
-
-                        <div class="space-y-1">
-                            <label class="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Kata
-                                Sandi</label>
-                            <x-text-input type="password" name="password"
-                                class="block w-full !rounded-xl bg-white/5 border-white/10 text-white py-3 px-4 text-sm focus:border-red-500/50"
-                                required />
-                        </div>
-
-                        <div class="space-y-1">
-                            <label
-                                class="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Konfirmasi
-                                Sandi</label>
-                            <x-text-input type="password" name="password_confirmation"
-                                class="block w-full !rounded-xl bg-white/5 border-white/10 text-white py-3 px-4 text-sm focus:border-red-500/50"
-                                required />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Kolom Kanan --}}
-            <div class="lg:col-span-4 flex flex-col gap-4">
-                <div class="bg-white/5 p-5 md:p-6 rounded-[2rem] border border-white/10 backdrop-blur-md">
-                    <div class="flex items-center gap-3 mb-5">
-                        <div class="h-5 w-1.5 bg-emerald-500 rounded-full shadow-[0_0_8px_#10b981]"></div>
-                        <h3 class="text-[10px] lg:text-[11px] font-bold uppercase tracking-[0.2em] text-white/90">Lokasi
-                            & Unit</h3>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div class="relative">
-                            <label
-                                class="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 mb-1 block">Provinsi</label>
-                            <div @click="openProv = !openProv"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 flex justify-between items-center cursor-pointer text-xs font-semibold text-white">
-                                <span class="truncate" x-text="formData.province_name || 'Pilih Provinsi'"></span>
-                                <svg class="w-3 h-3 text-[#bf953f]" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path d="M19 9l-7 7-7-7" stroke-width="4" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                            <div x-show="openProv" @click.away="openProv = false" x-cloak
-                                class="absolute z-[100] w-full mt-1 bg-slate-900 border border-white/20 rounded-xl shadow-2xl p-2">
-                                <input type="text" x-model="searchProvince"
-                                    class="w-full bg-white/10 border-none p-2 text-xs text-white rounded-lg mb-2 focus:ring-1 focus:ring-red-500"
-                                    placeholder="Cari...">
-                                <div class="max-h-40 overflow-y-auto custom-scroll">
-                                    <template x-for="p in filteredProvinces" :key="p.id">
-                                        <div @click="selectProvince(p.id, p.name)"
-                                            class="p-2 hover:bg-[#bf953f]/20 rounded-lg cursor-pointer text-[10px] text-slate-300 uppercase transition-colors"
-                                            x-text="p.name"></div>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative">
-                            <label
-                                class="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 mb-1 block">Kota
-                                / Kabupaten</label>
-                            <div @click="if(formData.province_id) openCity = !openCity"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 flex justify-between items-center cursor-pointer text-xs font-semibold text-white"
-                                :class="!formData.province_id && 'opacity-30'">
-                                <span class="truncate" x-text="formData.city_name || 'Pilih Kota'"></span>
-                                <svg class="w-3 h-3 text-[#bf953f]" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path d="M19 9l-7 7-7-7" stroke-width="4" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                            <div x-show="openCity" @click.away="openCity = false" x-cloak
-                                class="absolute z-[90] w-full mt-1 bg-slate-900 border border-white/20 rounded-xl shadow-2xl p-2">
-                                <div class="max-h-40 overflow-y-auto custom-scroll">
-                                    <template x-for="c in filteredCities" :key="c.id">
-                                        <div @click="selectCity(c.id, c.name)"
-                                            class="p-2 hover:bg-emerald-500/20 rounded-lg cursor-pointer text-[10px] text-slate-300 uppercase transition-colors"
-                                            x-text="c.name"></div>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="relative">
-                            <label
-                                class="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 mb-1 block">Unit
-                                Dojo</label>
-                            <div @click="if(formData.city_id) openDojo = !openDojo"
-                                class="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-4 flex justify-between items-center cursor-pointer text-xs font-semibold text-white"
-                                :class="!formData.city_id && 'opacity-30'">
-                                <span class="truncate" x-text="formData.dojo_name || 'Pilih Unit'"></span>
-                                <svg class="w-3 h-3 text-[#bf953f]" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path d="M19 9l-7 7-7-7" stroke-width="4" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                            </div>
-                            <div x-show="openDojo" @click.away="openDojo = false" x-cloak
-                                class="absolute z-[80] w-full mt-1 bg-slate-900 border border-white/20 rounded-xl shadow-2xl p-2">
-                                <div class="max-h-40 overflow-y-auto custom-scroll">
-                                    <template x-for="d in filteredDojos" :key="d.id">
-                                        <div @click="formData.dojo_id=d.id; formData.dojo_name=d.name; openDojo=false"
-                                            class="p-2 hover:bg-red-500/20 rounded-lg cursor-pointer text-[10px] text-slate-300 uppercase transition-colors"
-                                            x-text="d.name"></div>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-gradient-to-br from-slate-900 to-red-950/30 p-5 rounded-[2rem] border border-white/10">
-                    <label
-                        class="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 mb-2 block">Tingkatan
-                        Sabuk</label>
-                    <select name="belt_level_id"
-                        class="w-full border-none focus:ring-1 focus:ring-[#bf953f] rounded-xl bg-white/5 text-white font-black py-3 px-4 text-xs cursor-pointer appearance-none"
-                        required>
-                        <option value="" class="text-slate-900">PILIH TINGKATAN...</option>
-                        @foreach ($beltLevels as $belt)
-                            <option value="{{ $belt->id }}" class="text-slate-900 bg-white">
-                                {{ strtoupper($belt->name) }}
-                                {{ !empty($belt->kyu_dan) ? '- ' . strtoupper($belt->kyu_dan) : '' }}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            </div>
-
-            {{-- Submit Area --}}
-            <div
-                class="lg:col-span-12 flex flex-col md:flex-row items-center justify-between bg-white/5 p-4 rounded-[2rem] border border-white/10 backdrop-blur-md gap-4 mb-8 lg:mb-0">
-                <a href="{{ route('login') }}"
-                    class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] hover:text-white transition-all md:ml-6 order-2 md:order-1">
-                    Sudah Terdaftar? <span class="gold-gradient-text ml-1">Masuk Portal</span>
-                </a>
-                <button type="submit"
-                    class="w-full md:max-w-md py-4 bg-gradient-to-r from-red-800 to-red-950 hover:from-red-700 hover:to-red-900 text-white rounded-full font-black uppercase tracking-[0.3em] text-[10px] shadow-xl border border-white/5 transition-all flex items-center justify-center gap-4 group order-1 md:order-2">
-                    <span>Selesaikan Registrasi</span>
-                    <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                            d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                </button>
-                <div class="w-32 hidden lg:block order-3"></div>
-            </div>
-        </form>
-    </div>
-
-    <style>
-        [x-cloak] {
-            display: none !important;
-        }
-
-        .custom-scroll::-webkit-scrollbar {
-            width: 3px;
-        }
-
-        .custom-scroll::-webkit-scrollbar-thumb {
-            background: #bf953f;
-            border-radius: 10px;
-        }
-
-        {{-- Perbaikan: Hanya desktop yang dikunci tingginya, mobile harus bebas scroll --}} @media (min-width: 1024px) {
-            body {
-                overflow: hidden;
-            }
-        }
-
-        @media (max-width: 1023px) {
-            body {
-                overflow-y: auto !important;
-                height: auto !important;
-            }
-        }
-
-        .gold-gradient-text {
-            background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-    </style>
+        </fieldset>
+        <fieldset class="auth-section"><legend>Wilayah & dojo</legend>
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div><x-input-label for="province_id" value="Provinsi (opsional)" /><select id="province_id" name="province_id" x-model="province" @change="loadCities()"><option value="">Belum tersedia / belum tahu</option>@foreach ($provinces as $province)<option value="{{ $province->id }}" @selected((string) old('province_id') === (string) $province->id)>{{ $province->name }}</option>@endforeach</select></div>
+                <div><x-input-label for="city_id" value="Kabupaten / kota (opsional)" /><select id="city_id" name="city_id" x-model="city" @change="loadDojos()" :disabled="!province || loadingCities"><option value="" x-text="loadingCities ? 'Memuat cabang...' : 'Belum tersedia / belum tahu'">Belum tersedia / belum tahu</option><template x-for="item in cities" :key="item.id"><option :value="String(item.id)" :selected="String(item.id) === city" x-text="item.name"></option></template></select></div>
+                <div><x-input-label for="dojo_id" value="Dojo (opsional)" /><select id="dojo_id" name="dojo_id" x-model="dojo" :disabled="!city || loadingDojos"><option value="" x-text="loadingDojos ? 'Memuat dojo...' : 'Belum tersedia / belum tahu'">Belum tersedia / belum tahu</option><template x-for="item in dojos" :key="item.id"><option :value="String(item.id)" x-text="item.name"></option></template></select></div>
+                <div><x-input-label for="belt_level_id" value="Tingkat sabuk (opsional)" /><select id="belt_level_id" name="belt_level_id"><option value="">Belum tersedia / belum tahu</option>@foreach ($beltLevels as $belt)<option value="{{ $belt->id }}" @selected((string) old('belt_level_id') === (string) $belt->id)>{{ $belt->name }} {{ $belt->kyu_dan }}</option>@endforeach</select></div>
+            </div><p x-show="regionError" x-cloak x-text="regionError" role="alert" class="mt-2 text-xs text-red-600"></p>
+        </fieldset>
+        <fieldset class="auth-section"><legend>Akses akun</legend>
+            @if ($googleIdentity)<p class="mb-3 text-xs text-slate-500">Kata sandi opsional karena Anda menggunakan Google. Isi jika juga ingin masuk dengan email dan sandi.</p>@else<p class="mb-3 text-xs text-slate-500">Kata sandi dan konfirmasi wajib diisi, minimal 8 karakter.</p>@endif
+            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div><x-input-label for="password" value="Kata sandi" /><x-text-input id="password" name="password" type="password" x-bind:type="visible ? 'text' : 'password'" :required="!$googleIdentity" autocomplete="new-password" placeholder="Buat kata sandi" /></div>
+                <div><x-input-label for="password_confirmation" value="Konfirmasi kata sandi" /><x-text-input id="password_confirmation" name="password_confirmation" type="password" x-bind:type="visible ? 'text' : 'password'" required autocomplete="new-password" placeholder="Ulangi kata sandi" /></div>
+            </div><label class="mt-3 flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" x-model="visible" class="rounded border-slate-300 text-red-600 focus:ring-red-500">Tampilkan kata sandi</label>
+        </fieldset>
+        <div class="auth-submit-row"><p class="text-xs text-slate-500">Sudah memiliki akun? <a href="{{ route('login') }}" class="auth-link">Masuk</a></p><button type="submit" class="btn btn-primary">Daftar anggota</button></div>
+    </form>
 </x-guest-layout>

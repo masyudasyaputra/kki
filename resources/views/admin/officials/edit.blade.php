@@ -2,15 +2,15 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
             <div>
-                <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+                <h1 class="page-title">
                     Edit Data Pengurus
                 </h1>
-                <p class="text-xs text-slate-500 mt-0.5">
+                <p class="page-subtitle">
                     Modifikasi data: <span class="font-semibold text-slate-700">{{ $official->name }}</span>
                 </p>
             </div>
             <a href="{{ route('admin.officials.index') }}"
-                class="hidden sm:inline-flex items-center px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-colors">
+                class="btn btn-secondary hidden sm:inline-flex">
                 Kembali
             </a>
         </div>
@@ -217,11 +217,11 @@
                     {{-- Actions --}}
                     <div class="pt-5 border-t border-slate-100 flex items-center justify-end gap-3">
                         <a href="{{ route('admin.officials.index') }}"
-                            class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+                            class="btn btn-secondary">
                             Batal
                         </a>
                         <button type="submit"
-                            class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white rounded-lg text-xs font-semibold shadow-sm transition-all inline-flex items-center gap-2">
+                            class="btn btn-primary inline-flex">
                             <span>Simpan Perubahan</span>
                         </button>
                     </div>

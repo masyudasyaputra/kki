@@ -10,9 +10,9 @@
     @endphp
 
     <x-slot name="header">
-        <h2 class="font-black text-xl md:text-2xl text-slate-800 tracking-tight uppercase italic">
+        <h1 class="page-title">
             Digital ID Member
-        </h2>
+        </h1>
     </x-slot>
 
     <div x-data="{

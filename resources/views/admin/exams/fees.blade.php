@@ -2,16 +2,16 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
             <div>
-                <h2 class="font-bold text-xl sm:text-2xl text-slate-900 tracking-tight">
+                <h1 class="page-title">
                     Tarif <span class="text-red-600">Ujian Sabuk</span>
-                </h2>
-                <p class="text-xs text-slate-500 mt-1 font-medium">
+                </h1>
+                <p class="page-subtitle">
                     Konfigurasi biaya pendaftaran ujian berdasarkan kenaikan tingkatan sabuk.
                 </p>
             </div>
             <div>
                 <a href="{{ route('admin.exams.index') }}"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg text-xs font-medium shadow-sm transition-all">
+                    class="btn btn-secondary inline-flex">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -70,10 +70,16 @@
                 </div>
             @endif
 
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            <div class="space-y-3">
 
+                <dialog id="createFeeDialog" class="create-fee-dialog" aria-labelledby="fee-modal-title">
+                    <div class="create-form-heading">
+                        <h2 id="fee-modal-title">Tambah / ubah tarif ujian</h2>
+                        <button type="button" onclick="document.getElementById('createFeeDialog').close()" class="btn btn-secondary">Tutup</button>
+                    </div>
+                    @if ($errors->any())<div role="alert" class="m-3 rounded-lg bg-red-50 p-3 text-xs text-red-700">@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
                 {{-- FORM INPUT --}}
-                <div class="lg:col-span-4 lg:sticky lg:top-24 space-y-4">
+                <div class="p-3">
                     <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
                         <div class="px-5 sm:px-6 py-4 border-b border-slate-200/80">
                             <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">
@@ -120,15 +126,20 @@
                             </div>
 
                             <button type="submit"
-                                class="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-xs transition-all shadow-sm">
+                                class="btn btn-primary w-full">
                                 Simpan Tarif Ujian
                             </button>
                         </form>
                     </div>
                 </div>
 
+                </dialog>
+
+                <x-table-toolbar title="Daftar tarif ujian">
+                    <button type="button" onclick="document.getElementById('createFeeDialog').showModal()" class="btn btn-primary">+ Tambah Tarif</button>
+                </x-table-toolbar>
                 {{-- LIST MASTER BIAYA --}}
-                <div class="lg:col-span-8 space-y-4">
+                <div class="space-y-4">
                     <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
                         <div class="px-5 sm:px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
                             <div>
@@ -173,19 +184,13 @@
                                         </span>
 
                                         <div class="flex items-center gap-1.5">
-                                            <button type="button"
-                                                onclick="quickEdit('{{ $fee->belt_level_id }}', '{{ $fee->amount }}')"
-                                                class="px-2.5 py-1.5 bg-white border border-slate-200 text-slate-700 rounded-md text-xs font-semibold hover:bg-slate-50 transition-all shadow-xs">
-                                                Edit
-                                            </button>
+                                            <x-action-button type="button"
+                                                onclick="quickEdit('{{ $fee->belt_level_id }}', '{{ $fee->amount }}')" icon="edit" label="Edit" />
 
                                             <form action="{{ route('admin.exams.fees.destroy', $fee->id) }}"
                                                 method="POST" onsubmit="return confirm('Hapus pengaturan tarif ini?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit"
-                                                    class="px-2.5 py-1.5 bg-white border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 rounded-md text-xs font-semibold transition-all shadow-xs">
-                                                    Hapus
-                                                </button>
+                                                <x-action-button type="submit" icon="delete" label="Hapus" />
                                             </form>
                                         </div>
                                     </div>
@@ -212,7 +217,12 @@
             this.value = value ? new Intl.NumberFormat('id-ID').format(value) : '';
         });
 
+        @if ($errors->any())
+            document.getElementById('createFeeDialog').showModal();
+        @endif
+
         function quickEdit(beltId, amount) {
+            document.getElementById('createFeeDialog').showModal();
             document.getElementById('belt_level_id').value = beltId;
             realInput.value = amount;
             maskInput.value = new Intl.NumberFormat('id-ID').format(amount);

@@ -13,6 +13,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'google_id',
         'password',
 
         // Role utama (primary)
@@ -31,7 +32,7 @@ class User extends Authenticatable
         'expired_at',
     ];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = ['password', 'remember_token', 'google_id'];
 
     protected function casts(): array
     {

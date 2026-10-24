@@ -2,16 +2,16 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
             <div>
-                <h2 class="font-bold text-xl sm:text-2xl text-slate-900 tracking-tight">
+                <h1 class="page-title">
                     Konfigurasi <span class="text-red-600">Iuran Sabuk</span>
-                </h2>
-                <p class="text-xs text-slate-500 mt-1 font-medium">
+                </h1>
+                <p class="page-subtitle">
                     Atur tarif iuran registrasi per tingkatan sabuk. Nilai tersimpan secara otomatis (auto-save).
                 </p>
             </div>
             <div>
                 <a href="{{ route('admin.dashboard') }}"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg text-xs font-medium shadow-sm transition-all">
+                    class="btn btn-secondary inline-flex">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -117,7 +117,7 @@
                     </span>
                 </div>
 
-                <table class="min-w-full text-xs">
+                <table class="data-table min-w-full text-xs">
                     <thead class="bg-slate-50/90 border-b border-slate-200/80">
                         <tr class="text-slate-600 font-semibold uppercase text-[11px] tracking-wider">
                             <th class="px-6 py-3.5 text-left w-16">Urutan</th>

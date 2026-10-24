@@ -1,9 +1,9 @@
 @props(['headers' => [], 'title' => '', 'subtitle' => ''])
 
-<div class="flex flex-col gap-3">
+<div {{ $attributes->class(['flex flex-col gap-4']) }}>
     {{-- Toolbar Area --}}
-    @if ($title || isset($action))
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+    @if ($title || $subtitle || isset($action))
+        <div class="table-toolbar">
             <div>
                 @if ($title)
                     <h3 class="text-base font-bold text-slate-900 tracking-tight">{{ $title }}</h3>
@@ -12,16 +12,16 @@
                     <p class="text-xs text-slate-500 mt-0.5">{{ $subtitle }}</p>
                 @endif
             </div>
-            <div class="w-full sm:w-auto">
+            <div @isset($action) data-table-add-actions @endisset class="ml-auto flex shrink-0 justify-end">
                 {{ $action ?? '' }}
             </div>
         </div>
     @endif
 
     {{-- Table Container --}}
-    <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200/80">
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto table-surface">
+            <table class="data-table min-w-full divide-y divide-slate-200/80">
                 <thead>
                     <tr class="bg-slate-50/90 border-b border-slate-200/80">
                         @foreach ($headers as $header)

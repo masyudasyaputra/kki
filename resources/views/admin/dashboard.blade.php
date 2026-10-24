@@ -2,11 +2,11 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
-                <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+                <h1 class="page-title">
                     {{ $title }}
                 </h1>
-                <p class="text-xs text-slate-500 mt-0.5">
-                    Ringkasan performa dan data keanggotaan • {{ now()->format('d M Y') }}
+                <p class="page-subtitle">
+                    Organisasi, iuran, dan ujian • {{ now()->format('d M Y') }}
                 </p>
             </div>
         </div>
@@ -123,42 +123,11 @@
         $beltColors = array_map(fn($name) => beltHexColor($name), $beltLabels);
         $totalBeltSlice = array_sum($beltValues) ?: 0;
 
-        // Stats cards definition
         $statCards = [
-            [
-                'label' => 'Total Anggota',
-                'value' => number_format($stats['total_members'] ?? 0),
-                'icon_bg' => 'bg-blue-50 text-blue-600',
-                'dot' => 'bg-blue-500',
-                'footer' => 'Database Terdaftar',
-                'icon' =>
-                    'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z',
-            ],
-            [
-                'label' => 'Anggota Aktif',
-                'value' => number_format($stats['active_members'] ?? 0),
-                'icon_bg' => 'bg-emerald-50 text-emerald-600',
-                'dot' => 'bg-emerald-500',
-                'footer' => 'Terverifikasi Aktif',
-                'icon' => 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-            ],
-            [
-                'label' => 'Perlu Konfirmasi',
-                'value' => number_format($stats['pending_payments'] ?? 0),
-                'icon_bg' => 'bg-amber-50 text-amber-600',
-                'dot' => 'bg-amber-500',
-                'footer' => 'Menunggu Pembayaran',
-                'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-            ],
-            [
-                'label' => 'Total Kas Masuk',
-                'value' => 'Rp ' . number_format($stats['total_revenue'] ?? 0, 0, ',', '.'),
-                'icon_bg' => 'bg-red-50 text-red-600',
-                'dot' => 'bg-red-500',
-                'footer' => 'Total Pembayaran',
-                'icon' =>
-                    'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z',
-            ],
+            ['label' => 'Anggota terdaftar', 'value' => number_format($organization['members']), 'icon_bg' => 'bg-blue-50 text-blue-600', 'dot' => 'bg-blue-500', 'footer' => number_format($organization['active_members']) . ' aktif / ' . number_format($organization['members'] - $organization['active_members']) . ' nonaktif', 'icon' => 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m20 0v-2a4 4 0 00-3-3.87M13 7a4 4 0 11-8 0 4 4 0 018 0z'],
+            ['label' => 'Dojo terdaftar', 'value' => number_format($organization['dojos']), 'icon_bg' => 'bg-red-50 text-red-600', 'dot' => 'bg-red-500', 'footer' => number_format($organization['active_dojos']) . ' dengan SK masih berlaku', 'icon' => 'M3 21h18M5 21V3h14v18M9 7h1m4 0h1M9 11h1m4 0h1M10 21v-6h4v6'],
+            ['label' => 'Pengurus terdaftar', 'value' => number_format($organization['officials']), 'icon_bg' => 'bg-emerald-50 text-emerald-600', 'dot' => 'bg-emerald-500', 'footer' => number_format($organization['active_officials']) . ' dengan SK masih berlaku', 'icon' => 'M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m20 0v-2a4 4 0 00-3-3.87M13 7a4 4 0 11-8 0 4 4 0 018 0z'],
+            ['label' => 'Cabang dengan dojo', 'value' => number_format($organization['cities']), 'icon_bg' => 'bg-amber-50 text-amber-600', 'dot' => 'bg-amber-500', 'footer' => 'Kabupaten/kota dalam cakupan akun', 'icon' => 'M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3 12h18M12 3a18 18 0 010 18 18 18 0 010-18z'],
         ];
 
         $rqProvince = request('province_id');
@@ -169,8 +138,8 @@
         $rqSearch = request('search');
     @endphp
 
-    <div class="py-6 sm:py-8">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <div class="dashboard-overview py-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
 
             {{-- NOTIFIKASI STATUS DOJO (Khusus Admin Dojo) --}}
             @if ($isAdminDojo)
@@ -208,35 +177,39 @@
                             </div>
                         </div>
                         <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200/60 shrink-0">
-                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> Aktif
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span> {{ Auth::user()->dojo->sk_expiry_date && \Carbon\Carbon::parse(Auth::user()->dojo->sk_expiry_date)->endOfDay()->isFuture() ? 'SK berlaku' : 'SK perlu diperiksa' }}
                         </span>
                     </div>
                 @endif
             @endif
 
+            <div>
+                <h3 class="text-sm font-semibold text-slate-900">Ringkasan organisasi</h3>
+                <p class="mt-1 text-xs text-slate-500">Seluruh data dalam cakupan akun. Filter daftar anggota hanya mengubah tabel.</p>
+            </div>
             {{-- TOP GRID: STATS & DONUT --}}
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-3">
                 {{-- Stat Cards (7 Cols) --}}
                 <div class="lg:col-span-7">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-2 sm:gap-3">
                         @foreach ($statCards as $card)
-                            <div class="bg-white rounded-xl p-5 border border-slate-200/80 shadow-sm hover:border-slate-300 transition-all flex flex-col justify-between">
-                                <div class="flex items-start justify-between gap-3">
+                            <div class="bg-white rounded-xl p-3 border border-slate-200/80 shadow-sm hover:border-slate-300 transition-all flex flex-col justify-between">
+                                <div class="flex items-start justify-between gap-2">
                                     <div>
                                         <p class="text-xs font-medium text-slate-500">{{ $card['label'] }}</p>
-                                        <h3 class="mt-1.5 text-2xl font-bold tracking-tight text-slate-900">
+                                        <h3 class="mt-1 text-xl font-bold tracking-tight text-slate-900">
                                             {{ $card['value'] }}
                                         </h3>
                                     </div>
-                                    <div class="p-2.5 rounded-lg {{ $card['icon_bg'] }} shrink-0">
+                                    <div class="hidden p-2 rounded-lg sm:block {{ $card['icon_bg'] }} shrink-0">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $card['icon'] }}" />
                                         </svg>
                                     </div>
                                 </div>
 
-                                <div class="mt-4 pt-3 border-t border-slate-100 flex items-center text-xs text-slate-500">
-                                    <span class="h-2 w-2 rounded-full {{ $card['dot'] }} mr-2"></span>
+                                <div class="mt-2 flex items-center text-[11px] text-slate-500">
+                                    <span class="h-2 w-2 shrink-0 rounded-full {{ $card['dot'] }} mr-2"></span>
                                     {{ $card['footer'] }}
                                 </div>
                             </div>
@@ -246,7 +219,7 @@
 
                 {{-- Donut Chart Card (5 Cols) --}}
                 <div class="lg:col-span-5">
-                    <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5 sm:p-6 h-full flex flex-col justify-between">
+                    <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-3 h-full flex flex-col justify-between">
                         <div>
                             <div class="flex items-center justify-between gap-2 pb-3 border-b border-slate-100">
                                 <div>
@@ -258,9 +231,9 @@
                                 </span>
                             </div>
 
-                            <div class="mt-4 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                            <div class="mt-3 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
                                 <div class="sm:col-span-5">
-                                    <div class="relative w-full max-w-[200px] mx-auto aspect-square flex items-center justify-center">
+                                    <div class="relative w-full max-w-[128px] mx-auto aspect-square flex items-center justify-center">
                                         <canvas id="beltDonut" class="w-full h-full"></canvas>
                                         <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                                             <span class="text-xl font-bold text-slate-900 leading-tight">
@@ -272,7 +245,7 @@
                                 </div>
 
                                 <div class="sm:col-span-7">
-                                    <div class="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                                    <div class="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto pr-1">
                                         @forelse ($beltCounts as $beltName => $count)
                                             <div class="bg-slate-50/80 border border-slate-100 rounded-lg p-2 flex items-center justify-between text-xs">
                                                 <div class="flex items-center gap-1.5 min-w-0">
@@ -292,17 +265,21 @@
                         </div>
 
                         <p class="mt-3 text-[11px] text-slate-400 italic">
-                            * Grafik menampilkan distribusi sabuk dari data yang tampil.
+                            Komposisi seluruh anggota dalam cakupan akun, termasuk yang nonaktif.
                         </p>
                     </div>
                 </div>
             </div>
 
+            @include('admin.partials.dashboard-charts')
+
+            @include('admin.partials.dashboard-finance')
+
             {{-- MAIN SECTION: TABLE & FILTERS --}}
             <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
                 {{-- Card Header & Filter Bar --}}
-                <div class="p-5 sm:p-6 border-b border-slate-200/80 space-y-4">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="p-3 border-b border-slate-200/80 space-y-3">
+                    <div class="table-toolbar">
                         <div>
                             <h3 class="text-base font-bold text-slate-900">Daftar Anggota</h3>
                             <p class="text-xs text-slate-500 mt-0.5">
@@ -310,9 +287,9 @@
                             </p>
                         </div>
 
-                        <div class="flex items-center gap-2">
+                        <div data-table-add-actions class="flex items-center gap-2">
                             <a href="{{ route('admin.members.create') }}"
-                                class="inline-flex items-center gap-2 px-3.5 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all">
+                                class="btn btn-primary inline-flex">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                                 </svg>
@@ -322,9 +299,10 @@
                     </div>
 
                     {{-- Filter Toolbar --}}
-                    <form id="filterForm" method="GET" action="{{ route('admin.dashboard') }}"
+                    <form data-table-filters="true" id="filterForm" method="GET" action="{{ route('admin.dashboard') }}"
                         class="pt-3 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3">
 
+                        <input type="hidden" name="month" value="{{ $month->format('Y-m') }}">
                         {{-- Search Input --}}
                         <div class="md:col-span-3">
                             <div class="relative">
@@ -402,16 +380,16 @@
                 </div>
 
                 {{-- DESKTOP TABLE --}}
-                <div class="hidden md:block overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                <div class="hidden md:block overflow-x-auto table-surface">
+                    <table data-server-sort="true" class="data-table w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50/80 border-b border-slate-200/80">
-                                <th class="px-6 py-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Anggota</th>
-                                <th class="px-6 py-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Sabuk</th>
+                                <th data-sort-key="name" class="px-6 py-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Anggota</th>
+                                <th data-sort-key="belt" class="px-6 py-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Sabuk</th>
                                 @if (!$isAdminDojo)
-                                    <th class="px-6 py-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Dojo / Wilayah</th>
+                                    <th data-sort-key="dojo" class="px-6 py-3.5 text-xs font-semibold text-slate-600 uppercase tracking-wider">Dojo / Wilayah</th>
                                 @endif
-                                <th class="px-6 py-3.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
+                                <th data-sort-key="status" class="px-6 py-3.5 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -569,47 +547,5 @@
             });
         })();
 
-        // Auto submit filter logic
-        (function() {
-            const form = document.getElementById('filterForm');
-            if (!form) return;
-
-            const search = document.getElementById('searchInput');
-            const status = document.getElementById('statusSelect');
-            const belt = document.getElementById('beltSelect');
-            const province = document.getElementById('provinceSelect');
-            const city = document.getElementById('citySelect');
-
-            const debounce = (fn, delay = 500) => {
-                let t;
-                return (...args) => {
-                    clearTimeout(t);
-                    t = setTimeout(() => fn(...args), delay);
-                };
-            };
-
-            const submitNow = () => form.submit();
-            const submitDebounced = debounce(submitNow, 500);
-
-            if (search) {
-                search.addEventListener('input', submitDebounced);
-                search.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        submitNow();
-                    }
-                });
-            }
-
-            status?.addEventListener('change', submitNow);
-            belt?.addEventListener('change', submitNow);
-
-            province?.addEventListener('change', () => {
-                if (city) city.value = '';
-                submitNow();
-            });
-
-            city?.addEventListener('change', submitNow);
-        })();
     </script>
 </x-app-layout>

@@ -46,13 +46,21 @@ class DojoController extends Controller
             });
         }
 
+        if ($request->query('sk_status') === 'expired') {
+            $query->whereDate('sk_expiry_date', '<', today());
+        } elseif ($request->query('sk_status') === 'expiring') {
+            $query->whereDate('sk_expiry_date', '>=', today())->whereDate('sk_expiry_date', '<=', today()->addDays(30));
+        } elseif ($request->query('sk_status') === 'active') {
+            $query->whereDate('sk_expiry_date', '>', today()->addDays(30));
+        }
+
         // --- 3. PENGAMBILAN DATA DROPDOWN FILTER ---
         // Kita batasi pilihan dropdown agar sesuai wilayah login
-        if ($user->role === 'admin') {
+        if (in_array($user->role, ['admin', 'pb'])) {
             $provinces = Province::all();
             $cities = $request->filled('province_id')
                 ? City::where('province_id', $request->province_id)->get()
-                : collect();
+                : City::orderBy('name')->get();
         } elseif ($user->role === 'pengprov') {
             $provinces = Province::where('id', $user->province_id)->get();
             $cities = City::where('province_id', $user->province_id)->get();
@@ -67,7 +75,10 @@ class DojoController extends Controller
             ->where('sk_expiry_date', '<=', now()->addDays(30))
             ->get();
 
-        $dojos = $query->latest()->paginate(10)->withQueryString();
+        $dojos = \App\Support\TableSort::apply($query, $request, [
+            'name' => 'name', 'city' => ['city', 'name'], 'sensei' => 'sensei_name',
+            'members' => 'members_count', 'expiry' => 'sk_expiry_date',
+        ])->paginate(10)->withQueryString();
 
         return view('admin.dojos.index', compact('dojos', 'warningDojos', 'provinces', 'cities'));
     }

@@ -45,7 +45,13 @@ class UserController extends Controller
             $query->where('province_id', $request->province_id);
         }
 
-        $users = $query->latest()->paginate(10)->appends($request->query());
+        if (in_array($request->query('status'), ['0', '1'], true)) {
+            $query->where('is_active', $request->query('status'));
+        }
+
+        $users = \App\Support\TableSort::apply($query, $request, [
+            'name' => 'name', 'role' => 'role', 'province' => ['province', 'name'], 'status' => 'is_active',
+        ])->paginate(10)->appends($request->query());
 
         return view('admin.users.index', compact('users'));
     }

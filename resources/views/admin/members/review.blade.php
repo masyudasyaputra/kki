@@ -36,16 +36,16 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
             <div>
-                <h2 class="font-bold text-xl sm:text-2xl text-slate-900 tracking-tight">
+                <h1 class="page-title">
                     Konfirmasi <span class="text-red-600">Pendaftaran</span>
-                </h2>
-                <p class="text-xs text-slate-500 mt-1 font-medium">
+                </h1>
+                <p class="page-subtitle">
                     Periksa kembali data calon anggota dan rincian tagihan sebelum melanjutkan proses pembayaran.
                 </p>
             </div>
             <div>
                 <a href="{{ route('admin.members.create') }}"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg text-xs font-medium shadow-sm transition-all">
+                    class="btn btn-secondary inline-flex">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -148,8 +148,8 @@
                     </div>
 
                     {{-- Breakdown Table --}}
-                    <div class="bg-white rounded-lg border border-slate-200/80 overflow-hidden shadow-xs">
-                        <table class="min-w-full text-xs">
+                    <div class="bg-white rounded-lg border border-slate-200/80 overflow-hidden shadow-xs table-surface">
+                        <table class="data-table min-w-full text-xs">
                             <thead class="bg-slate-50 border-b border-slate-200/80">
                                 <tr class="text-slate-600 font-semibold uppercase text-[11px]">
                                     <th class="py-2.5 px-4 text-left">Tingkatan Sabuk</th>
@@ -229,7 +229,7 @@
 
                         <div class="flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
                             <a href="{{ route('admin.members.create') }}"
-                                class="w-full sm:w-auto px-4 py-2.5 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-semibold text-center transition-all">
+                                class="btn btn-secondary w-full">
                                 Kembali Edit Data
                             </a>
 

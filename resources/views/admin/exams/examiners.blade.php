@@ -2,16 +2,16 @@
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">
-                <h2 class="font-bold text-xl sm:text-2xl text-slate-900 tracking-tight">
+                <h1 class="page-title">
                     Penugasan <span class="text-red-600">Penguji Ujian</span>
-                </h2>
-                <p class="text-xs text-slate-500 mt-1 font-medium">
+                </h1>
+                <p class="page-subtitle">
                     {{ $exam->name }} • {{ \Carbon\Carbon::parse($exam->execution_date)->format('d M Y') }}
                 </p>
             </div>
             <div>
                 <a href="{{ route('admin.exams.show', $exam) }}"
-                    class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-lg text-xs font-medium shadow-sm transition-all">
+                    class="btn btn-secondary inline-flex">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -35,7 +35,7 @@
                         </div>
                         <span class="text-xs font-semibold text-emerald-900">{{ session('success') }}</span>
                     </div>
-                    <button type="button" onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 p-1">
+                    <button type="button" onclick="this.parentElement.remove()" class="btn btn-secondary">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -137,11 +137,11 @@
 
                     <div class="px-5 sm:px-6 py-4 bg-slate-50/80 border-t border-slate-200/80 flex items-center justify-end gap-3">
                         <a href="{{ route('admin.exams.show', $exam) }}"
-                            class="px-4 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 rounded-lg text-xs font-semibold transition-all">
+                            class="btn btn-secondary">
                             Batal
                         </a>
                         <button type="submit"
-                            class="inline-flex items-center gap-1.5 px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all">
+                            class="btn btn-primary inline-flex">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>

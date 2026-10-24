@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="px-4 sm:px-0">
-            <h2 class="font-black text-xl text-slate-900 uppercase tracking-tight">Status Pembayaran</h2>
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
+            <h1 class="page-title">Status Pembayaran</h1>
+            <p class="page-subtitle">
                 Invoice: {{ $invoice ?? '-' }}
             </p>
         </div>
@@ -28,7 +28,7 @@
 
                     <div class="mt-4 pt-4 border-t border-slate-100">
                         <a href="{{ route('admin.dashboard') }}"
-                            class="inline-flex items-center justify-center w-full px-6 py-3 bg-slate-900 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest">
+                            class="btn btn-primary inline-flex w-full">
                             Kembali ke Dashboard
                         </a>
                     </div>

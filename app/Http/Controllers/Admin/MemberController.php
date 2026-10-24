@@ -21,6 +21,42 @@ class MemberController extends Controller
     ) {
     }
 
+    public function index(Request $request)
+    {
+        $actor = $request->user();
+        $role = collect(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo'])
+            ->first(fn ($candidate) => $actor->hasRole($candidate));
+        abort_unless($role, 403);
+        $role = ['admin_pengprov' => 'pengprov', 'admin_pengcab' => 'pengcab'][$role] ?? $role;
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'in:0,1'],
+            'province_id' => ['nullable', 'integer'], 'city_id' => ['nullable', 'integer'],
+            'dojo_id' => ['nullable', 'integer'], 'belt_level_id' => ['nullable', 'integer'],
+        ]);
+        $base = app(\App\Services\Dashboard\DashboardSummary::class)->users($actor, $role)->where('role', 'member');
+        $query = (clone $base)->with(['province', 'city', 'dojo', 'beltLevel']);
+        if (!empty($filters['search'])) {
+            $term = '%' . trim($filters['search']) . '%';
+            $query->where(fn ($q) => $q->where('name', 'like', $term)->orWhere('email', 'like', $term)
+                ->orWhere('whatsapp', 'like', $term)->orWhere('id', 'like', $term));
+        }
+        foreach (['province_id', 'city_id', 'dojo_id', 'belt_level_id'] as $column) {
+            if (!empty($filters[$column])) $query->where($column, $filters[$column]);
+        }
+        if (isset($filters['status'])) $query->where('is_active', $filters['status']);
+        $members = \App\Support\TableSort::apply($query, $request, [
+            'name' => 'name', 'belt' => ['beltLevel', 'order'], 'dojo' => ['dojo', 'name'],
+            'city' => ['city', 'name'], 'status' => 'is_active',
+        ])->paginate(10)->withQueryString();
+        $provinces = Province::whereIn('id', (clone $base)->select('province_id'))->orderBy('name')->get();
+        $cities = City::whereIn('id', (clone $base)->select('city_id'))->orderBy('name')->get();
+        $dojos = \App\Models\Dojo::whereIn('id', (clone $base)->select('dojo_id'))->orderBy('name')->get();
+        $beltLevels = BeltLevel::orderBy('order')->get();
+
+        return view('admin.members.index', compact('members', 'provinces', 'cities', 'dojos', 'beltLevels'));
+    }
+
     /**
      * FORM: Pendaftaran kolektif
      */
@@ -258,6 +294,10 @@ class MemberController extends Controller
             }
 
             $payment->update(['payment_url' => $checkout['payment_url']]);
+
+            if ($request->header('Sec-Fetch-Dest') === 'iframe' || $request->boolean('_form_modal')) {
+                return view('admin.members.checkout-handoff', ['checkoutUrl' => $checkout['payment_url']]);
+            }
 
             return redirect()->away($checkout['payment_url']);
         } catch (\Throwable $e) {

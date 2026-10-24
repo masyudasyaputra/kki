@@ -2,10 +2,10 @@
     <x-slot name="header">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 px-4 sm:px-0">
             <div>
-                <h2 class="font-black text-2xl text-white leading-tight tracking-tight uppercase">
+                <h1 class="page-title">
                     {{ $title }}
-                </h2>
-                <p class="text-sm text-slate-400 font-medium italic">
+                </h1>
+                <p class="page-subtitle">
                     Dashboard Overview • {{ now()->format('d M Y') }}
                 </p>
             </div>
@@ -261,9 +261,8 @@
                     </div>
 
                     {{-- TABLE VIEW (Desktop) --}}
-                    <div
-                        class="hidden md:block overflow-hidden rounded-3xl border border-slate-800/50 bg-slate-950/20">
-                        <table class="w-full text-sm text-left border-collapse">
+                    <div class="hidden md:block overflow-hidden rounded-3xl border border-slate-800/50 bg-slate-950/20 table-surface">
+                        <table class="data-table w-full text-sm text-left border-collapse">
                             <thead>
                                 <tr
                                     class="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] bg-slate-950/80 border-b border-slate-800">

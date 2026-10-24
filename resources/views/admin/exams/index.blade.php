@@ -2,38 +2,15 @@
     <x-slot name="header">
         <div class="flex items-start sm:items-center justify-between gap-3">
             <div class="min-w-0">
-                <h2 class="font-bold text-xl sm:text-2xl text-slate-900 tracking-tight">
+                <h1 class="page-title">
                     Jadwal <span class="text-red-600">Ujian Sabuk</span>
-                </h2>
-                <p class="text-xs text-slate-500 mt-1 font-medium">
+                </h1>
+                <p class="page-subtitle">
                     Manajemen sesi pelaksanaan ujian, pendaftaran peserta, dan penilaian kenaikan tingkat.
                 </p>
             </div>
-            @if (auth()->user()->hasRole(['pb', 'pengprov']))
-                <div class="hidden sm:block">
-                    <button onclick="toggleModal('modalAddExam')"
-                        class="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                        </svg>
-                        <span>Tambah Sesi Ujian</span>
-                    </button>
-                </div>
-            @endif
         </div>
     </x-slot>
-
-    {{-- Floating Action Button for Mobile (PB/PENGPROV) --}}
-    @if (auth()->user()->hasRole(['pb', 'pengprov']))
-        <div class="fixed bottom-6 right-6 z-50 sm:hidden">
-            <button onclick="toggleModal('modalAddExam')"
-                class="flex items-center justify-center w-12 h-12 bg-red-600 text-white rounded-full shadow-lg shadow-red-600/30 hover:bg-red-700 active:scale-95 transition-all">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"></path>
-                </svg>
-            </button>
-        </div>
-    @endif
 
     <div class="py-6 sm:py-8 bg-slate-50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -53,6 +30,15 @@
                 </div>
             @endif
 
+            <x-table-toolbar title="Daftar Jadwal Ujian">
+                @if (auth()->user()->hasRole(['pb', 'pengprov']))
+                    <button type="button" onclick="toggleModal('modalAddExam')" class="btn btn-primary">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="M12 5v14M5 12h14" /></svg>
+                        Tambah Ujian
+                    </button>
+                @endif
+            </x-table-toolbar>
+
             {{-- Desktop Table --}}
             <div class="hidden md:block bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-slate-200/80 flex items-center justify-between">
@@ -67,7 +53,7 @@
                     </span>
                 </div>
 
-                <table class="min-w-full text-xs">
+                <table class="data-table min-w-full text-xs">
                     <thead class="bg-slate-50/90 border-b border-slate-200/80">
                         <tr class="text-slate-600 font-semibold uppercase text-[11px] tracking-wider">
                             <th class="px-6 py-3.5 text-left">Nama Sesi</th>
@@ -81,7 +67,7 @@
 
                     <tbody class="divide-y divide-slate-100">
                         @forelse($exams as $exam)
-                            <tr class="hover:bg-slate-50/60 transition-colors">
+                            <tr data-record-key="{{ $exam->id }}" class="hover:bg-slate-50/60 transition-colors">
                                 <td class="px-6 py-4">
                                     <div class="flex flex-col">
                                         <span class="font-bold text-slate-900 text-xs uppercase hover:text-red-600 transition-colors">
@@ -123,59 +109,26 @@
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex justify-end items-center gap-1.5">
                                         {{-- Kelola --}}
-                                        <a href="{{ route('admin.exams.show', $exam->id) }}"
-                                            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-all shadow-xs">
-                                            <span>Kelola</span>
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </a>
+                                        <x-action-button href="{{ route('admin.exams.show', $exam->id) }}" icon="view" label="Kelola" />
 
                                         {{-- Input Nilai --}}
                                         @if (auth()->user()->hasRole(['pb', 'pengprov', 'penguji']))
-                                            <a href="{{ route('admin.exams.scoring', $exam->id) }}"
-                                                class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-all shadow-xs">
-                                                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M9 12h6m-6 4h6M9 8h6m4 14H5a2 2 0 01-2-2V4a2 2 0 012-2h10l6 6v14a2 2 0 01-2 2z" />
-                                                </svg>
-                                                <span>Nilai</span>
-                                            </a>
+                                            <x-action-button href="{{ route('admin.exams.scoring', $exam->id) }}" icon="score" label="Input nilai" />
                                         @endif
 
                                         {{-- PB / Pengprov specific actions --}}
                                         @if (auth()->user()->hasRole(['pb', 'pengprov']))
                                             {{-- Atur Penguji --}}
-                                            <a href="{{ route('admin.exams.examiners.edit', $exam->id) }}"
-                                                title="Tugaskan Penguji"
-                                                class="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all shadow-xs">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                                </svg>
-                                            </a>
+                                            <x-action-button href="{{ route('admin.exams.examiners.edit', $exam->id) }}" icon="people" label="Atur penguji" />
 
                                             {{-- Edit --}}
-                                            <button type="button" onclick="openEditModal({{ json_encode($exam) }})"
-                                                title="Edit Jadwal"
-                                                class="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-all shadow-xs">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </button>
+                                            <x-action-button type="button" onclick="openEditModal({{ json_encode($exam) }})" icon="edit" label="Edit" />
 
                                             {{-- Delete --}}
                                             <form action="{{ route('admin.exams.destroy', $exam->id) }}"
                                                 method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus jadwal ujian ini?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" title="Hapus Jadwal"
-                                                    class="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200 hover:bg-rose-50 transition-all shadow-xs">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                    </svg>
-                                                </button>
+                                                <x-action-button type="submit" icon="delete" label="Hapus" />
                                             </form>
                                         @endif
                                     </div>
@@ -195,7 +148,7 @@
             {{-- Mobile Cards --}}
             <div class="md:hidden space-y-4">
                 @forelse ($exams as $exam)
-                    <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+                    <div data-card-key="{{ $exam->id }}" class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
                         <div class="p-4 border-b border-slate-100">
                             <div class="flex justify-between items-start gap-3">
                                 <div class="min-w-0">
@@ -233,36 +186,18 @@
                         {{-- Mobile Footer Actions --}}
                         <div class="p-3 bg-slate-50 flex items-center justify-between gap-2">
                             <div class="flex items-center gap-1.5 flex-1">
-                                <a href="{{ route('admin.exams.show', $exam->id) }}"
-                                    class="flex-1 inline-flex items-center justify-center py-2 px-3 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-all">
-                                    Kelola
-                                </a>
+                                <x-action-button href="{{ route('admin.exams.show', $exam->id) }}" icon="view" label="Kelola" />
 
                                 @if (auth()->user()->hasRole(['pb', 'pengprov', 'penguji']))
-                                    <a href="{{ route('admin.exams.scoring', $exam->id) }}"
-                                        class="flex-1 inline-flex items-center justify-center py-2 px-3 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-100 transition-all">
-                                        Nilai
-                                    </a>
+                                    <x-action-button href="{{ route('admin.exams.scoring', $exam->id) }}" icon="score" label="Input nilai" />
                                 @endif
                             </div>
 
                             @if (auth()->user()->hasRole(['pb', 'pengprov']))
                                 <div class="flex items-center gap-1">
-                                    <a href="{{ route('admin.exams.examiners.edit', $exam->id) }}"
-                                        class="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 transition-all">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                        </svg>
-                                    </a>
+                                    <x-action-button href="{{ route('admin.exams.examiners.edit', $exam->id) }}" icon="people" label="Atur penguji" />
 
-                                    <button type="button" onclick="openEditModal({{ json_encode($exam) }})"
-                                        class="p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-slate-900 transition-all">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
+                                    <x-action-button type="button" onclick="openEditModal({{ json_encode($exam) }})" icon="edit" label="Edit" />
                                 </div>
                             @endif
                         </div>
@@ -289,7 +224,7 @@
                         <p class="text-[11px] text-slate-500 font-medium">Buat sesi ujian kenaikan sabuk baru</p>
                     </div>
                     <button type="button" onclick="toggleModal('modalAddExam')"
-                        class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">
+                        class="btn btn-secondary">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -337,11 +272,11 @@
 
                 <div class="px-6 py-4 bg-slate-50/80 border-t border-slate-200/80 flex items-center justify-end gap-2.5">
                     <button type="button" onclick="toggleModal('modalAddExam')"
-                        class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-50 transition-all">
+                        class="btn btn-secondary">
                         Batal
                     </button>
                     <button type="submit"
-                        class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all">
+                        class="btn btn-primary">
                         Simpan Jadwal
                     </button>
                 </div>
@@ -362,7 +297,7 @@
                         <p class="text-[11px] text-slate-500 font-medium">Perbarui rincian sesi ujian</p>
                     </div>
                     <button type="button" onclick="toggleModal('modalEditExam')"
-                        class="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all">
+                        class="btn btn-secondary">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -410,11 +345,11 @@
 
                 <div class="px-6 py-4 bg-slate-50/80 border-t border-slate-200/80 flex items-center justify-end gap-2.5">
                     <button type="button" onclick="toggleModal('modalEditExam')"
-                        class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-lg text-xs font-semibold hover:bg-slate-50 transition-all">
+                        class="btn btn-secondary">
                         Batal
                     </button>
                     <button type="submit"
-                        class="px-5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-sm transition-all">
+                        class="btn btn-primary">
                         Update Jadwal
                     </button>
                 </div>

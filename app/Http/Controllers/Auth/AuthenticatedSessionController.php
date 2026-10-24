@@ -13,8 +13,9 @@ use App\Models\User;
 
 class AuthenticatedSessionController extends Controller
 {
-    public function create(): View
+    public function create(Request $request)
     {
+        if (!$request->boolean('_auth_modal') && $request->header('Sec-Fetch-Dest') !== 'iframe') return redirect('/?auth=login');
         return view('auth.login');
     }
 

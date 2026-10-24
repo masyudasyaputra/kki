@@ -2,6 +2,7 @@
 <html lang="id" class="scroll-smooth">
 
 <head>
+    <link rel="icon" type="image/webp" href="{{ asset('images/logo-shokaido.webp') }}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#8F1018">
@@ -28,8 +29,6 @@
     <meta name="twitter:title" content="SHOKAIDO Sumatera Utara">
     <meta name="twitter:description" content="Perguruan Karate-Do untuk pembinaan karakter, tradisi, dan prestasi.">
     <meta name="twitter:image" content="{{ asset('images/logo.png') }}">
-
-    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=barlow:400,500,600,700,800|barlow-condensed:600,700,800,900"
         rel="stylesheet" />
