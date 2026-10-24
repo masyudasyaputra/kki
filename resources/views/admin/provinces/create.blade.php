@@ -1,155 +1,133 @@
 <x-app-layout>
-    {{-- Tambahkan Asset Tom Select di Slot Head atau Header --}}
     <x-slot name="header">
-        <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css"
-            rel="stylesheet">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight uppercase tracking-tight">
-            {{ __('Tambah Wilayah Provinsi Baru') }}
-        </h2>
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+                    Tambah Wilayah Provinsi Baru
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Registrasi Pengprov, nama ketua, dan masa berlaku SK kepengurusan
+                </p>
+            </div>
+            <a href="{{ route('admin.provinces.index') }}"
+                class="hidden sm:inline-flex items-center px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-colors">
+                Kembali
+            </a>
+        </div>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            {{-- Form Card --}}
-            <div class="bg-white p-8 shadow-sm rounded-xl border-l-8 border-indigo-600">
-                <form action="{{ route('admin.provinces.store') }}" method="POST">
+    <div class="py-6 sm:py-8">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            {{-- Pesan Error Validasi --}}
+            @if ($errors->any())
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div class="flex gap-3">
+                        <svg class="h-5 w-5 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="min-w-0">
+                            <h3 class="text-xs font-bold text-red-800">Terdapat kesalahan pada isian form:</h3>
+                            <ul class="mt-1 list-disc list-inside text-xs text-red-700 space-y-0.5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+                {{-- Header Form --}}
+                <div class="px-6 py-5 border-b border-slate-200/80 flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">Formulir Pengurus Provinsi</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Pilih provinsi yang belum terdaftar dan masukkan data legalitas</p>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
+                        Pengprov
+                    </span>
+                </div>
+
+                <form action="{{ route('admin.provinces.store') }}" method="POST" class="p-6 sm:p-8 space-y-8">
                     @csrf
 
-                    {{-- Section 1: Data Wilayah --}}
-                    <div class="mb-8">
-                        <h4 class="text-xs font-black uppercase tracking-widest text-indigo-600 mb-4 flex items-center">
-                            <span class="bg-indigo-100 p-1 rounded-md mr-2">01</span>
-                            Informasi Wilayah
-                        </h4>
-                        <div class="grid grid-cols-1 gap-6">
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 uppercase tracking-tight mb-1">
-                                    Nama Provinsi
-                                </label>
-                                {{-- Menggunakan Select dengan Fitur Pencarian --}}
-                                <select id="select-province" name="name" required>
-                                    <option value="">Cari nama provinsi...</option>
-                                    @foreach ($availableProvinces as $prov)
-                                        <option value="{{ $prov }}">{{ $prov }}</option>
-                                    @endforeach
-                                </select>
+                    {{-- Section 1: Informasi Wilayah --}}
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+                            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">1</span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Informasi Wilayah</h3>
+                        </div>
 
-                                @error('name')
-                                    <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p>
-                                @enderror
-                            </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Nama Provinsi <span class="text-red-500">*</span>
+                            </label>
+                            <select name="name" required
+                                class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all">
+                                <option value="">Pilih nama provinsi...</option>
+                                @foreach ($availableProvinces as $prov)
+                                    <option value="{{ $prov }}" {{ old('name') === $prov ? 'selected' : '' }}>
+                                        {{ $prov }}
+                                    </option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
 
-                    {{-- Section 2: Administrasi & SK --}}
-                    <div class="mb-8 bg-gray-50 p-6 rounded-xl border border-gray-200">
-                        <h4 class="text-xs font-black uppercase tracking-widest text-gray-600 mb-4 flex items-center">
-                            <span class="bg-gray-200 p-1 rounded-md mr-2">02</span>
-                            Legalitas & Kepengurusan
-                        </h4>
-                        <div class="grid grid-cols-1 gap-6">
-                            {{-- Input Nama Ketua --}}
-                            <div>
-                                <label class="block text-sm font-bold text-gray-700 uppercase tracking-tight">
-                                    Nama Ketua Pengprov
+                    {{-- Section 2: Legalitas & Kepengurusan --}}
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+                            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">2</span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Legalitas & Kepengurusan</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Nama Ketua Pengprov <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="leader_name" value="{{ old('leader_name') }}"
-                                    class="w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                    required placeholder="Nama Lengkap dan Gelar">
-                                @error('leader_name')
-                                    <p class="text-red-500 text-xs mt-1 font-bold">{{ $message }}</p>
-                                @enderror
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                    required placeholder="Nama lengkap dan gelar">
                             </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-700 uppercase tracking-tight">
-                                        Nomor SK Pengprov
-                                    </label>
-                                    <input type="text" name="sk_number" value="{{ old('sk_number') }}"
-                                        class="w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                        placeholder="SK/001/PENGPROV/2026">
-                                </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Nomor SK Pengprov
+                                </label>
+                                <input type="text" name="sk_number" value="{{ old('sk_number') }}"
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                    placeholder="SK/001/PENGPROV/2026">
+                            </div>
 
-                                <div>
-                                    <label
-                                        class="block text-sm font-bold text-gray-700 uppercase tracking-tight text-red-600">
-                                        Masa Bakti Hingga
-                                    </label>
-                                    <input type="date" name="sk_expiry_date" value="{{ old('sk_expiry_date') }}"
-                                        class="w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-                                        required>
-                                    <p class="text-[10px] text-gray-500 mt-1 italic leading-tight">
-                                        *Sistem akan memberikan notifikasi otomatis 30 hari sebelum tanggal ini
-                                        berakhir.
-                                    </p>
-                                </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Masa Bakti Hingga <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" name="sk_expiry_date" value="{{ old('sk_expiry_date') }}"
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                    required>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Footer Buttons --}}
-                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    {{-- Actions --}}
+                    <div class="pt-5 border-t border-slate-100 flex items-center justify-end gap-3">
                         <a href="{{ route('admin.provinces.index') }}"
-                            class="bg-white border border-gray-300 text-gray-600 px-6 py-2 rounded-lg font-bold text-sm hover:bg-gray-50 transition">
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
                             Batal
                         </a>
                         <button type="submit"
-                            class="bg-indigo-600 hover:bg-indigo-700 text-white px-10 py-2 rounded-lg font-black text-sm shadow-lg shadow-indigo-200 transition-all uppercase tracking-widest">
-                            Simpan Provinsi
+                            class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white rounded-lg text-xs font-semibold shadow-sm transition-all inline-flex items-center gap-2">
+                            <span>Simpan Provinsi</span>
                         </button>
                     </div>
                 </form>
             </div>
 
-            {{-- Info Box --}}
-            <div class="mt-6 flex items-start p-4 bg-blue-50 rounded-xl border border-blue-100">
-                <svg class="w-5 h-5 text-blue-500 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <p class="text-[11px] text-blue-700 leading-relaxed font-medium">
-                    Pastikan nama ketua dan masa bakti SK diisi dengan benar untuk keperluan administrasi dan pelaporan
-                    organisasi.
-                </p>
-            </div>
         </div>
     </div>
-
-    {{-- Script Inisialisasi Tom Select --}}
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            if (document.querySelector('#select-province')) {
-                new TomSelect("#select-province", {
-                    create: false,
-                    sortField: {
-                        field: "text",
-                        direction: "asc"
-                    },
-                    placeholder: "Ketik nama provinsi..."
-                });
-            }
-        });
-    </script>
-
-    <style>
-        /* Menyesuaikan Tom Select dengan gaya Tailwind */
-        .ts-control {
-            border-radius: 0.5rem !important;
-            padding: 0.6rem 0.75rem !important;
-            border-color: #d1d5db !important;
-            font-size: 0.875rem !important;
-        }
-
-        .ts-wrapper.focus .ts-control {
-            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2) !important;
-            border-color: #4f46e5 !important;
-        }
-
-        .ts-dropdown .active {
-            background-color: #4f46e5 !important;
-            color: white !important;
-        }
-    </style>
 </x-app-layout>

@@ -1,43 +1,33 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <h2 class="font-black text-xl sm:text-3xl text-slate-900 leading-tight tracking-tighter uppercase">
-                    {{ __('Registrasi') }} <span class="text-slate-900">Dojo</span>
-                    <span class="text-red-600">•</span>
-                </h2>
-                <p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
-                    Pendaftaran dojo baru • identitas • legalitas • wilayah
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+                    Registrasi Dojo Baru
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Lengkapi identitas, legalitas SK, dan lokasi latihan dojo
                 </p>
-            </div>
-
-            <div
-                class="sm:hidden shrink-0 inline-flex items-center gap-2 bg-slate-900 text-white px-3 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest">
-                <span class="w-2 h-2 rounded-full bg-red-600"></span>
-                DOJO
             </div>
         </div>
     </x-slot>
 
-    <div class="py-8 sm:py-10 bg-slate-50 min-h-screen">
+    <div class="py-6 sm:py-8">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
             {{-- Pesan Error Validasi --}}
             @if ($errors->any())
-                <div class="mb-6 sm:mb-8 p-4 sm:p-5 bg-white border-l-4 border-red-600 rounded-2xl shadow-sm">
-                    <div class="flex gap-3 sm:gap-4">
-                        <div class="bg-red-100 p-2 rounded-xl">
-                            <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="square" stroke-linejoin="square" stroke-width="3"
-                                    d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </div>
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div class="flex gap-3">
+                        <svg class="h-5 w-5 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                         <div class="min-w-0">
-                            <h3 class="text-xs font-black text-red-800 uppercase tracking-widest">Validasi Gagal</h3>
-                            <ul
-                                class="mt-1 list-disc list-inside text-[11px] font-bold text-red-600/80 uppercase tracking-tight">
+                            <h3 class="text-xs font-bold text-red-800">Terdapat kesalahan pada isian form:</h3>
+                            <ul class="mt-1 list-disc list-inside text-xs text-red-700 space-y-0.5">
                                 @foreach ($errors->all() as $error)
-                                    <li class="break-words">{{ $error }}</li>
+                                    <li>{{ $error }}</li>
                                 @endforeach
                             </ul>
                         </div>
@@ -45,176 +35,126 @@
                 </div>
             @endif
 
-            <div
-                class="bg-white rounded-[2rem] border-2 border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
                 {{-- Header Form --}}
-                <div class="bg-slate-900 px-5 sm:px-7 md:px-8 py-5">
-                    <div class="flex items-start sm:items-center justify-between gap-4">
-                        <div class="min-w-0">
-                            <h3 class="text-white text-[10px] sm:text-xs font-black uppercase tracking-[0.2em]">
-                                Formulir Registrasi Dojo Baru
-                            </h3>
-                            <p class="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                Identitas • Legalitas • Wilayah & Lokasi
-                            </p>
-                        </div>
-                        <span
-                            class="hidden sm:inline-flex items-center gap-2 bg-white/5 border border-white/10 text-slate-200 px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest">
-                            <span class="w-2 h-2 rounded-full bg-red-600"></span>
-                            {{ strtoupper(str_replace('_', ' ', auth()->user()->role)) }}
-                        </span>
+                <div class="px-6 py-5 border-b border-slate-200/80 flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">Formulir Data Dojo</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Isi data secara lengkap sesuai dokumen resmi</p>
                     </div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
+                        {{ strtoupper(str_replace('_', ' ', auth()->user()->role)) }}
+                    </span>
                 </div>
-                <div class="h-1 bg-gradient-to-r from-slate-900 via-slate-700 to-red-600/60"></div>
 
-                <form action="{{ route('admin.dojos.store') }}" method="POST"
-                    class="px-5 sm:px-7 md:px-8 pt-5 sm:pt-6 pb-6 sm:pb-8 space-y-6 sm:space-y-8">
+                <form action="{{ route('admin.dojos.store') }}" method="POST" class="p-6 sm:p-8 space-y-8">
                     @csrf
 
                     {{-- Section 1: Informasi Dasar --}}
-                    <section class="rounded-[1.5rem] border-2 border-slate-100 bg-white p-4 sm:p-6">
-                        <div class="flex items-center justify-between mb-4 sm:mb-5">
-                            <h4
-                                class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-900 flex items-center gap-3">
-                                <span
-                                    class="w-8 h-8 bg-slate-100 flex items-center justify-center rounded-xl border-2 border-slate-200">
-                                    01
-                                </span>
-                                Identitas Dojo
-                            </h4>
-                            <span
-                                class="hidden sm:inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Informasi Dasar
-                            </span>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+                            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">1</span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Identitas Dojo</h3>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                    Nama Dojo <span class="text-red-600">*</span>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Nama Dojo <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="name" value="{{ old('name') }}"
-                                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all uppercase"
-                                    required placeholder="Contoh: Dojo Garuda Bandung">
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                    required placeholder="Contoh: Dojo Garuda Medan">
                             </div>
 
                             <div>
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                    Nama Sensei / Kepala Dojo
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Nama Sensei / Kepala Pelatih
                                 </label>
                                 <input type="text" name="sensei_name" value="{{ old('sensei_name') }}"
-                                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all uppercase"
-                                    placeholder="Masukkan nama lengkap">
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                    placeholder="Nama pelatih kepala">
                             </div>
 
                             <div>
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                    Nomor Telepon
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Nomor Kontak / Telepon
                                 </label>
                                 <input type="text" name="phone_number" value="{{ old('phone_number') }}"
-                                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all"
-                                    placeholder="0812xxxxxx">
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                    placeholder="0812xxxxxxxx">
                             </div>
                         </div>
-                    </section>
+                    </div>
 
                     {{-- Section 2: Legalitas SK --}}
-                    <section class="rounded-[1.5rem] border-2 border-slate-100 bg-slate-50 p-4 sm:p-6">
-                        <div class="flex items-center justify-between mb-4 sm:mb-5">
-                            <h4
-                                class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-900 flex items-center gap-3">
-                                <span
-                                    class="w-8 h-8 bg-white flex items-center justify-center rounded-xl border-2 border-slate-200 shadow-sm">
-                                    02
-                                </span>
-                                Legalitas & Masa Berlaku
-                            </h4>
-                            <span
-                                class="hidden sm:inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Dokumen SK
-                            </span>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+                            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">2</span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Legalitas & Masa Berlaku</h3>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                    Nomor SK Dojo
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Nomor Surat Keputusan (SK)
                                 </label>
                                 <input type="text" name="sk_number" value="{{ old('sk_number') }}"
-                                    class="w-full bg-white border-2 border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all uppercase"
-                                    placeholder="No. SK/Tahun/PB">
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                    placeholder="Nomor SK resmi dojo">
                             </div>
 
                             <div>
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                    Tanggal Berakhir SK <span class="text-red-600">*</span>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Masa Berlaku SK Sampai <span class="text-red-500">*</span>
                                 </label>
                                 <input type="date" name="sk_expiry_date" value="{{ old('sk_expiry_date') }}"
-                                    class="w-full bg-white border-2 border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all"
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
                                     required>
-                                <p class="mt-2 text-[10px] text-slate-500 italic">
-                                    *Dojo otomatis non-aktif jika melewati tanggal ini.
+                                <p class="mt-1.5 text-[11px] text-slate-400 italic">
+                                    * Dojo otomatis non-aktif jika melewati tanggal berakhir ini.
                                 </p>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
-                    {{-- Section 3: Wilayah & Lokasi (Adaptive) --}}
-                    <section class="rounded-[1.5rem] border-2 border-slate-100 bg-white p-4 sm:p-6">
-                        <div class="flex items-center justify-between mb-4 sm:mb-5">
-                            <h4
-                                class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-900 flex items-center gap-3">
-                                <span
-                                    class="w-8 h-8 bg-slate-100 flex items-center justify-center rounded-xl border-2 border-slate-200">
-                                    03
-                                </span>
-                                Wilayah & Lokasi Latihan
-                            </h4>
-                            <span
-                                class="hidden sm:inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Lokasi
-                            </span>
+                    {{-- Section 3: Wilayah & Lokasi --}}
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+                            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">3</span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Wilayah & Alamat Latihan</h3>
                         </div>
 
                         @if (auth()->user()->role === 'pengcab')
                             <input type="hidden" name="province_id" value="{{ auth()->user()->province_id }}">
                             <input type="hidden" name="city_id" value="{{ auth()->user()->city_id }}">
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4">
-                                <div class="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                                    <span
-                                        class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Provinsi</span>
-                                    <p class="text-xs sm:text-sm font-black text-slate-700 uppercase mt-1">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-2">
+                                <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200/80">
+                                    <span class="text-[10px] font-semibold text-slate-400 uppercase">Provinsi</span>
+                                    <p class="text-xs font-bold text-slate-800 mt-0.5">
                                         {{ auth()->user()->province->name }}
                                     </p>
                                 </div>
-                                <div class="bg-slate-50 p-4 rounded-2xl border-2 border-slate-100">
-                                    <span
-                                        class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Kota/Cabang</span>
-                                    <p class="text-xs sm:text-sm font-black text-slate-700 uppercase mt-1">
+                                <div class="bg-slate-50 p-3.5 rounded-lg border border-slate-200/80">
+                                    <span class="text-[10px] font-semibold text-slate-400 uppercase">Kota/Cabang</span>
+                                    <p class="text-xs font-bold text-slate-800 mt-0.5">
                                         {{ auth()->user()->city->name }}
                                     </p>
                                 </div>
                             </div>
                         @else
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6 mb-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
-                                    <label
-                                        class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                        Provinsi <span class="text-red-600">*</span>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                        Provinsi <span class="text-red-500">*</span>
                                     </label>
                                     <select name="province_id" id="province_id"
-                                        class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all uppercase"
+                                        class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
                                         required>
                                         <option value="">Pilih Provinsi</option>
                                         @foreach ($provinces as $p)
-                                            <option value="{{ $p->id }}"
-                                                {{ (string) old('province_id') === (string) $p->id ? 'selected' : '' }}>
+                                            <option value="{{ $p->id }}" {{ (string) old('province_id') === (string) $p->id ? 'selected' : '' }}>
                                                 {{ $p->name }}
                                             </option>
                                         @endforeach
@@ -222,12 +162,11 @@
                                 </div>
 
                                 <div>
-                                    <label
-                                        class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                        Kota / Cabang <span class="text-red-600">*</span>
+                                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                        Kota / Cabang <span class="text-red-500">*</span>
                                     </label>
                                     <select name="city_id" id="city_id"
-                                        class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all uppercase"
+                                        class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
                                         required>
                                         <option value="">Pilih Kota</option>
                                     </select>
@@ -236,39 +175,24 @@
                         @endif
 
                         <div>
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                Alamat Lengkap Latihan <span class="text-red-600">*</span>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Alamat Lengkap Latihan <span class="text-red-500">*</span>
                             </label>
                             <textarea name="address" rows="3"
-                                class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all"
+                                class="w-full p-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
                                 required placeholder="Contoh: GOR Serbaguna Lantai 2, Jl. Merdeka...">{{ old('address') }}</textarea>
-                        </div>
-                    </section>
-
-                    {{-- Mobile sticky actions --}}
-                    <div
-                        class="sm:hidden -mx-5 px-5 pt-4 pb-5 sticky bottom-0 bg-slate-50/95 backdrop-blur border-t border-slate-100">
-                        <div class="grid grid-cols-2 gap-3">
-                            <a href="{{ route('admin.dojos.index') }}"
-                                class="inline-flex justify-center items-center bg-white border-2 border-slate-200 text-slate-500 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
-                                Batal
-                            </a>
-                            <button type="submit"
-                                class="inline-flex justify-center items-center bg-slate-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-600 transition-all border-b-4 border-slate-700 hover:border-red-800 active:translate-y-1">
-                                Simpan
-                            </button>
                         </div>
                     </div>
 
-                    {{-- Desktop actions --}}
-                    <div class="hidden sm:flex justify-end gap-3 pt-6 border-t-2 border-slate-50">
+                    {{-- Actions --}}
+                    <div class="pt-5 border-t border-slate-100 flex items-center justify-end gap-3">
                         <a href="{{ route('admin.dojos.index') }}"
-                            class="inline-flex justify-center items-center bg-white border-2 border-slate-200 text-slate-500 px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
                             Batal
                         </a>
                         <button type="submit"
-                            class="inline-flex justify-center items-center bg-slate-900 text-white px-10 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-600 shadow-lg shadow-slate-200 transition-all border-b-4 border-slate-700 hover:border-red-800 active:translate-y-1">
-                            Daftarkan Dojo
+                            class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white rounded-lg text-xs font-semibold shadow-sm transition-all inline-flex items-center gap-2">
+                            <span>Daftarkan Dojo</span>
                         </button>
                     </div>
 
@@ -292,8 +216,7 @@
                         .then(data => {
                             citySelect.innerHTML = '<option value="">Pilih Kota</option>';
                             data.forEach(city => {
-                                citySelect.innerHTML +=
-                                    `<option value="${city.id}">${city.name}</option>`;
+                                citySelect.innerHTML += `<option value="${city.id}">${city.name}</option>`;
                             });
                         })
                         .catch(() => {

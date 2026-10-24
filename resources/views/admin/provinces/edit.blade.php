@@ -1,239 +1,128 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex items-center gap-4">
-            <a href="{{ route('admin.users.index') }}"
-                class="p-2.5 bg-white rounded-2xl shadow-sm border border-gray-100 hover:bg-gray-50 transition-all group">
-                <svg class="w-5 h-5 text-gray-500 group-hover:text-indigo-600 transition-colors" fill="none"
-                    stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18">
-                    </path>
-                </svg>
-            </a>
+        <div class="flex items-center justify-between gap-3">
             <div>
-                <h2 class="font-black text-2xl text-gray-800 tracking-tight leading-tight">
-                    {{ __('Edit User') }}
-                </h2>
-                <p class="text-sm text-gray-500 font-medium">Perbarui profil dan kendali akses pengguna</p>
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+                    Edit Data Wilayah Provinsi
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Modifikasi data: <span class="font-semibold text-slate-700">{{ $province->name }}</span>
+                </p>
             </div>
+            <a href="{{ route('admin.provinces.index') }}"
+                class="hidden sm:inline-flex items-center px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-colors">
+                Kembali
+            </a>
         </div>
     </x-slot>
 
-    <div class="py-8 md:py-12 bg-gray-50/50">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-            <form action="{{ route('admin.users.update', $user->id) }}" method="POST" class="space-y-8">
-                @csrf
-                @method('PUT')
+    <div class="py-6 sm:py-8">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                <div
-                    class="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100/80 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-50/50 rounded-full -mr-16 -mt-16"></div>
-
-                    <div class="relative grid grid-cols-1 gap-8">
-                        {{-- Nama Lengkap --}}
-                        <div>
-                            <label
-                                class="block text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ps-1">Nama
-                                Lengkap</label>
-                            <input type="text" name="name" value="{{ old('name', $user->name) }}" required
-                                class="w-full bg-gray-50/50 border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white p-4 text-gray-900 font-bold shadow-sm transition-all placeholder-gray-300">
-                            @error('name')
-                                <p class="text-red-500 text-xs mt-2 ps-1 font-bold">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        {{-- Email --}}
-                        <div>
-                            <label
-                                class="block text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ps-1">Alamat
-                                Email</label>
-                            <input type="email" name="email" value="{{ old('email', $user->email) }}" required
-                                class="w-full bg-gray-50/50 border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white p-4 text-gray-900 font-bold shadow-sm transition-all">
-                            @error('email')
-                                <p class="text-red-500 text-xs mt-2 ps-1 font-bold">{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {{-- Role --}}
-                            <div>
-                                <label
-                                    class="block text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ps-1">Role
-                                    / Hak Akses</label>
-                                <div class="relative">
-                                    <select name="role" id="role-select"
-                                        class="w-full bg-gray-50/50 border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white p-4 text-gray-900 font-bold shadow-sm transition-all appearance-none">
-                                        <option value="pb" {{ $user->role == 'pb' ? 'selected' : '' }}>Pengurus
-                                            Besar (PB)</option>
-                                        <option value="pengprov" {{ $user->role == 'pengprov' ? 'selected' : '' }}>
-                                            Pengurus Provinsi</option>
-                                        <option value="pengcab" {{ $user->role == 'pengcab' ? 'selected' : '' }}>
-                                            Pengurus Cabang</option>
-                                        <option value="admin_dojo" {{ $user->role == 'admin_dojo' ? 'selected' : '' }}>
-                                            Admin Dojo</option>
-                                        <option value="member" {{ $user->role == 'member' ? 'selected' : '' }}>Member
-                                        </option>
-                                    </select>
-                                    <div
-                                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {{-- Status Aktif --}}
-                            <div>
-                                <label
-                                    class="block text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ps-1">Status
-                                    Akun</label>
-                                <div class="relative">
-                                    <select name="is_active"
-                                        class="w-full bg-gray-50/50 border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white p-4 text-gray-900 font-bold shadow-sm transition-all appearance-none">
-                                        <option value="1" {{ $user->is_active ? 'selected' : '' }}>AKTIF</option>
-                                        <option value="0" {{ !$user->is_active ? 'selected' : '' }}>NON-AKTIF
-                                        </option>
-                                    </select>
-                                    <div
-                                        class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 9l-7 7-7-7"></path>
-                                        </svg>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="wilayah-section"
-                    class="bg-white p-6 md:p-10 rounded-[2.5rem] shadow-sm border border-gray-100/80">
-                    <h3 class="text-gray-800 font-black text-lg mb-8 flex items-center">
-                        <span
-                            class="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center me-4 shadow-sm">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
-                                </path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                            </svg>
-                        </span>
-                        Pengaturan Wilayah
-                    </h3>
-
-                    <div class="space-y-8">
-                        <div id="provinsi-div">
-                            <label
-                                class="block text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ps-1">Provinsi</label>
-                            <select name="province_id"
-                                class="w-full bg-gray-50/50 border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 p-4 text-gray-900 font-bold shadow-sm transition-all appearance-none">
-                                <option value="">Pilih Provinsi</option>
-                                @foreach ($provinces as $province)
-                                    <option value="{{ $province->id }}"
-                                        {{ $user->province_id == $province->id ? 'selected' : '' }}>
-                                        {{ $province->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div id="city-div" class="{{ $user->role != 'pengcab' ? 'hidden' : '' }}">
-                            <label
-                                class="block text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ps-1">Kota
-                                / Cabang</label>
-                            <select name="city_id"
-                                class="w-full bg-gray-50/50 border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 p-4 text-gray-900 font-bold shadow-sm transition-all appearance-none">
-                                <option value="">Pilih Kota/Kabupaten</option>
-                                @foreach ($cities as $city)
-                                    <option value="{{ $city->id }}"
-                                        {{ $user->city_id == $city->id ? 'selected' : '' }}>{{ $city->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div id="dojo-div"
-                            class="{{ !in_array($user->role, ['admin_dojo', 'member']) ? 'hidden' : '' }}">
-                            <label
-                                class="block text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-3 ps-1">Unit
-                                Dojo</label>
-                            <select name="dojo_id"
-                                class="w-full bg-gray-50/50 border-gray-100 rounded-2xl focus:ring-2 focus:ring-indigo-500 p-4 text-gray-900 font-bold shadow-sm transition-all appearance-none">
-                                <option value="">Pilih Dojo</option>
-                                @foreach ($dojos as $dojo)
-                                    <option value="{{ $dojo->id }}"
-                                        {{ $user->dojo_id == $dojo->id ? 'selected' : '' }}>{{ $dojo->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Password Card --}}
-                <div
-                    class="bg-indigo-900 p-8 md:p-10 rounded-[2.5rem] shadow-xl shadow-indigo-200/50 text-white relative overflow-hidden group">
-                    <div
-                        class="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-700">
-                    </div>
-
-                    <h3 class="font-black text-lg mb-2 flex items-center relative">
-                        <svg class="w-5 h-5 me-3 text-indigo-300" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
+            {{-- Pesan Error Validasi --}}
+            @if ($errors->any())
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div class="flex gap-3">
+                        <svg class="h-5 w-5 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                            </path>
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        Ganti Password
-                    </h3>
-                    <p class="text-indigo-200 text-xs mb-8 font-medium">Kosongkan kolom di bawah jika tidak ingin
-                        mengubah password.</p>
+                        <div class="min-w-0">
+                            <h3 class="text-xs font-bold text-red-800">Terdapat kesalahan pada isian form:</h3>
+                            <ul class="mt-1 list-disc list-inside text-xs text-red-700 space-y-0.5">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            @endif
 
-                    <input type="password" name="password" placeholder="••••••••"
-                        class="relative w-full bg-white/10 border-white/20 rounded-2xl focus:ring-2 focus:ring-white focus:bg-white focus:text-gray-900 p-4 text-white placeholder-indigo-300/50 transition-all shadow-inner">
+            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+                {{-- Header Form --}}
+                <div class="px-6 py-5 border-b border-slate-200/80 flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">Formulir Pembaruan Pengprov</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Perbarui nama provinsi, ketua pengprov, atau masa berlaku SK</p>
+                    </div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
+                        ID: #{{ $province->id }}
+                    </span>
                 </div>
 
-                {{-- Action Buttons --}}
-                <div class="flex flex-col md:flex-row gap-4 pt-6">
-                    <button type="submit"
-                        class="flex-[2] bg-indigo-600 text-white font-black py-5 rounded-[1.5rem] shadow-xl shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1 transition-all active:scale-95 uppercase tracking-widest text-sm">
-                        Simpan Perubahan
-                    </button>
-                    <a href="{{ route('admin.users.index') }}"
-                        class="flex-1 bg-white text-gray-500 font-black py-5 rounded-[1.5rem] text-center border border-gray-100 hover:bg-gray-50 hover:text-gray-700 transition-all uppercase tracking-widest text-sm">
-                        Batal
-                    </a>
-                </div>
-            </form>
+                <form action="{{ route('admin.provinces.update', $province->id) }}" method="POST" class="p-6 sm:p-8 space-y-8">
+                    @csrf
+                    @method('PUT')
+
+                    {{-- Section 1: Informasi Wilayah --}}
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+                            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">1</span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Informasi Wilayah</h3>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                Nama Provinsi <span class="text-red-500">*</span>
+                            </label>
+                            <input type="text" name="name" value="{{ old('name', $province->name) }}"
+                                class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                required>
+                        </div>
+                    </div>
+
+                    {{-- Section 2: Legalitas & Kepengurusan --}}
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+                            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">2</span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Legalitas & Kepengurusan</h3>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Nama Ketua Pengprov <span class="text-red-500">*</span>
+                                </label>
+                                <input type="text" name="leader_name" value="{{ old('leader_name', $province->leader_name) }}"
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                    required placeholder="Nama lengkap dan gelar">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Nomor SK Pengprov
+                                </label>
+                                <input type="text" name="sk_number" value="{{ old('sk_number', $province->sk_number) }}"
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                    placeholder="SK/001/PENGPROV/2026">
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Masa Bakti Hingga <span class="text-red-500">*</span>
+                                </label>
+                                <input type="date" name="sk_expiry_date" value="{{ old('sk_expiry_date', $province->sk_expiry_date ? \Carbon\Carbon::parse($province->sk_expiry_date)->format('Y-m-d') : '') }}"
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                    required>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Actions --}}
+                    <div class="pt-5 border-t border-slate-100 flex items-center justify-end gap-3">
+                        <a href="{{ route('admin.provinces.index') }}"
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
+                            Batal
+                        </a>
+                        <button type="submit"
+                            class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white rounded-lg text-xs font-semibold shadow-sm transition-all inline-flex items-center gap-2">
+                            <span>Simpan Perubahan</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
         </div>
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const roleSelect = document.getElementById('role-select');
-            const cityDiv = document.getElementById('city-div');
-            const dojoDiv = document.getElementById('dojo-div');
-            const sectionWilayah = document.getElementById('wilayah-section');
-
-            function toggleFields() {
-                const role = roleSelect.value;
-                cityDiv.classList.add('hidden');
-                dojoDiv.classList.add('hidden');
-                sectionWilayah.classList.remove('hidden');
-
-                if (role === 'pb') {
-                    sectionWilayah.classList.add('hidden');
-                } else if (role === 'pengcab') {
-                    cityDiv.classList.remove('hidden');
-                } else if (role === 'admin_dojo' || role === 'member') {
-                    dojoDiv.classList.remove('hidden');
-                }
-            }
-
-            roleSelect.addEventListener('change', toggleFields);
-            toggleFields();
-        });
-    </script>
 </x-app-layout>

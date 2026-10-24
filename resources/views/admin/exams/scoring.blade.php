@@ -362,18 +362,17 @@
                     </div>
                 </div>
 
-                <div class="p-5 border-t border-slate-100 flex gap-3 bg-white">
+                <div class="px-6 py-4 border-t border-slate-200/80 flex items-center justify-end gap-3 bg-slate-50/80">
                     <button @click="showModal = false"
-                        class="flex-1 py-3 rounded-2xl bg-white border-2 border-slate-200 text-slate-500 text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
+                        class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:bg-slate-50 transition-all">
                         Kembali
                     </button>
 
                     @if ($canScore)
-                        <form action="{{ route('admin.exams.scoring.finalize', $exam) }}" method="POST"
-                            class="flex-1">
+                        <form action="{{ route('admin.exams.scoring.finalize', $exam) }}" method="POST">
                             @csrf
-                            <button type="submit" onclick="return confirm('Finalisasi hasil sekarang?')"
-                                class="w-full py-3 rounded-2xl bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-all border-b-4 border-slate-700 hover:border-red-800 active:translate-y-1">
+                            <button type="submit" onclick="return confirm('Finalisasi hasil ujian sekarang?')"
+                                class="px-5 py-2 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold transition-all shadow-sm">
                                 Finalisasi & Simpan
                             </button>
                         </form>

@@ -36,219 +36,194 @@
     $roleLabel = str_replace('_', ' ', $u->role ?? 'member');
 @endphp
 
-<style>
-    .gold-gradient-text {
-        background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728, #fbf5b7, #aa771c);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-    }
-
-    /* ACTIVE (lebih bagus & kontras) */
-    .shokaido-nav-active {
-        background: linear-gradient(135deg, #b91c1c 0%, #7f1d1d 55%, #450a0a 100%);
-        color: #fff !important;
-        border-color: rgba(220, 38, 38, 0.55) !important;
-        box-shadow:
-            0 16px 32px rgba(127, 29, 29, 0.28),
-            inset 0 0 0 1px rgba(255, 255, 255, 0.06);
-    }
-
-    .shokaido-nav-active svg {
-        color: #fff !important;
-    }
-
-    .shokaido-nav-active .nav-label {
-        color: #fff !important;
-        opacity: 1 !important;
-    }
-
-    /* Inactive */
-    .nav-idle {
-        background: rgba(15, 23, 42, 0.35);
-        border-color: rgba(255, 255, 255, 0.10);
-        color: rgba(226, 232, 240, 0.90);
-    }
-
-    .nav-idle .nav-label {
-        color: rgba(226, 232, 240, 0.82);
-    }
-
-    .nav-idle svg {
-        color: rgba(226, 232, 240, 0.92);
-    }
-
-    /* Indicator gold kecil */
-    .nav-indicator {
-        height: 3px;
-        border-radius: 999px;
-        background: linear-gradient(to right, #bf953f, #fcf6ba, #b38728);
-        box-shadow: 0 6px 18px rgba(191, 149, 63, 0.25);
-    }
-
-    /* Floating menu button safe */
-    .mobile-fab-bottom {
-        bottom: calc(18px + env(safe-area-inset-bottom));
-    }
-
-    /* Tap feedback */
-    .tap-press:active {
-        transform: scale(0.96);
-    }
-</style>
-
-<nav x-data="{ openMenu: false, openSystem: false }"
-    class="bg-slate-900 text-white sticky top-0 z-50 border-b border-[#bf953f]/20 shadow-lg shadow-red-900/5">
+<nav x-data="{ openMenu: false, openSystem: false, openUser: false }"
+    class="bg-slate-900 text-white sticky top-0 z-50 border-b border-slate-800 shadow-sm">
 
     {{-- TOP BAR --}}
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
 
-            {{-- Logo --}}
-            <div class="flex items-center min-w-0">
-                <a href="{{ $homeHref }}" class="flex items-center gap-3 group active:scale-95 transition-transform">
-                    <img src="{{ asset('images/logo.png') }}" alt="Logo"
-                        class="h-9 sm:h-10 w-auto drop-shadow-sm group-hover:drop-shadow-md transition-all">
-
+            {{-- Brand Logo --}}
+            <div class="flex items-center gap-6 min-w-0">
+                <a href="{{ $homeHref }}" class="flex items-center gap-3 group transition-opacity hover:opacity-95">
+                    <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-9 w-auto object-contain">
                     <div class="flex flex-col min-w-0">
-                        <span
-                            class="font-black tracking-tighter text-[13px] sm:text-base leading-none uppercase italic">
-                            SHOKAIDO<span class="gold-gradient-text">.OS</span>
+                        <span class="font-bold tracking-tight text-base leading-none text-white flex items-center gap-1">
+                            SHOKAIDO<span class="text-red-500 font-extrabold">.OS</span>
                         </span>
-                        <span
-                            class="text-[6px] sm:text-[8px] font-bold text-red-600 uppercase tracking-[0.14em] leading-tight mt-0.5">
+                        <span class="text-[10px] font-medium text-slate-400 tracking-wide mt-1">
                             Shotokan Kandaga Indonesia
                         </span>
                     </div>
                 </a>
-            </div>
 
-            {{-- DESKTOP MENU --}}
-            <div class="hidden sm:flex items-center gap-1.5">
-                <a href="{{ $homeHref }}"
-                    class="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border-2
-                    {{ $activeDashboard ? 'shokaido-nav-active' : 'border-white/10 text-slate-200 hover:bg-white/5' }}">
-                    Dashboard
-                </a>
-
-                @if ($isStruktural)
-                    <a href="{{ route('admin.officials.index') }}"
-                        class="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border-2
-                        {{ $activeOfficials ? 'shokaido-nav-active' : 'border-white/10 text-slate-200 hover:bg-white/5' }}">
-                        Pengurus
+                {{-- DESKTOP MENU --}}
+                <div class="hidden md:flex items-center gap-1 ml-4 pl-4 border-l border-slate-800">
+                    <a href="{{ $homeHref }}"
+                        class="px-3.5 py-2 rounded-lg text-xs font-medium transition-all inline-flex items-center gap-2
+                        {{ $activeDashboard ? 'bg-slate-800 text-white font-semibold shadow-sm border border-slate-700/70' : 'text-slate-300 hover:text-white hover:bg-slate-800/60' }}">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                        </svg>
+                        Dashboard
                     </a>
 
-                    <a href="{{ route('admin.dojos.index') }}"
-                        class="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border-2
-                        {{ $activeDojos ? 'shokaido-nav-active' : 'border-white/10 text-slate-200 hover:bg-white/5' }}">
-                        Dojo
-                    </a>
-                @endif
+                    @if ($isStruktural)
+                        <a href="{{ route('admin.officials.index') }}"
+                            class="px-3.5 py-2 rounded-lg text-xs font-medium transition-all inline-flex items-center gap-2
+                            {{ $activeOfficials ? 'bg-slate-800 text-white font-semibold shadow-sm border border-slate-700/70' : 'text-slate-300 hover:text-white hover:bg-slate-800/60' }}">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                            Pengurus
+                        </a>
 
-                @if ($isAdmin)
-                    <a href="{{ route('admin.exams.index') }}"
-                        class="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border-2
-                        {{ $activeExams ? 'shokaido-nav-active' : 'border-white/10 text-slate-200 hover:bg-white/5' }}">
-                        <span class="inline-flex items-center gap-2">
-                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                        <a href="{{ route('admin.dojos.index') }}"
+                            class="px-3.5 py-2 rounded-lg text-xs font-medium transition-all inline-flex items-center gap-2
+                            {{ $activeDojos ? 'bg-slate-800 text-white font-semibold shadow-sm border border-slate-700/70' : 'text-slate-300 hover:text-white hover:bg-slate-800/60' }}">
+                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            Dojo
+                        </a>
+                    @endif
+
+                    @if ($isAdmin)
+                        <a href="{{ route('admin.exams.index') }}"
+                            class="px-3.5 py-2 rounded-lg text-xs font-medium transition-all inline-flex items-center gap-2
+                            {{ $activeExams ? 'bg-slate-800 text-white font-semibold shadow-sm border border-slate-700/70' : 'text-slate-300 hover:text-white hover:bg-slate-800/60' }}">
+                            <svg class="w-4 h-4 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
                                 <path d="M2,11L12,16L22,11L12,6L2,11M12,18L2,13V15L12,20L22,15V13L12,18Z" />
                             </svg>
                             Ujian
-                        </span>
-                    </a>
-                @endif
+                        </a>
+                    @endif
 
-                @if ($isSistemAdmin)
-                    <div class="relative" x-data="{ open: false }">
-                        <button @click="open = !open"
-                            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all border-2
-                            {{ $activeSystem ? 'shokaido-nav-active' : 'border-white/10 text-slate-200 hover:bg-white/5' }}">
-                            Sistem
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="square" stroke-linejoin="square" stroke-width="3"
-                                    d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
+                    @if ($isSistemAdmin)
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open"
+                                class="px-3.5 py-2 rounded-lg text-xs font-medium transition-all inline-flex items-center gap-1.5
+                                {{ $activeSystem ? 'bg-slate-800 text-white font-semibold shadow-sm border border-slate-700/70' : 'text-slate-300 hover:text-white hover:bg-slate-800/60' }}">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Sistem
+                                <svg class="w-3.5 h-3.5 text-slate-400 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
 
-                        <div x-show="open" x-cloak @click.outside="open = false"
-                            class="absolute left-0 mt-2 w-64 bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-                            <div class="p-2">
-                                <div
-                                    class="px-3 py-2 text-[9px] font-black uppercase tracking-[0.3em] text-red-700 opacity-80">
-                                    Core Settings
+                            <div x-show="open" x-cloak @click.outside="open = false"
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                class="absolute left-0 mt-2 w-60 bg-white text-slate-800 rounded-xl shadow-lg border border-slate-200/90 py-1.5 z-50">
+                                
+                                <div class="px-3.5 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                                    Pengaturan Master
                                 </div>
 
                                 <a href="{{ route('admin.users.index') }}"
-                                    class="block px-3 py-2 rounded-xl text-xs font-black uppercase tracking-tight
-                                    {{ $activeUsers ? 'bg-red-50 text-red-700' : 'hover:bg-slate-50' }}">
-                                    User Management
+                                    class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium transition-colors
+                                    {{ $activeUsers ? 'bg-red-50 text-red-700 font-semibold' : 'text-slate-700 hover:bg-slate-50' }}">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    Manajemen User
                                 </a>
 
                                 <a href="{{ route('admin.exams.fees.index') }}"
-                                    class="block px-3 py-2 rounded-xl text-xs font-black uppercase tracking-tight
-                                    {{ $activeExamFees ? 'bg-red-50 text-red-700' : 'hover:bg-slate-50' }}">
+                                    class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium transition-colors
+                                    {{ $activeExamFees ? 'bg-red-50 text-red-700 font-semibold' : 'text-slate-700 hover:bg-slate-50' }}">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z" />
+                                    </svg>
                                     Biaya Ujian
                                 </a>
 
                                 <a href="{{ route('admin.fees.index') }}"
-                                    class="block px-3 py-2 rounded-xl text-xs font-black uppercase tracking-tight
-                                    {{ $activeFees ? 'bg-red-50 text-red-700' : 'hover:bg-slate-50' }}">
+                                    class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium transition-colors
+                                    {{ $activeFees ? 'bg-red-50 text-red-700 font-semibold' : 'text-slate-700 hover:bg-slate-50' }}">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
                                     Konfigurasi Iuran
                                 </a>
 
                                 @if ($hasRole('pb'))
-                                    <div class="my-2 border-t border-slate-100"></div>
+                                    <div class="my-1 border-t border-slate-100"></div>
                                     <a href="{{ route('admin.provinces.index') }}"
-                                        class="block px-3 py-2 rounded-xl text-xs font-black uppercase tracking-tight
-                                        {{ $activeProv ? 'bg-red-50 text-red-700' : 'hover:bg-slate-50' }}">
+                                        class="flex items-center gap-2.5 px-3.5 py-2 text-xs font-medium transition-colors
+                                        {{ $activeProv ? 'bg-red-50 text-red-700 font-semibold' : 'text-slate-700 hover:bg-slate-50' }}">
+                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
                                         Wilayah / Pengprov
                                     </a>
                                 @endif
                             </div>
                         </div>
-                    </div>
-                @endif
+                    @endif
+                </div>
             </div>
 
-            {{-- DESKTOP USER --}}
-            <div class="hidden sm:flex items-center">
+            {{-- Right Section: User Profile --}}
+            <div class="hidden md:flex items-center">
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open"
-                        class="group flex items-center gap-3 px-3 py-1.5 rounded-2xl border-2 border-white/10 hover:border-red-600/30 hover:bg-white/5 transition-all">
-                        <div class="flex flex-col text-right">
-                            <span
-                                class="text-xs font-black uppercase tracking-tight leading-none">{{ $u->name }}</span>
-                            <div class="flex flex-wrap justify-end gap-1 mt-1">
-                                @foreach ($userRoles as $r)
-                                    <span
-                                        class="text-[7px] uppercase font-black text-white bg-red-600 px-1.5 py-0.5 rounded shadow-sm">
-                                        {{ str_replace('_', ' ', $r) }}
-                                    </span>
-                                @endforeach
-                            </div>
-                        </div>
-                        <div
-                            class="h-10 w-10 rounded-xl bg-gradient-to-br from-slate-800 to-black flex items-center justify-center text-[#bf953f] border border-[#bf953f]/30 font-black text-sm shadow-md group-hover:scale-105 transition-transform">
+                        class="flex items-center gap-3 px-3 py-1.5 rounded-lg border border-slate-800 hover:bg-slate-800/80 transition-all text-left">
+                        <div class="h-8 w-8 rounded-full bg-slate-800 border border-slate-700 text-slate-200 flex items-center justify-center font-bold text-xs">
                             {{ strtoupper(substr($u->name, 0, 1)) }}
                         </div>
+                        <div class="flex flex-col">
+                            <span class="text-xs font-semibold text-white leading-tight">{{ $u->name }}</span>
+                            <span class="text-[10px] text-slate-400 font-normal uppercase mt-0.5">
+                                {{ $roleLabel }}
+                            </span>
+                        </div>
+                        <svg class="w-3.5 h-3.5 text-slate-400 ml-1 transition-transform" :class="{ 'rotate-180': open }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
                     </button>
 
                     <div x-show="open" x-cloak @click.outside="open = false"
-                        class="absolute right-0 mt-2 w-72 bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-                        <div class="p-2">
-                            <div class="px-3 py-3 bg-slate-50 rounded-xl border border-slate-100 mb-2">
-                                <p class="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400">Account</p>
-                                <p class="text-[11px] font-bold text-slate-700 truncate mt-1">{{ $u->email }}</p>
-                            </div>
+                        x-transition:enter="transition ease-out duration-100"
+                        x-transition:enter-start="transform opacity-0 scale-95"
+                        x-transition:enter-end="transform opacity-100 scale-100"
+                        x-transition:leave="transition ease-in duration-75"
+                        x-transition:leave-start="transform opacity-100 scale-100"
+                        x-transition:leave-end="transform opacity-0 scale-95"
+                        class="absolute right-0 mt-2 w-64 bg-white text-slate-800 rounded-xl shadow-lg border border-slate-200/90 py-1.5 z-50">
+                        
+                        <div class="px-4 py-2.5 border-b border-slate-100">
+                            <p class="text-[11px] font-semibold text-slate-900 truncate">{{ $u->name }}</p>
+                            <p class="text-xs text-slate-500 truncate mt-0.5">{{ $u->email }}</p>
+                        </div>
 
+                        <div class="py-1">
                             <a href="{{ route('profile.edit') }}"
-                                class="block px-3 py-2 rounded-xl text-xs font-black uppercase tracking-tight hover:bg-slate-50">
-                                Pengaturan Profil
+                                class="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors">
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                                Profil Saya
                             </a>
 
-                            <form method="POST" action="{{ route('logout') }}" class="mt-1">
+                            <form method="POST" action="{{ route('logout') }}">
                                 @csrf
                                 <button type="submit"
-                                    class="w-full text-left px-3 py-2 rounded-xl text-xs font-black uppercase tracking-tight text-red-700 hover:bg-red-50">
+                                    class="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors text-left">
+                                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                    </svg>
                                     Keluar Sistem
                                 </button>
                             </form>
@@ -257,254 +232,106 @@
                 </div>
             </div>
 
+            {{-- MOBILE MENU BUTTON --}}
+            <div class="flex md:hidden items-center">
+                <button type="button" @click="openMenu = !openMenu"
+                    class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none transition-colors"
+                    aria-label="Toggle menu">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path x-show="!openMenu" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path x-show="openMenu" x-cloak stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
         </div>
     </div>
 
-    {{-- MOBILE FLOATING MENU BUTTON (CENTER) --}}
-    <div class="sm:hidden" x-cloak>
-        <button type="button" @click="openMenu = true"
-            class="fixed left-1/2 -translate-x-1/2 mobile-fab-bottom z-[70]
-               inline-flex items-center justify-center gap-2
-               h-14 px-6 rounded-[999px]
-               bg-slate-900/95 backdrop-blur
-               text-white border border-white/10
-               shadow-[0_16px_40px_rgba(2,6,23,0.35)]
-               tap-press transition-all"
-            aria-label="Buka Menu">
-            <span class="relative flex h-2.5 w-2.5">
-                <span
-                    class="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-40 animate-ping"></span>
-                <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400"></span>
-            </span>
+    {{-- MOBILE DROPDOWN MENU --}}
+    <div x-show="openMenu" x-cloak
+        x-transition:enter="transition ease-out duration-150"
+        x-transition:enter-start="opacity-0 -translate-y-2"
+        x-transition:enter-end="opacity-100 translate-y-0"
+        x-transition:leave="transition ease-in duration-100"
+        x-transition:leave-start="opacity-100 translate-y-0"
+        x-transition:leave-end="opacity-0 -translate-y-2"
+        class="md:hidden border-t border-slate-800 bg-slate-900 px-4 pt-3 pb-5 space-y-1">
+        
+        <div class="px-3 py-2 border-b border-slate-800 mb-2">
+            <p class="text-xs font-semibold text-white">{{ $u->name }}</p>
+            <p class="text-[11px] text-slate-400 uppercase tracking-wide mt-0.5">{{ $roleLabel }}</p>
+        </div>
 
-            <span class="text-[10px] font-black uppercase tracking-[0.22em]">Menu</span>
+        <a href="{{ $homeHref }}"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium
+            {{ $activeDashboard ? 'bg-slate-800 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800/60' }}">
+            Dashboard
+        </a>
 
-            <span class="w-px h-6 bg-white/10"></span>
+        @if ($isStruktural)
+            <a href="{{ route('admin.officials.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium
+                {{ $activeOfficials ? 'bg-slate-800 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800/60' }}">
+                Pengurus
+            </a>
 
-            <svg class="w-5 h-5 text-[#bf953f]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z" />
-            </svg>
-        </button>
-    </div>
+            <a href="{{ route('admin.dojos.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium
+                {{ $activeDojos ? 'bg-slate-800 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800/60' }}">
+                Dojo
+            </a>
+        @endif
 
-    {{-- MOBILE MENU SHEET --}}
-    <div class="sm:hidden" x-cloak>
-        <div x-show="openMenu" class="fixed inset-0 z-[80]">
-            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="openMenu = false"></div>
+        @if ($isAdmin)
+            <a href="{{ route('admin.exams.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-medium
+                {{ $activeExams ? 'bg-slate-800 text-white font-semibold' : 'text-slate-300 hover:bg-slate-800/60' }}">
+                Ujian
+            </a>
+        @endif
 
-            <div class="absolute inset-x-0 bottom-0 bg-white rounded-t-[2.5rem] shadow-2xl overflow-hidden"
-                style="padding-bottom: env(safe-area-inset-bottom);">
-
-                {{-- header sheet --}}
-                <div class="px-5 pt-5 pb-4">
-                    <div class="flex items-start justify-between gap-4">
-                        <div class="min-w-0">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.22em]">
-                                Hi, {{ $u->name }}!
-                            </p>
-                            <h3 class="mt-1 text-xl font-black text-slate-900 uppercase tracking-tight">
-                                Fitur Pilihan Kamu
-                            </h3>
-                            <p class="mt-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-                                {{ strtoupper(str_replace('_', ' ', $u->role ?? 'member')) }} MODE
-                            </p>
-                        </div>
-
-                        <button type="button" @click="openMenu = false"
-                            class="p-2 rounded-2xl border-2 border-slate-200 text-slate-700 hover:bg-slate-50 active:scale-95">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="square" stroke-linejoin="square" stroke-width="3"
-                                    d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+        @if ($isSistemAdmin)
+            <div class="pt-2 border-t border-slate-800 mt-2">
+                <div class="px-3 py-1.5 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                    Sistem
                 </div>
-
-                {{-- grid menu ala mobile banking --}}
-                <div class="px-5 pb-5">
-                    <div class="grid grid-cols-4 gap-4">
-
-                        {{-- HOME --}}
-                        <a href="{{ $homeHref }}"
-                            class="group flex flex-col items-center gap-2 tap-press transition-transform">
-                            <div
-                                class="w-14 h-14 rounded-2xl border flex items-center justify-center transition-all
-                                {{ $activeDashboard ? 'shokaido-nav-active' : 'bg-slate-100 border-slate-200 text-slate-700 group-hover:bg-slate-900 group-hover:text-white' }}">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="square" stroke-linejoin="square" stroke-width="2.5"
-                                        d="M3 10.5L12 3l9 7.5V21a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 21v-10.5z" />
-                                    <path stroke-linecap="square" stroke-linejoin="square" stroke-width="2.5"
-                                        d="M9 22V12h6v10" />
-                                </svg>
-                            </div>
-                            <span class="text-[10px] font-black text-slate-900">Home</span>
-                            @if ($activeDashboard)
-                                <span class="w-10 nav-indicator"></span>
-                            @endif
-                        </a>
-
-                        {{-- PENGURUS --}}
-                        @if ($isStruktural)
-                            <a href="{{ route('admin.officials.index') }}"
-                                class="group flex flex-col items-center gap-2 tap-press transition-transform">
-                                <div
-                                    class="w-14 h-14 rounded-2xl border flex items-center justify-center transition-all
-                                    {{ $activeOfficials ? 'shokaido-nav-active' : 'bg-slate-100 border-slate-200 text-slate-700 group-hover:bg-slate-900 group-hover:text-white' }}">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="square" stroke-linejoin="square" stroke-width="2.5"
-                                            d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                                    </svg>
-                                </div>
-                                <span class="text-[10px] font-black text-slate-900">Pengurus</span>
-                                @if ($activeOfficials)
-                                    <span class="w-10 nav-indicator"></span>
-                                @endif
-                            </a>
-                        @else
-                            <div class="flex flex-col items-center gap-2 opacity-40">
-                                <div
-                                    class="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="square" stroke-linejoin="square" stroke-width="2.5"
-                                            d="M17 20h5v-2a3 3 0 0 0-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 0 1 5.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 0 1 9.288 0M15 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0z" />
-                                    </svg>
-                                </div>
-                                <span class="text-[10px] font-black text-slate-900">Pengurus</span>
-                            </div>
-                        @endif
-
-                        {{-- DOJO --}}
-                        <a href="{{ $isAdmin ? route('admin.dojos.index') : $homeHref }}"
-                            class="group flex flex-col items-center gap-2 tap-press transition-transform">
-                            <div
-                                class="w-14 h-14 rounded-2xl border flex items-center justify-center transition-all
-                                {{ $activeDojos ? 'shokaido-nav-active' : 'bg-slate-100 border-slate-200 text-slate-700 group-hover:bg-slate-900 group-hover:text-white' }}">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="square" stroke-linejoin="square" stroke-width="2.5"
-                                        d="M3 21V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v16" />
-                                    <path stroke-linecap="square" stroke-linejoin="square" stroke-width="2.5"
-                                        d="M7 21V11h10v10" />
-                                </svg>
-                            </div>
-                            <span class="text-[10px] font-black text-slate-900">Dojo</span>
-                            @if ($activeDojos)
-                                <span class="w-10 nav-indicator"></span>
-                            @endif
-                        </a>
-
-                        {{-- UJIAN --}}
-                        @if ($isAdmin)
-                            <a href="{{ route('admin.exams.index') }}"
-                                class="group flex flex-col items-center gap-2 tap-press transition-transform">
-                                <div
-                                    class="w-14 h-14 rounded-2xl border flex items-center justify-center transition-all
-                                    {{ $activeExams ? 'shokaido-nav-active' : 'bg-slate-100 border-slate-200 text-slate-700 group-hover:bg-slate-900 group-hover:text-white' }}">
-                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M2,11L12,16L22,11L12,6L2,11M12,18L2,13V15L12,20L22,15V13L12,18Z" />
-                                    </svg>
-                                </div>
-                                <span class="text-[10px] font-black text-slate-900">Ujian</span>
-                                @if ($activeExams)
-                                    <span class="w-10 nav-indicator"></span>
-                                @endif
-                            </a>
-                        @else
-                            <div class="flex flex-col items-center gap-2 opacity-40">
-                                <div
-                                    class="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700">
-                                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                        <path d="M2,11L12,16L22,11L12,6L2,11M12,18L2,13V15L12,20L22,15V13L12,18Z" />
-                                    </svg>
-                                </div>
-                                <span class="text-[10px] font-black text-slate-900">Ujian</span>
-                            </div>
-                        @endif
-
-                        {{-- PROFIL --}}
-                        <a href="{{ route('profile.edit') }}"
-                            class="group flex flex-col items-center gap-2 tap-press transition-transform">
-                            <div
-                                class="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 group-hover:bg-slate-900 group-hover:text-white transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="square" stroke-linejoin="square" stroke-width="2.5"
-                                        d="M20 21a8 8 0 1 0-16 0" />
-                                    <path stroke-linecap="square" stroke-linejoin="square" stroke-width="2.5"
-                                        d="M12 13a4 4 0 1 0-4-4 4 4 0 0 0 4 4z" />
-                                </svg>
-                            </div>
-                            <span class="text-[10px] font-black text-slate-900">Profil</span>
-                        </a>
-
-                        {{-- SISTEM --}}
-                        <button type="button" @click="openSystem = !openSystem"
-                            class="group flex flex-col items-center gap-2 tap-press transition-transform">
-                            <div
-                                class="w-14 h-14 rounded-2xl bg-white border-2 border-slate-200 flex items-center justify-center text-slate-800 group-hover:bg-slate-50 transition-all">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="square" stroke-linejoin="square" stroke-width="2.5"
-                                        d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z" />
-                                    <path stroke-linecap="square" stroke-linejoin="square" stroke-width="2.5"
-                                        d="M19.4 15a7.97 7.97 0 0 0 .1-1 7.97 7.97 0 0 0-.1-1l2-1.6-2-3.4-2.4 1a8.3 8.3 0 0 0-1.7-1L15 3h-6l-.3 2.9a8.3 8.3 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.6a7.97 7.97 0 0 0-.1 1c0 .34.03.67.1 1l-2 1.6 2 3.4 2.4-1c.52.42 1.09.77 1.7 1L9 21h6l.3-2.9c.61-.23 1.18-.58 1.7-1l2.4 1 2-3.4-2-1.6z" />
-                                </svg>
-                            </div>
-                            <span class="text-[10px] font-black text-slate-900">Sistem</span>
-                            @if ($activeSystem)
-                                <span class="w-10 nav-indicator"></span>
-                            @endif
-                        </button>
-
-                        {{-- LOGOUT --}}
-                        <form method="POST" action="{{ route('logout') }}" class="col-span-2">
-                            @csrf
-                            <button type="submit"
-                                class="w-full h-14 rounded-2xl bg-red-600 border-b-4 border-red-800 text-white text-[10px] font-black uppercase tracking-widest active:translate-y-1">
-                                Logout
-                            </button>
-                        </form>
-                    </div>
-
-                    {{-- sistem links --}}
-                    <div x-show="openSystem" x-transition x-cloak class="mt-5">
-                        <div class="flex items-center justify-between">
-                            <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.22em]">Sistem</p>
-                            <button type="button" @click="openSystem = false"
-                                class="text-[10px] font-black uppercase tracking-widest text-red-600">
-                                Tutup
-                            </button>
-                        </div>
-
-                        <div class="mt-3 grid grid-cols-1 gap-2">
-                            @if ($isSistemAdmin)
-                                <a href="{{ route('admin.users.index') }}"
-                                    class="px-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest">
-                                    User Management
-                                </a>
-                                <a href="{{ route('admin.exams.fees.index') }}"
-                                    class="px-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest">
-                                    Biaya Ujian
-                                </a>
-                                <a href="{{ route('admin.fees.index') }}"
-                                    class="px-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest">
-                                    Konfigurasi Iuran
-                                </a>
-                                @if ($hasRole('pb'))
-                                    <a href="{{ route('admin.provinces.index') }}"
-                                        class="px-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest">
-                                        Wilayah / Pengprov
-                                    </a>
-                                @endif
-                            @else
-                                <div
-                                    class="px-4 py-4 rounded-2xl bg-slate-50 border border-slate-200 text-slate-500 text-[10px] font-black uppercase tracking-widest">
-                                    Tidak ada akses sistem
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                <div class="h-3"></div>
+                <a href="{{ route('admin.users.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium
+                    {{ $activeUsers ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/60' }}">
+                    Manajemen User
+                </a>
+                <a href="{{ route('admin.exams.fees.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium
+                    {{ $activeExamFees ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/60' }}">
+                    Biaya Ujian
+                </a>
+                <a href="{{ route('admin.fees.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium
+                    {{ $activeFees ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/60' }}">
+                    Konfigurasi Iuran
+                </a>
+                @if ($hasRole('pb'))
+                    <a href="{{ route('admin.provinces.index') }}"
+                        class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium
+                        {{ $activeProv ? 'bg-slate-800 text-white' : 'text-slate-300 hover:bg-slate-800/60' }}">
+                        Wilayah / Pengprov
+                    </a>
+                @endif
             </div>
+        @endif
+
+        <div class="pt-3 border-t border-slate-800 mt-2 flex flex-col gap-1">
+            <a href="{{ route('profile.edit') }}"
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-slate-300 hover:bg-slate-800/60">
+                Profil Saya
+            </a>
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit"
+                    class="w-full text-left flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-medium text-red-400 hover:bg-red-500/10">
+                    Keluar Sistem
+                </button>
+            </form>
         </div>
     </div>
 </nav>

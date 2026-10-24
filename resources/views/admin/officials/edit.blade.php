@@ -1,44 +1,37 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
-            <div class="min-w-0">
-                <h2 class="font-black text-xl sm:text-3xl text-slate-900 leading-tight tracking-tighter uppercase">
-                    {{ __('Edit') }} <span class="text-slate-900">Pengurus</span>
-                    <span class="text-red-600">•</span>
-                </h2>
-                <p class="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mt-1">
-                    Modifikasi Data: <span class="text-slate-600">{{ $official->name }}</span>
+            <div>
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+                    Edit Data Pengurus
+                </h1>
+                <p class="text-xs text-slate-500 mt-0.5">
+                    Modifikasi data: <span class="font-semibold text-slate-700">{{ $official->name }}</span>
                 </p>
             </div>
-
-            {{-- Chip mobile --}}
-            <div
-                class="sm:hidden shrink-0 inline-flex items-center gap-2 bg-slate-900 text-white px-3 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest">
-                <span class="w-2 h-2 rounded-full bg-red-600"></span>
-                EDIT
-            </div>
+            <a href="{{ route('admin.officials.index') }}"
+                class="hidden sm:inline-flex items-center px-3.5 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-colors">
+                Kembali
+            </a>
         </div>
     </x-slot>
 
-    <div class="py-8 sm:py-10 bg-slate-50 min-h-screen">
+    <div class="py-6 sm:py-8">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-            {{-- Pesan Error Validasi (merah hanya untuk error) --}}
+            {{-- Pesan Error Validasi --}}
             @if ($errors->any())
-                <div class="mb-6 sm:mb-8 p-4 sm:p-5 bg-white border-l-4 border-red-600 rounded-2xl shadow-sm">
-                    <div class="flex gap-3 sm:gap-4">
-                        <div class="bg-red-100 p-2 rounded-xl">
-                            <svg class="h-5 w-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="square" stroke-linejoin="square" stroke-width="3"
-                                    d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </div>
+                <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                    <div class="flex gap-3">
+                        <svg class="h-5 w-5 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
                         <div class="min-w-0">
-                            <h3 class="text-xs font-black text-red-800 uppercase tracking-widest">Validasi Gagal</h3>
-                            <ul
-                                class="mt-1 list-disc list-inside text-[11px] font-bold text-red-600/80 uppercase tracking-tight">
+                            <h3 class="text-xs font-bold text-red-800">Terdapat kesalahan pada isian form:</h3>
+                            <ul class="mt-1 list-disc list-inside text-xs text-red-700 space-y-0.5">
                                 @foreach ($errors->all() as $error)
-                                    <li class="break-words">{{ $error }}</li>
+                                    <li>{{ $error }}</li>
                                 @endforeach
                             </ul>
                         </div>
@@ -46,92 +39,50 @@
                 </div>
             @endif
 
-            <div
-                class="bg-white rounded-[2rem] border-2 border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
-                {{-- Header Form (slate dominan; merah aksen tipis) --}}
-                <div class="relative">
-                    <div class="bg-gradient-to-r from-slate-950 via-slate-900 to-slate-900 px-5 sm:px-7 md:px-8 py-5">
-                        <div class="flex items-start sm:items-center justify-between gap-4">
-                            <div class="min-w-0">
-                                <h3 class="text-white text-[10px] sm:text-xs font-black uppercase tracking-[0.2em]">
-                                    Formulir Pembaruan Data
-                                </h3>
-                                <p class="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                    Profil • Wilayah • Legalitas
-                                </p>
-                            </div>
-
-                            <div class="text-right shrink-0">
-                                <span
-                                    class="inline-flex items-center gap-2 bg-white/5 border border-white/10 text-slate-200 px-3 sm:px-4 py-2 rounded-2xl text-[9px] font-black uppercase tracking-widest">
-                                    <span class="w-2 h-2 rounded-full bg-red-600"></span>
-                                    ID: #{{ $official->id }}
-                                </span>
-                            </div>
-                        </div>
+            <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+                {{-- Header Form --}}
+                <div class="px-6 py-5 border-b border-slate-200/80 flex items-center justify-between gap-4">
+                    <div>
+                        <h2 class="text-sm font-bold text-slate-900">Formulir Pembaruan Pengurus</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">Perbarui profil pengurus, jabatan, wilayah tugas, atau SK</p>
                     </div>
-
-                    <div class="h-1 bg-gradient-to-r from-slate-900 via-slate-700 to-red-600/60"></div>
-
-                    <div class="pointer-events-none absolute inset-0 opacity-10"
-                        style="background: radial-gradient(520px 180px at 15% 30%, rgba(220,38,38,0.22), transparent 60%);">
-                    </div>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
+                        ID: #{{ $official->id }}
+                    </span>
                 </div>
 
-                <form action="{{ route('admin.officials.update', $official->id) }}" method="POST"
-                    class="px-5 sm:px-7 md:px-8 pt-5 sm:pt-6 pb-6 sm:pb-8 space-y-6 sm:space-y-8">
+                <form action="{{ route('admin.officials.update', $official->id) }}" method="POST" class="p-6 sm:p-8 space-y-8">
                     @csrf
                     @method('PUT')
 
                     {{-- Section 1: Profil & Jabatan --}}
-                    <section class="rounded-[1.5rem] border-2 border-slate-100 bg-white p-4 sm:p-6">
-                        <div class="flex items-center justify-between mb-4 sm:mb-5">
-                            <h4
-                                class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-900 flex items-center gap-3">
-                                <span
-                                    class="w-8 h-8 bg-slate-100 flex items-center justify-center rounded-xl border-2 border-slate-200">
-                                    01
-                                </span>
-                                Profil Pengurus
-                            </h4>
-
-                            <span
-                                class="hidden sm:inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Data Identitas
-                            </span>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+                            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">1</span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Profil & Jabatan</h3>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div class="md:col-span-2">
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                    Nama Lengkap & Gelar
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Nama Lengkap & Gelar <span class="text-red-500">*</span>
                                 </label>
                                 <input type="text" name="name" value="{{ old('name', $official->name) }}"
-                                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all uppercase"
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
                                     required placeholder="Contoh: Dr. H. Ahmad Fauzi, M.Pd">
                             </div>
 
                             <div>
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                    Jabatan
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Jabatan Organisasi <span class="text-red-500">*</span>
                                 </label>
-                                <select name="position"
-                                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all uppercase"
-                                    required>
+                                <select name="position" required
+                                    class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all">
                                     @php
-                                        $jabatan = [
-                                            'Ketua Umum',
-                                            'Sekretaris',
-                                            'Bendahara',
-                                            'Ketua Bidang Prestasi',
-                                            'Anggota',
-                                        ];
+                                        $jabatan = ['Ketua Umum', 'Sekretaris', 'Bendahara', 'Ketua Bidang Prestasi', 'Anggota'];
                                     @endphp
                                     @foreach ($jabatan as $j)
-                                        <option value="{{ $j }}"
-                                            {{ old('position', $official->position) == $j ? 'selected' : '' }}>
+                                        <option value="{{ $j }}" {{ old('position', $official->position) == $j ? 'selected' : '' }}>
                                             {{ $j }}
                                         </option>
                                     @endforeach
@@ -139,103 +90,75 @@
                             </div>
 
                             <div>
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                                     Nomor WhatsApp
                                 </label>
                                 <div class="relative">
-                                    <span
-                                        class="absolute left-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                                        +62
-                                    </span>
-                                    <input type="text" name="phone_number"
-                                        value="{{ old('phone_number', $official->phone_number) }}"
-                                        class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 pl-14 pr-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all"
-                                        placeholder="812xxxx">
+                                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">+62</span>
+                                    <input type="text" name="phone_number" value="{{ old('phone_number', $official->phone_number) }}"
+                                        class="w-full h-10 pl-11 pr-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                        placeholder="812xxxxxxxx">
                                 </div>
-                                <p class="mt-2 text-[10px] text-slate-500 italic">
-                                    * Isi tanpa 0 di depan. Contoh: 812xxxx
-                                </p>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
                     {{-- Section 2: Wilayah Tugas --}}
-                    <section class="rounded-[1.5rem] border-2 border-slate-100 bg-slate-50 p-4 sm:p-6">
-                        <div class="flex items-center justify-between mb-4 sm:mb-5">
-                            <h4
-                                class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-900 flex items-center gap-3">
-                                <span
-                                    class="w-8 h-8 bg-white flex items-center justify-center rounded-xl border-2 border-slate-200 shadow-sm">
-                                    02
-                                </span>
-                                Cakupan Wilayah Tugas
-                            </h4>
-
-                            <span
-                                class="hidden sm:inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Scope
-                            </span>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+                            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">2</span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Cakupan Wilayah Tugas</h3>
                         </div>
 
-                        <div class="mb-5 sm:mb-6">
-                            <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">
-                                Tingkat Kepengurusan
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-2">
+                                Tingkat Kepengurusan <span class="text-red-500">*</span>
                             </label>
 
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 @if (auth()->user()->role === 'pb')
-                                    <label class="cursor-pointer">
-                                        <input type="radio" name="level" value="provinsi" class="peer sr-only"
-                                            {{ old('level', $official->level) === 'provinsi' ? 'checked' : '' }}
-                                            onchange="toggleWilayah(this.value)">
-                                        <div
-                                            class="px-5 py-4 rounded-2xl border-2 border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-700
-                                                   peer-checked:border-slate-900 peer-checked:bg-slate-50 transition-all">
-                                            Provinsi (Pengprov)
-                                            <p
-                                                class="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                                Yurisdiksi provinsi</p>
+                                    <label class="relative flex flex-col p-3.5 rounded-lg border border-slate-200 cursor-pointer hover:border-slate-300 transition-all">
+                                        <div class="flex items-center gap-2">
+                                            <input type="radio" name="level" value="provinsi"
+                                                class="text-red-600 focus:ring-red-500/20"
+                                                {{ old('level', $official->level) === 'provinsi' ? 'checked' : '' }}
+                                                onchange="toggleWilayah(this.value)">
+                                            <span class="text-xs font-semibold text-slate-800">Provinsi (Pengprov)</span>
                                         </div>
+                                        <span class="text-[11px] text-slate-400 ml-5 mt-0.5">Yurisdiksi tingkat daerah/provinsi</span>
                                     </label>
                                 @endif
 
-                                <label class="cursor-pointer">
-                                    <input type="radio" name="level" value="pengcab" class="peer sr-only"
-                                        {{ old('level', $official->level) === 'pengcab' ? 'checked' : '' }}
-                                        onchange="toggleWilayah(this.value)">
-                                    <div
-                                        class="px-5 py-4 rounded-2xl border-2 border-slate-200 bg-white text-[10px] font-black uppercase tracking-widest text-slate-700
-                                               peer-checked:border-slate-900 peer-checked:bg-slate-50 transition-all">
-                                        Kota/Kab (Pengcab)
-                                        <p class="mt-1 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                            Yurisdiksi kota/kab</p>
+                                <label class="relative flex flex-col p-3.5 rounded-lg border border-slate-200 cursor-pointer hover:border-slate-300 transition-all">
+                                    <div class="flex items-center gap-2">
+                                        <input type="radio" name="level" value="pengcab"
+                                            class="text-red-600 focus:ring-red-500/20"
+                                            {{ old('level', $official->level) === 'pengcab' ? 'checked' : '' }}
+                                            onchange="toggleWilayah(this.value)">
+                                        <span class="text-xs font-semibold text-slate-800">Kota / Kabupaten (Pengcab)</span>
                                     </div>
+                                    <span class="text-[11px] text-slate-400 ml-5 mt-0.5">Yurisdiksi cabang kota atau kabupaten</span>
                                 </label>
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                    Provinsi
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Provinsi <span class="text-red-500">*</span>
                                 </label>
 
                                 @if (auth()->user()->role === 'pengprov')
                                     <input type="hidden" name="province_id" value="{{ auth()->user()->province_id }}">
-                                    <div
-                                        class="w-full bg-white border-2 border-slate-200 rounded-2xl py-3 px-4 text-sm font-black text-slate-500 uppercase cursor-not-allowed">
+                                    <div class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 flex items-center">
                                         {{ auth()->user()->province->name }}
                                     </div>
                                 @else
-                                    <select name="province_id" id="province_id"
-                                        class="w-full bg-white border-2 border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all uppercase"
-                                        required>
+                                    <select name="province_id" id="province_id" required
+                                        class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all">
                                         <option value="">Pilih Provinsi</option>
                                         @foreach ($provinces as $p)
-                                            <option value="{{ $p->id }}"
-                                                {{ old('province_id', $official->province_id) == $p->id ? 'selected' : '' }}>
+                                            <option value="{{ $p->id }}" {{ old('province_id', $official->province_id) == $p->id ? 'selected' : '' }}>
                                                 {{ $p->name }}
                                             </option>
                                         @endforeach
@@ -243,108 +166,65 @@
                                 @endif
                             </div>
 
-                            <div id="city_container"
-                                class="{{ old('level', $official->level) === 'pengcab' ? '' : 'hidden' }}">
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                    Kota/Kabupaten
+                            <div id="city_container" class="{{ old('level', $official->level) === 'pengcab' ? '' : 'hidden' }}">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Kota / Kabupaten <span class="text-red-500">*</span>
                                 </label>
-
                                 <select name="city_id" id="city_id"
-                                    class="w-full bg-white border-2 border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all uppercase"
+                                    class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
                                     {{ old('level', $official->level) === 'pengcab' ? 'required' : '' }}>
                                     <option value="">Pilih Kota</option>
                                     @if ($official->level === 'pengcab')
                                         @foreach ($cities as $city)
-                                            <option value="{{ $city->id }}"
-                                                {{ old('city_id', $official->city_id) == $city->id ? 'selected' : '' }}>
+                                            <option value="{{ $city->id }}" {{ old('city_id', $official->city_id) == $city->id ? 'selected' : '' }}>
                                                 {{ $city->name }}
                                             </option>
                                         @endforeach
                                     @endif
                                 </select>
-
-                                <p class="mt-2 text-[10px] text-slate-500 italic">
-                                    * Wajib diisi jika tingkat kepengurusan Kota/Kab (Pengcab).
-                                </p>
                             </div>
                         </div>
-                    </section>
+                    </div>
 
                     {{-- Section 3: Legalitas SK --}}
-                    <section class="rounded-[1.5rem] border-2 border-slate-100 bg-white p-4 sm:p-6">
-                        <div class="flex items-center justify-between mb-4 sm:mb-5">
-                            <h4
-                                class="text-[10px] font-black uppercase tracking-[0.15em] text-slate-900 flex items-center gap-3">
-                                <span
-                                    class="w-8 h-8 bg-slate-100 flex items-center justify-center rounded-xl border-2 border-slate-200">
-                                    03
-                                </span>
-                                Legalitas SK
-                            </h4>
-
-                            <span
-                                class="hidden sm:inline-flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-slate-400">
-                                <span class="w-1.5 h-1.5 rounded-full bg-slate-300"></span> Masa Berlaku
-                            </span>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-2.5 pb-2 border-b border-slate-100">
+                            <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">3</span>
+                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">Legalitas SK</h3>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                                     Nomor SK
                                 </label>
-                                <input type="text" name="sk_number"
-                                    value="{{ old('sk_number', $official->sk_number) }}"
-                                    class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all uppercase"
+                                <input type="text" name="sk_number" value="{{ old('sk_number', $official->sk_number) }}"
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
                                     placeholder="SK/001/WIL/2026">
                             </div>
 
                             <div>
-                                <label
-                                    class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">
-                                    Masa Bakti Hingga <span class="text-red-600">*</span>
+                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
+                                    Masa Bakti Hingga <span class="text-red-500">*</span>
                                 </label>
-                                <input type="date" name="sk_expiry_date"
-                                    value="{{ old('sk_expiry_date', $official->sk_expiry_date) }}"
-                                    class="w-full bg-white border-2 border-slate-200 rounded-2xl py-3 px-4 text-sm font-bold focus:ring-0 focus:border-slate-900 transition-all"
+                                <input type="date" name="sk_expiry_date" value="{{ old('sk_expiry_date', $official->sk_expiry_date) }}"
+                                    class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
                                     required>
                             </div>
                         </div>
-
-                        <p class="mt-3 text-[10px] text-slate-500 italic">
-                            * Wajib diisi. Gunakan tanggal akhir masa berlaku SK.
-                        </p>
-                    </section>
-
-                    {{-- Mobile sticky actions --}}
-                    <div
-                        class="sm:hidden -mx-5 px-5 pt-4 pb-5 sticky bottom-0 bg-slate-50/95 backdrop-blur border-t border-slate-100">
-                        <div class="grid grid-cols-2 gap-3">
-                            <a href="{{ route('admin.officials.index') }}"
-                                class="inline-flex justify-center items-center bg-white border-2 border-slate-200 text-slate-500 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
-                                Batal
-                            </a>
-                            <button type="submit"
-                                class="inline-flex justify-center items-center bg-slate-900 text-white py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-600 transition-all border-b-4 border-slate-700 hover:border-red-800 active:translate-y-1">
-                                Simpan
-                            </button>
-                        </div>
                     </div>
 
-                    {{-- Desktop actions --}}
-                    <div class="hidden sm:flex justify-end gap-3 pt-6 border-t-2 border-slate-50">
+                    {{-- Actions --}}
+                    <div class="pt-5 border-t border-slate-100 flex items-center justify-end gap-3">
                         <a href="{{ route('admin.officials.index') }}"
-                            class="inline-flex justify-center items-center bg-white border-2 border-slate-200 text-slate-500 px-8 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all">
+                            class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
                             Batal
                         </a>
                         <button type="submit"
-                            class="inline-flex justify-center items-center bg-slate-900 text-white px-10 py-3 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-600 shadow-lg shadow-slate-200 transition-all border-b-4 border-slate-700 hover:border-red-800 active:translate-y-1">
-                            Simpan Perubahan
+                            class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white rounded-lg text-xs font-semibold shadow-sm transition-all inline-flex items-center gap-2">
+                            <span>Simpan Perubahan</span>
                         </button>
                     </div>
-
                 </form>
             </div>
         </div>

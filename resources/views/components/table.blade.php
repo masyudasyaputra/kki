@@ -1,38 +1,38 @@
 @props(['headers' => [], 'title' => '', 'subtitle' => ''])
 
-<div class="flex flex-col gap-4">
+<div class="flex flex-col gap-3">
     {{-- Toolbar Area --}}
     @if ($title || isset($action))
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 px-1">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
             <div>
                 @if ($title)
-                    <h3 class="text-sm font-black text-slate-800 uppercase tracking-widest">{{ $title }}</h3>
+                    <h3 class="text-base font-bold text-slate-900 tracking-tight">{{ $title }}</h3>
                 @endif
                 @if ($subtitle)
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mt-1">{{ $subtitle }}</p>
+                    <p class="text-xs text-slate-500 mt-0.5">{{ $subtitle }}</p>
                 @endif
             </div>
-            <div class="w-full md:w-auto">
+            <div class="w-full sm:w-auto">
                 {{ $action ?? '' }}
             </div>
         </div>
     @endif
 
     {{-- Table Container --}}
-    <div class="bg-white rounded-[1.5rem] border-2 border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden">
+    <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-100">
+            <table class="min-w-full divide-y divide-slate-200/80">
                 <thead>
-                    <tr class="bg-slate-900 text-white">
+                    <tr class="bg-slate-50/90 border-b border-slate-200/80">
                         @foreach ($headers as $header)
                             <th scope="col"
-                                class="px-8 py-5 {{ $header['align'] ?? 'text-left' }} text-[10px] font-black uppercase tracking-[0.2em] opacity-80">
+                                class="px-5 py-3.5 {{ $header['align'] ?? 'text-left' }} text-[11px] font-semibold text-slate-600 uppercase tracking-wider">
                                 {{ $header['label'] }}
                             </th>
                         @endforeach
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-100 bg-white">
                     {{ $slot }}
                 </tbody>
             </table>

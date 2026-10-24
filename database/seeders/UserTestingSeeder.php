@@ -4,81 +4,35 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class UserTestingSeeder extends Seeder
 {
     /**
-     * Jalankan seeder sesuai struktur tabel users di database.
+     * Kosongkan tabel user dan buat akun Super Admin baru dengan akses tertinggi.
      */
     public function run(): void
     {
-        $pass = Hash::make('password123');
+        // 1. Bersihkan seluruh user lama
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        User::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
-        // Data User sesuai dengan kolom dan role di database kamu
-        $users = [
-            [
-                'name' => 'Admin PB Pusat',
-                'email' => 'pb@test.com',
-                'password' => $pass,
-                'role' => 'pb',
-                'province_id' => null,
-                'city_id' => null,
-                'dojo_id' => null,
-            ],
-            [
-                'name' => 'Jelly (Pengprov)',
-                'email' => 'jelly@gmail.com',
-                'password' => $pass,
-                'role' => 'pengprov',
-                'province_id' => 5, // Mengacu pada ID yang sudah ada di DB kamu
-                'city_id' => null,
-                'dojo_id' => null,
-            ],
-            [
-                'name' => 'Nadia (Pengcab)',
-                'email' => 'nadia@gmail.com',
-                'password' => $pass,
-                'role' => 'pengcab',
-                'province_id' => 5,
-                'city_id' => 52,
-                'dojo_id' => null,
-            ],
-            [
-                'name' => 'Hendra (Admin Dojo)',
-                'email' => 'hendra@gmail.com',
-                'password' => $pass,
-                'role' => 'admin_dojo',
-                'province_id' => 5,
-                'city_id' => 52,
-                'dojo_id' => 3,
-            ],
-            [
-                'name' => 'Sensei Penguji',
-                'email' => 'penguji@test.com',
-                'password' => $pass,
-                'role' => 'penguji',
-                'province_id' => 5,
-                'city_id' => 52,
-                'dojo_id' => 3,
-            ],
-            [
-                'name' => 'Nasha Aleena (Member)',
-                'email' => 'nasha@gmail.com',
-                'password' => $pass,
-                'role' => 'member',
-                'province_id' => 5,
-                'city_id' => 52,
-                'dojo_id' => 3,
-                'belt_level_id' => 1, // Asumsi Sabuk Putih
-            ],
-        ];
-
-        foreach ($users as $userData) {
-            User::updateOrCreate(
-                ['email' => $userData['email']], // Cek berdasarkan email agar tidak duplikat
-                $userData
-            );
-        }
+        // 2. Buat akun Super Admin baru (Level PB / Pengurus Besar dengan akses nasional penuh)
+        User::create([
+            'name' => 'Super Admin',
+            'email' => 'superadmin@test.com',
+            'password' => Hash::make('password123'),
+            'role' => 'pb', // Role hirarki tertinggi pada sistem (Nasional / Global Access)
+            'roles' => ['pb', 'super_admin'],
+            'is_active' => true,
+            'email_verified_at' => now(),
+            'province_id' => null,
+            'city_id' => null,
+            'dojo_id' => null,
+            'belt_level_id' => null,
+            'whatsapp' => '081234567890',
+        ]);
     }
 }
