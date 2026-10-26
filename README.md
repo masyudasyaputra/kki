@@ -5,13 +5,13 @@ Dikembangkan dari https://github.com/masyudasyaputra/perguruan dengan riwayat Gi
 
 ## Menjalankan secara lokal
 
-Persyaratan: PHP 8.2 atau lebih baru, Composer, Node.js, dan npm.
+Persyaratan: PHP 8.2 atau lebih baru, Composer, MySQL, Node.js, dan npm.
 
 ```sh
 composer install
 cp .env.example .env
 php artisan key:generate
-php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+# Buat database MySQL bernama kki dan sesuaikan kredensial di .env.
 php artisan migrate
 npm ci
 npm run build
@@ -19,6 +19,6 @@ php artisan serve
 ```
 
 Sesuaikan `APP_URL` di `.env` dengan alamat lokal yang digunakan. Untuk Laragon, gunakan `http://kki.test`.
-Konfigurasi bawaan menggunakan SQLite. Untuk MySQL, atur koneksi dan gunakan database terpisah bernama `kki`.
+Konfigurasi bawaan menggunakan MySQL dengan database terpisah bernama `kki`; migrasi proyek memerlukan MySQL.
 
 Logo dan foto bawaan proyek asal masih digunakan; siapkan aset KKI untuk menggantinya.
