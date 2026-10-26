@@ -21,4 +21,4 @@ php artisan serve
 Sesuaikan `APP_URL` di `.env` dengan alamat lokal yang digunakan. Untuk Laragon, gunakan `http://kki.test`.
 Konfigurasi bawaan menggunakan MySQL dengan database terpisah bernama `kki`; migrasi proyek memerlukan MySQL.
 
-Logo dan foto bawaan proyek asal masih digunakan; siapkan aset KKI untuk menggantinya.
+Identitas aplikasi menggunakan Kushin Ryu M Karate-Do Indonesia (KKI). Logo digunakan dari `public/images/logo-kki.png` di landing page, portal anggota, halaman autentikasi, dan favicon.

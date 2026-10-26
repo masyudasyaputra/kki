@@ -2,14 +2,14 @@
 <html lang="id" class="scroll-smooth">
 
 <head>
-    <link rel="icon" type="image/webp" href="{{ asset('images/logo-shokaido.webp') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/logo-kki.png') }}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#8F1018">
+    <meta name="theme-color" content="#dc171c">
 
-    <title>KKI Sumatera Utara | Perguruan Karate-Do</title>
+    <title>KKI Sumatera Utara | Kushin Ryu M Karate-Do Indonesia</title>
     <meta name="description"
-        content="Website resmi Perguruan Karate-Do KKI Pengprov Sumatera Utara. Temukan dojo dan cabang KKI di kabupaten/kota Sumatera Utara.">
+        content="Kushin Ryu M Karate-Do Indonesia (KKI) Sumatera Utara. Temukan dojo dan cabang KKI di kabupaten/kota Sumatera Utara.">
     <meta name="keywords"
         content="KKI Sumatera Utara, karate Sumut, perguruan karate Medan, dojo karate Sumatera Utara, KKI">
     <meta name="author" content="KKI Pengprov Sumatera Utara">
@@ -19,16 +19,16 @@
     <meta property="og:type" content="website">
     <meta property="og:locale" content="id_ID">
     <meta property="og:site_name" content="KKI Sumatera Utara">
-    <meta property="og:title" content="KKI Sumatera Utara | Perguruan Karate-Do">
+    <meta property="og:title" content="KKI Sumatera Utara | Kushin Ryu M Karate-Do Indonesia">
     <meta property="og:description"
         content="Membentuk karateka berkarakter, menjaga tradisi, dan menumbuhkan prestasi bersama KKI Sumatera Utara.">
     <meta property="og:url" content="{{ url('/') }}">
-    <meta property="og:image" content="{{ asset('images/logo.png') }}">
+    <meta property="og:image" content="{{ asset('images/logo-kki.png') }}">
     <meta property="og:image:alt" content="Lambang Perguruan Karate-Do KKI">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="KKI Sumatera Utara">
     <meta name="twitter:description" content="Perguruan Karate-Do untuk pembinaan karakter, tradisi, dan prestasi.">
-    <meta name="twitter:image" content="{{ asset('images/logo.png') }}">
+    <meta name="twitter:image" content="{{ asset('images/logo-kki.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=barlow:400,500,600,700,800|barlow-condensed:600,700,800,900"
         rel="stylesheet" />
@@ -42,16 +42,16 @@
 
     <style>
         :root {
-            --shokaido-red: #941722;
-            --shokaido-deep: #5f0710;
-            --shokaido-gold: #cda252;
-            --shokaido-ink: #171515;
-            --shokaido-paper: #f7f4ee;
+            --kki-red: #dc171c;
+            --kki-deep: #7f1014;
+            --kki-gold: #f3f4f6;
+            --kki-ink: #171515;
+            --kki-paper: #f7f4ee;
         }
 
         body {
             font-family: 'Barlow', sans-serif;
-            background: var(--shokaido-paper);
+            background: var(--kki-paper);
         }
 
         .font-display {
@@ -73,7 +73,7 @@
         }
 
         .gold-line {
-            background: linear-gradient(90deg, transparent, var(--shokaido-gold), transparent);
+            background: linear-gradient(90deg, transparent, var(--kki-gold), transparent);
         }
 
         .vertical-label {
@@ -125,9 +125,9 @@
             "@@context": "https://schema.org",
             "@type": "SportsOrganization",
             "name": "KKI Pengprov Sumatera Utara",
-            "alternateName": "Perguruan Karate-Do KKI Sumut",
+            "alternateName": "Kushin Ryu M Karate-Do Indonesia Sumatera Utara",
             "url": "{{ url('/') }}",
-            "logo": "{{ asset('images/logo.png') }}",
+            "logo": "{{ asset('images/logo-kki.png') }}",
             "description": "Perguruan Karate-Do untuk pembinaan karakter, tradisi, dan prestasi di Sumatera Utara.",
             "sport": "Karate",
             "areaServed": {
@@ -170,10 +170,10 @@
     </script>
 </head>
 
-<body class="overflow-x-hidden bg-[#050505] text-white antialiased selection:bg-[#941722] selection:text-white"
+<body class="overflow-x-hidden bg-[#050505] text-white antialiased selection:bg-[#dc171c] selection:text-white"
     x-data="{ menuOpen: false }">
     <a href="#konten-utama"
-        class="fixed left-4 top-3 z-[100] -translate-y-20 rounded-lg bg-white px-4 py-2 text-sm font-bold text-[#941722] shadow-xl transition-transform focus:translate-y-0">
+        class="fixed left-4 top-3 z-[100] -translate-y-20 rounded-lg bg-white px-4 py-2 text-sm font-bold text-[#dc171c] shadow-xl transition-transform focus:translate-y-0">
         Lewati ke konten
     </a>
 
@@ -181,35 +181,35 @@
         <div class="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 lg:px-8">
             <a href="#beranda" class="flex items-center gap-3" aria-label="KKI Sumatera Utara - Beranda">
                 <span class="grid h-11 w-11 place-items-center rounded-full bg-white p-1 shadow-lg shadow-black/30">
-                    <img src="{{ asset('images/logo-shokaido.webp') }}" alt=""
+                    <img src="{{ asset('images/logo-kki.png') }}" alt=""
                         class="h-full w-full object-contain" width="44" height="44">
                 </span>
                 <span class="leading-none">
                     <span class="block text-lg font-extrabold tracking-[0.12em]">KKI</span>
-                    <span class="mt-1 block text-[9px] font-bold uppercase tracking-[0.22em] text-[#d6ad55]">Pengprov
+                    <span class="mt-1 block text-[9px] font-bold uppercase tracking-[0.22em] text-[#f3f4f6]">Pengprov
                         Sumatera Utara</span>
                 </span>
             </a>
 
             <nav class="hidden items-center gap-7 lg:flex" aria-label="Navigasi utama">
                 <a href="#tentang"
-                    class="text-sm font-semibold text-white/55 transition hover:text-[#d6ad55]">Tentang</a>
-                <a href="#nilai" class="text-sm font-semibold text-white/55 transition hover:text-[#d6ad55]">Nilai</a>
+                    class="text-sm font-semibold text-white/55 transition hover:text-[#f3f4f6]">Tentang</a>
+                <a href="#nilai" class="text-sm font-semibold text-white/55 transition hover:text-[#f3f4f6]">Nilai</a>
                 <a href="#program"
-                    class="text-sm font-semibold text-white/55 transition hover:text-[#d6ad55]">Program</a>
+                    class="text-sm font-semibold text-white/55 transition hover:text-[#f3f4f6]">Program</a>
                 <a href="#agenda"
-                    class="text-sm font-semibold text-white/55 transition hover:text-[#d6ad55]">Agenda</a>
-                <a href="#dojo" class="text-sm font-semibold text-white/55 transition hover:text-[#d6ad55]">Dojo &
+                    class="text-sm font-semibold text-white/55 transition hover:text-[#f3f4f6]">Agenda</a>
+                <a href="#dojo" class="text-sm font-semibold text-white/55 transition hover:text-[#f3f4f6]">Dojo &
                     Cabang</a>
                 @auth
                     <a href="{{ url('/dashboard') }}"
-                        class="rounded-full bg-[#941722] px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-white transition hover:bg-[#650811]">Dashboard</a>
+                        class="rounded-full bg-[#dc171c] px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-white transition hover:bg-[#a10d12]">Dashboard</a>
                 @else
                     <a href="{{ route('login') }}"
-                        class="text-sm font-semibold text-white/55 transition hover:text-[#d6ad55]">Masuk</a>
+                        class="text-sm font-semibold text-white/55 transition hover:text-[#f3f4f6]">Masuk</a>
                     @if (Route::has('register'))
                         <a href="{{ route('register') }}"
-                            class="rounded-full bg-[#941722] px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-white transition hover:bg-[#650811]">Daftar
+                            class="rounded-full bg-[#dc171c] px-5 py-2.5 text-xs font-extrabold uppercase tracking-wider text-white transition hover:bg-[#a10d12]">Daftar
                             Anggota</a>
                     @endif
                 @endauth
@@ -247,13 +247,13 @@
                 <div class="mt-3 grid grid-cols-2 gap-3 border-t border-white/10 pt-4">
                     @auth
                         <a href="{{ url('/dashboard') }}"
-                            class="col-span-2 rounded-xl bg-[#941722] px-4 py-3 text-center text-sm font-extrabold text-white">Dashboard</a>
+                            class="col-span-2 rounded-xl bg-[#dc171c] px-4 py-3 text-center text-sm font-extrabold text-white">Dashboard</a>
                     @else
                         <a href="{{ route('login') }}"
                             class="rounded-xl border border-white/20 px-4 py-3 text-center text-sm font-bold">Masuk</a>
                         @if (Route::has('register'))
                             <a href="{{ route('register') }}"
-                                class="rounded-xl bg-[#941722] px-4 py-3 text-center text-sm font-extrabold text-white">Daftar</a>
+                                class="rounded-xl bg-[#dc171c] px-4 py-3 text-center text-sm font-extrabold text-white">Daftar</a>
                         @endif
                     @endauth
                 </div>
@@ -265,10 +265,10 @@
         <section id="beranda"
             class="relative isolate min-h-screen overflow-hidden bg-[#050505] pt-[76px] text-white">
             <div class="hero-grid absolute inset-0 -z-20 opacity-20"></div>
-            <div class="absolute inset-y-0 left-0 -z-10 w-1/2 bg-gradient-to-r from-[#941722]/20 to-transparent"></div>
-            <div class="absolute inset-y-0 right-0 -z-10 w-1/2 bg-gradient-to-l from-[#d6ad55]/10 to-transparent"></div>
+            <div class="absolute inset-y-0 left-0 -z-10 w-1/2 bg-gradient-to-r from-[#dc171c]/20 to-transparent"></div>
+            <div class="absolute inset-y-0 right-0 -z-10 w-1/2 bg-gradient-to-l from-[#f3f4f6]/10 to-transparent"></div>
             <div class="absolute -right-32 top-24 -z-10 h-[540px] w-[540px] rounded-full border border-white/5"></div>
-            <div class="absolute -right-20 top-36 -z-10 h-[420px] w-[420px] rounded-full border border-[#d6ad55]/10">
+            <div class="absolute -right-20 top-36 -z-10 h-[420px] w-[420px] rounded-full border border-[#f3f4f6]/10">
             </div>
             <p class="font-display pointer-events-none absolute left-1/2 top-32 -z-10 -translate-x-1/2 whitespace-nowrap text-[19vw] font-black leading-none tracking-[.04em] text-white/[.035]"
                 aria-hidden="true">KKI</p>
@@ -277,23 +277,23 @@
                 class="mx-auto grid min-h-[calc(100vh-76px)] max-w-7xl items-center gap-8 px-5 py-16 lg:grid-cols-[.82fr_1.18fr] lg:px-8 lg:py-20">
                 <div class="relative z-10 max-w-3xl">
                     <div class="reveal-up mb-7 flex items-center gap-3">
-                        <span class="h-px w-10 bg-[#d6ad55]"></span>
-                        <p class="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#d6ad55]">Perguruan
+                        <span class="h-px w-10 bg-[#f3f4f6]"></span>
+                        <p class="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#f3f4f6]">Perguruan
                             Karate-Do
                             • Sumatera Utara</p>
                     </div>
                     <h1
                         class="font-display reveal-up reveal-delay-1 text-6xl font-black leading-[.86] sm:text-7xl lg:text-[84px]">
-                        Jiwa karate.<br>
-                        <span class="text-[#d6ad55]">Semangat juara.</span>
+                        Kushin Ryu.<br>
+                        <span class="text-[#f3f4f6]">Satu keluarga.</span>
                     </h1>
                     <p class="reveal-up reveal-delay-2 mt-7 max-w-md text-base leading-7 text-white/55">
-                        Rumah pembinaan karateka Sumatera Utara yang menjunjung disiplin, kehormatan, persaudaraan, dan
+                        Kushin Ryu M Karate-Do Indonesia. Rumah pembinaan karateka Sumatera Utara yang menjunjung disiplin, persaudaraan, dan
                         semangat untuk terus bertumbuh.
                     </p>
                     <div class="reveal-up reveal-delay-2 mt-9 flex flex-col gap-3 sm:flex-row">
                         <a href="#dojo"
-                            class="inline-flex items-center justify-center gap-3 rounded-full bg-[#941722] px-7 py-4 text-sm font-extrabold text-white shadow-xl shadow-[#941722]/15 transition hover:-translate-y-0.5 hover:bg-[#650811]">
+                            class="inline-flex items-center justify-center gap-3 rounded-full bg-[#dc171c] px-7 py-4 text-sm font-extrabold text-white shadow-xl shadow-[#dc171c]/15 transition hover:-translate-y-0.5 hover:bg-[#a10d12]">
                             Eksplor Dojo & Cabang
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 aria-hidden="true">
@@ -302,89 +302,35 @@
                             </svg>
                         </a>
                         <a href="#tentang"
-                            class="inline-flex items-center justify-center rounded-full border border-white/20 px-7 py-4 text-sm font-bold text-white transition hover:border-[#d6ad55] hover:text-[#d6ad55]">Kenal
+                            class="inline-flex items-center justify-center rounded-full border border-white/20 px-7 py-4 text-sm font-bold text-white transition hover:border-[#f3f4f6] hover:text-[#f3f4f6]">Kenal
                             Lebih Dekat</a>
                     </div>
                 </div>
 
                 <div class="relative mx-auto w-full max-w-[900px] lg:ml-auto">
-                    <div class="absolute inset-8 rounded-full bg-[#941722]/20 blur-[90px]"></div>
-                    <img src="{{ asset('images/hero-karate-action.webp') }}"
-                        alt="Karateka KKI melakukan pukulan lurus dalam latihan"
-                        class="relative z-0 w-[105%] max-w-none -translate-x-[2.5%] object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,.45)] sm:w-[115%] sm:-translate-x-[7%] lg:w-[118%] lg:-translate-x-[9%] xl:w-[125%] xl:-translate-x-[12%]"
-                        width="1792" height="896" fetchpriority="high">
+                    <div class="absolute inset-8 rounded-full bg-[#dc171c]/20 blur-[90px]"></div>
+                    <img src="{{ asset('images/logo-kki.png') }}"
+                        alt="Lambang Kushin Ryu M Karate-Do Indonesia"
+                        class="relative mx-auto w-full max-w-[520px] object-contain px-8 pb-16 pt-4 drop-shadow-[0_25px_60px_rgba(220,23,28,.2)]"
+                        width="520" height="520" fetchpriority="high">
 
                     <aside
                         class="relative z-20 ml-auto -mt-10 w-[92%] rounded-[1.5rem] border border-white/15 bg-black/85 p-5 text-white shadow-xl shadow-black/30 backdrop-blur sm:w-72 lg:absolute lg:-bottom-8 lg:right-0 lg:mt-0 lg:w-64"
-                        aria-label="Afiliasi KKI">
+                        aria-label="Perguruan KKI">
                         <div class="flex items-center gap-4">
-                            <img src="{{ asset('images/skif-optimized.webp') }}" alt="Logo SKIF Indonesia"
+                            <img src="{{ asset('images/logo-kki.png') }}" alt="Lambang KKI"
                                 class="h-14 w-14 object-contain" width="56" height="56">
                             <div>
-                                <p class="text-[9px] font-extrabold uppercase tracking-[.2em] text-[#d6ad55]">Afiliasi
+                                <p class="text-[9px] font-extrabold uppercase tracking-[.2em] text-[#f3f4f6]">Perguruan
                                 </p>
-                                <h2 class="font-display text-xl font-black">SKIF Indonesia</h2>
+                                <h2 class="font-display text-xl font-black">Kushin Ryu</h2>
                             </div>
                         </div>
                         <p class="mt-4 border-t border-white/10 pt-4 text-xs leading-5 text-white/50">Bagian dari
                             keluarga
-                            Shotokan Karate-Do International Federation Indonesia.</p>
+                            Kushin Ryu M Karate-Do Indonesia.</p>
                     </aside>
 
-                    <div
-                        class="!hidden absolute -left-5 top-14 h-44 w-10 items-center justify-center border-y border-white/20">
-                        <span
-                            class="vertical-label text-[9px] font-bold uppercase tracking-[.35em] text-white/45">Shotokan
-                            Karate-Do</span>
-                    </div>
-                    <div
-                        class="hidden relative aspect-[4/4.7] overflow-hidden rounded-[2rem] border border-white/15 bg-[#7f0e18] p-6 shadow-2xl shadow-black/30 sm:p-9">
-                        <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/25">
-                        </div>
-                        <img src="{{ asset('images/shotokan.png') }}" alt="" aria-hidden="true"
-                            class="absolute -bottom-8 -right-12 w-[88%] opacity-[.075] brightness-0 invert">
-                        <div class="relative flex h-full flex-col items-center justify-between">
-                            <div
-                                class="flex w-full items-center justify-between text-[10px] font-bold uppercase tracking-[.25em] text-white/50">
-                                <span>Est. Spirit</span>
-                                <span>Sumatera Utara</span>
-                            </div>
-                            <div class="relative grid place-items-center">
-                                <div
-                                    class="absolute h-64 w-64 rounded-full border border-[#e3bd72]/25 sm:h-72 sm:w-72">
-                                </div>
-                                <div class="absolute h-56 w-56 rounded-full bg-black/10 sm:h-64 sm:w-64"></div>
-                                <img src="{{ asset('images/logo-shokaido.webp') }}"
-                                    alt="Lambang resmi Perguruan Karate-Do KKI"
-                                    class="relative h-52 w-52 object-contain drop-shadow-[0_22px_24px_rgba(0,0,0,.35)] sm:h-60 sm:w-60"
-                                    width="240" height="240" fetchpriority="high">
-                            </div>
-                            <div class="w-full">
-                                <div class="gold-line mb-5 h-px w-full"></div>
-                                <div class="flex items-end justify-between gap-4">
-                                    <div>
-                                        <p class="font-display text-2xl font-bold">Oss!</p>
-                                        <p class="mt-1 text-[10px] uppercase tracking-[.22em] text-white/50">Satu
-                                            semangat, satu
-                                            keluarga</p>
-                                    </div>
-                                    <span
-                                        class="grid h-11 w-11 place-items-center rounded-full border border-white/20 text-[#e5bd70]">
-                                        <svg class="h-5 w-5" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24" aria-hidden="true">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"
-                                                d="M12 3v18M3 12h18" />
-                                        </svg>
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        class="hidden absolute -bottom-5 -left-5 rounded-2xl bg-[#d3a64f] px-5 py-4 text-[#2b1b08] shadow-xl sm:-left-10">
-                        <p class="text-[9px] font-extrabold uppercase tracking-[.22em]">Landasan kami</p>
-                        <p class="mt-1 font-display text-lg font-bold">Karakter di atas kemenangan.</p>
-                    </div>
                 </div>
             </div>
 
@@ -404,37 +350,25 @@
                             kabupaten/kota</p>
                     </div>
                     <div class="px-7 py-7 text-center">
-                        <p class="font-display text-4xl font-black">SKIF</p>
-                        <p class="mt-1 text-[10px] font-extrabold uppercase tracking-[.18em] text-white/45">Afiliasi
-                            karate nasional</p>
+                        <p class="font-display text-4xl font-black">KKI</p>
+                        <p class="mt-1 text-[10px] font-extrabold uppercase tracking-[.18em] text-white/45">Perguruan
+                            Kushin Ryu Indonesia</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section class="border-y border-white/10 bg-[#090909] py-12 text-white" aria-label="Identitas dan afiliasi organisasi">
-            <div class="mx-auto flex max-w-4xl flex-col items-center justify-center gap-7 px-5 sm:flex-row sm:gap-12">
-                <div class="flex items-center gap-4">
-                    <img src="{{ asset('images/logo-shokaido.webp') }}" alt="Logo KKI"
-                        class="h-14 w-14 object-contain" width="56" height="56">
-                    <div>
-                        <p class="text-[9px] font-bold uppercase tracking-[.2em] text-white/35">Perguruan</p>
-                        <p class="font-display text-xl font-black">KKI Sumut</p>
-                    </div>
+        <section class="border-y border-white/10 bg-[#090909] py-10 text-white" aria-label="Identitas perguruan KKI">
+            <div class="mx-auto flex max-w-7xl flex-col items-center gap-6 px-5 text-center sm:flex-row sm:text-left lg:px-8">
+                <img src="{{ asset('images/logo-kki.png') }}" alt="Lambang Kushin Ryu M Karate-Do Indonesia" class="h-20 w-20 shrink-0 object-contain" width="80" height="80">
+                <div>
+                    <p class="text-[10px] font-bold uppercase tracking-[.25em] text-red-400">Satu perguruan. Satu keluarga.</p>
+                    <h2 class="font-display mt-2 text-2xl font-black sm:text-3xl">Kushin Ryu M Karate-Do Indonesia</h2>
+                    <p class="mt-2 text-sm text-white/50">Pembinaan karate, karakter, dan persaudaraan di Sumatera Utara.</p>
                 </div>
-                <div class="hidden h-px w-20 bg-white/15 sm:block"></div>
-                <span class="font-display text-lg font-black text-[#d6ad55]">Berafiliasi dengan</span>
-                <div class="flex items-center gap-4">
-                    <img src="{{ asset('images/skif-optimized.webp') }}" alt="Logo SKIF Indonesia"
-                        class="h-14 w-14 object-contain" width="56" height="56" loading="lazy">
-                    <div>
-                        <p class="text-[9px] font-bold uppercase tracking-[.2em] text-white/35">Afiliasi</p>
-                        <p class="font-display text-xl font-black">SKIF Indonesia</p>
-                    </div>
-                </div>
+                <a href="#lambang" class="sm:ml-auto shrink-0 rounded-full border border-white/20 px-5 py-3 text-xs font-bold transition hover:border-red-500">Makna lambang KKI &rarr;</a>
             </div>
         </section>
-
         <section id="tentang" class="scroll-mt-20 bg-[#050505] px-5 py-16 sm:py-24 lg:px-8">
             <div
                 class="mx-auto grid max-w-7xl gap-14 overflow-hidden rounded-[2.5rem] bg-[#171515] px-7 py-16 text-white sm:px-12 lg:grid-cols-[.8fr_1.2fr] lg:px-16 lg:py-20">
@@ -448,9 +382,7 @@
                         sekadar<br><span class="text-white/25">olahraga bela diri.</span></h2>
                 </div>
                 <div class="lg:pt-8">
-                    <p class="text-xl font-semibold leading-9 text-white/85 sm:text-2xl sm:leading-10">Kami percaya
-                        karate-do
-                        adalah jalan untuk mengenali diri, melatih keteguhan, dan memberi manfaat bagi sesama.</p>
+                    <p class="text-xl font-semibold leading-9 text-white/85 sm:text-2xl sm:leading-10">Kushin Ryu M Karate-Do Indonesia (KKI) adalah keluarga karate beraliran Kushin Ryu yang menjunjung kesatuan, persaudaraan, dan pembentukan karakter.</p>
                     <div class="mt-8 grid gap-6 border-t border-white/10 pt-8 sm:grid-cols-2">
                         <p class="text-sm leading-7 text-white/50">KKI Pengprov Sumatera Utara menaungi proses
                             pembinaan
@@ -466,11 +398,31 @@
             </div>
         </section>
 
+        <section id="lambang" class="scroll-mt-20 border-y border-white/10 bg-[#0a0a0a] py-20 sm:py-28">
+            <div class="mx-auto grid max-w-7xl items-center gap-12 px-5 lg:grid-cols-[.8fr_1.2fr] lg:px-8">
+                <div class="text-center">
+                    <img src="{{ asset('images/logo-kki.png') }}" alt="Lambang KKI: bunga melati, lingkaran Kushin Ryu, merah putih, dan pita Indonesia" class="mx-auto w-full max-w-sm object-contain" width="384" height="384" loading="lazy">
+                    <p class="mt-6 text-xs font-bold uppercase tracking-[.25em] text-white/40">Kesatuan &amp; persaudaraan</p>
+                    <a href="{{ asset('images/makna-lambang-kki.png') }}" target="_blank" rel="noopener noreferrer" class="mt-7 inline-flex items-center gap-2 rounded-full border border-white/20 px-5 py-3 text-xs font-bold transition hover:border-red-500">Lihat penjelasan lambang lengkap &nearr;</a>
+                </div>
+                <div>
+                    <p class="text-[10px] font-extrabold uppercase tracking-[.3em] text-red-400">Identitas yang menyatukan</p>
+                    <h2 class="font-display mt-4 text-4xl font-black sm:text-5xl">Makna lambang KKI.</h2>
+                    <p class="mt-5 text-base leading-7 text-white/60">Bunga melati berkelopak putih dengan pusat merah putih menjadi lambang kesatuan dan persatuan keluarga besar KKI di seluruh Indonesia.</p>
+                    <dl class="mt-8 grid gap-6 sm:grid-cols-2">
+                        <div class="border-t border-white/15 pt-5"><dt class="font-bold">Bunga melati</dt><dd class="mt-2 text-sm leading-6 text-white/55">Melambangkan jiwa muda yang berkembang. Lima daun bunga mengingatkan pada lima sila Pancasila.</dd></div>
+                        <div class="border-t border-white/15 pt-5"><dt class="font-bold">Lingkaran Kushin Ryu</dt><dd class="mt-2 text-sm leading-6 text-white/55">Tulisan pada lingkaran hitam menunjukkan identitas perguruan dan aliran karate Kushin Ryu.</dd></div>
+                        <div class="border-t border-white/15 pt-5"><dt class="font-bold">Pusat merah putih</dt><dd class="mt-2 text-sm leading-6 text-white/55">Melambangkan bendera Indonesia serta semangat keberanian dan kesucian dalam berlatih dan berkarya.</dd></div>
+                        <div class="border-t border-white/15 pt-5"><dt class="font-bold">Pita Indonesia</dt><dd class="mt-2 text-sm leading-6 text-white/55">Menyatukan keberagaman anggota KKI dalam semangat Bhinneka Tunggal Ika dan persaudaraan.</dd></div>
+                    </dl>
+                </div>
+            </div>
+        </section>
         <section id="nilai" class="scroll-mt-20 bg-[#050505] py-24 text-white sm:py-32">
             <div class="mx-auto max-w-7xl px-5 lg:px-8">
                 <div class="mb-14 flex flex-col justify-between gap-7 md:flex-row md:items-end">
                     <div>
-                        <p class="mb-5 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#d7ad5d]">Dojo Kun •
+                        <p class="mb-5 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#f3f4f6]">Semangat KKI •
                             Nilai
                             yang dihidupi</p>
                         <h2 class="font-display max-w-xl text-4xl font-extrabold leading-tight sm:text-5xl">Teguh dalam
@@ -507,9 +459,9 @@
                     @foreach ($values as [$number, $title, $description, $icon])
                         <article class="group border-white/10 px-2 py-10 md:border-l md:px-8 first:md:border-l-0">
                             <div class="mb-10 flex items-center justify-between">
-                                <span class="font-display text-lg text-[#d6ad55]">{{ $number }}</span>
+                                <span class="font-display text-lg text-[#f3f4f6]">{{ $number }}</span>
                                 <span
-                                    class="grid h-14 w-14 place-items-center rounded-full border border-[#d6ad55]/35 bg-[#d6ad55]/5 text-[#d6ad55] transition duration-300 group-hover:border-[#941722] group-hover:bg-[#941722] group-hover:text-white">
+                                    class="grid h-14 w-14 place-items-center rounded-full border border-[#f3f4f6]/35 bg-[#f3f4f6]/5 text-[#f3f4f6] transition duration-300 group-hover:border-[#dc171c] group-hover:bg-[#dc171c] group-hover:text-white">
                                     @if ($icon === 'character')
                                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                             aria-hidden="true">
@@ -548,11 +500,11 @@
         <section id="program" class="scroll-mt-20 overflow-hidden bg-[#0a0a0a] py-24 text-white sm:py-32">
             <div class="mx-auto max-w-7xl px-5 lg:px-8">
                 <div class="mx-auto mb-16 max-w-2xl text-center">
-                    <p class="mb-4 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#941722]">Ruang untuk
+                    <p class="mb-4 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#dc171c]">Ruang untuk
                         bertumbuh</p>
                     <h2 class="font-display text-4xl font-extrabold tracking-tight sm:text-5xl">Pembinaan yang utuh
                         untuk
-                        <span class="italic text-[#941722]">setiap langkah.</span>
+                        <span class="italic text-[#dc171c]">setiap langkah.</span>
                     </h2>
                 </div>
 
@@ -583,14 +535,14 @@
                     @endphp
                     @foreach ($programs as [$title, $description, $icon])
                         <article
-                            class="group relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111111] p-7 transition duration-300 hover:-translate-y-1 hover:border-[#d6ad55]/40 hover:shadow-2xl hover:shadow-black/40">
-                            <img src="{{ asset($loop->odd ? 'images/hero-karate-action.webp' : 'images/hero-karateka-shokaido.webp') }}"
+                            class="group relative flex min-h-[340px] flex-col justify-end overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#111111] p-7 transition duration-300 hover:-translate-y-1 hover:border-[#f3f4f6]/40 hover:shadow-2xl hover:shadow-black/40">
+                            <img src="{{ asset('images/logo-kki.png') }}"
                                 alt="" aria-hidden="true"
-                                class="absolute inset-0 h-full w-full object-cover opacity-55 grayscale transition duration-500 group-hover:scale-105 group-hover:grayscale-0"
+                                class="absolute right-2 top-4 h-44 w-44 object-contain opacity-10 transition duration-500 group-hover:scale-105 group-hover:opacity-20"
                                 loading="lazy">
                             <div class="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent"></div>
                             <span
-                                class="relative grid h-12 w-12 place-items-center rounded-2xl bg-[#941722] text-white shadow-lg shadow-[#941722]/15">
+                                class="relative grid h-12 w-12 place-items-center rounded-2xl bg-[#dc171c] text-white shadow-lg shadow-[#dc171c]/15">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"
@@ -599,7 +551,7 @@
                             </span>
                             <h3 class="relative mt-6 font-display text-2xl font-bold leading-tight">{{ $title }}</h3>
                             <p class="relative mt-3 text-sm leading-6 text-white/60">{{ $description }}</p>
-                            <div class="relative mt-6 h-px w-10 bg-[#d3a64f] transition-all duration-300 group-hover:w-full">
+                            <div class="relative mt-6 h-px w-10 bg-[#f3f4f6] transition-all duration-300 group-hover:w-full">
                             </div>
                         </article>
                     @endforeach
@@ -608,21 +560,21 @@
         </section>
 
         <section id="agenda" class="relative scroll-mt-20 overflow-hidden bg-[#171515] py-24 text-white sm:py-32">
-            <div class="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full border border-[#d6ad55]/10">
+            <div class="pointer-events-none absolute -right-32 -top-32 h-96 w-96 rounded-full border border-[#f3f4f6]/10">
             </div>
-            <div class="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full border border-[#941722]/25">
+            <div class="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full border border-[#dc171c]/25">
             </div>
-            <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#d6ad55]/30 to-transparent">
+            <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#f3f4f6]/30 to-transparent">
             </div>
 
             <div class="relative mx-auto max-w-7xl px-5 lg:px-8">
                 <div class="mb-14 flex flex-col justify-between gap-7 md:flex-row md:items-end">
                     <div>
-                        <p class="mb-5 flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#d6ad55]">
-                            <span class="h-px w-9 bg-[#d6ad55]"></span> Kalender KKI SUMUT
+                        <p class="mb-5 flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#f3f4f6]">
+                            <span class="h-px w-9 bg-[#f3f4f6]"></span> Kalender KKI SUMUT
                         </p>
                         <h2 class="font-display max-w-2xl text-4xl font-black leading-[.95] sm:text-6xl">Agenda
-                            <span class="text-[#d6ad55]">kegiatan.</span>
+                            <span class="text-[#f3f4f6]">kegiatan.</span>
                         </h2>
                     </div>
                     <p class="max-w-md text-sm leading-7 text-white/50">Pantau jadwal kegiatan dan ujian resmi di
@@ -639,11 +591,11 @@
                                 ];
                             @endphp
                             <article
-                                class="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0a0a0a] p-7 transition duration-300 hover:-translate-y-1 hover:border-[#d6ad55]/40">
-                                <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#941722] to-[#d6ad55]"></div>
+                                class="group relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0a0a0a] p-7 transition duration-300 hover:-translate-y-1 hover:border-[#f3f4f6]/40">
+                                <div class="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#dc171c] to-[#f3f4f6]"></div>
                                 <div class="flex items-start justify-between gap-5">
                                     <time datetime="{{ $agenda->execution_date->toDateString() }}"
-                                        class="flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-2xl bg-[#941722] text-center shadow-lg shadow-[#941722]/15">
+                                        class="flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-2xl bg-[#dc171c] text-center shadow-lg shadow-[#dc171c]/15">
                                         <span class="font-display text-3xl font-black leading-none">{{ $agenda->execution_date->format('d') }}</span>
                                         <span class="mt-1 text-[9px] font-extrabold uppercase tracking-[.18em] text-[#f1cf86]">
                                             {{ $agendaMonths[(int) $agenda->execution_date->format('n')] }}
@@ -651,18 +603,18 @@
                                         </span>
                                     </time>
                                     <span
-                                        class="rounded-full border border-[#d6ad55]/25 bg-[#d6ad55]/10 px-3 py-2 text-[8px] font-extrabold uppercase tracking-[.16em] text-[#e7c57f]">
+                                        class="rounded-full border border-[#f3f4f6]/25 bg-[#f3f4f6]/10 px-3 py-2 text-[8px] font-extrabold uppercase tracking-[.16em] text-[#f3f4f6]">
                                         {{ $agenda->status === 'ongoing' ? 'Berlangsung' : 'Pendaftaran dibuka' }}
                                     </span>
                                 </div>
 
-                                <p class="mt-8 text-[9px] font-extrabold uppercase tracking-[.2em] text-[#d6ad55]">Agenda
+                                <p class="mt-8 text-[9px] font-extrabold uppercase tracking-[.2em] text-[#f3f4f6]">Agenda
                                     resmi</p>
                                 <h3 class="mt-3 font-display text-2xl font-black leading-tight">{{ $agenda->name }}</h3>
 
                                 <div class="mt-7 space-y-3 border-t border-white/10 pt-6 text-sm text-white/50">
                                     <p class="flex items-start gap-3">
-                                        <svg class="mt-0.5 h-4 w-4 shrink-0 text-[#d6ad55]" fill="none"
+                                        <svg class="mt-0.5 h-4 w-4 shrink-0 text-[#f3f4f6]" fill="none"
                                             stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
                                                 d="M12 21s7-6.1 7-12A7 7 0 1 0 5 9c0 5.9 7 12 7 12Z" />
@@ -672,7 +624,7 @@
                                     </p>
                                     @if ($agenda->province)
                                         <p class="flex items-center gap-3">
-                                            <svg class="h-4 w-4 shrink-0 text-[#d6ad55]" fill="none"
+                                            <svg class="h-4 w-4 shrink-0 text-[#f3f4f6]" fill="none"
                                                 stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
                                                     d="M4 19.5V6.8L12 3l8 3.8v12.7M8 21V9h8v12M3 21h18" />
@@ -688,7 +640,7 @@
                     <div
                         class="grid gap-8 overflow-hidden rounded-[2rem] border border-white/10 bg-[#0a0a0a] p-8 sm:p-10 md:grid-cols-[auto_1fr] md:items-center">
                         <span
-                            class="grid h-20 w-20 place-items-center rounded-2xl bg-[#941722] text-[#f1cf86] shadow-xl shadow-[#941722]/15">
+                            class="grid h-20 w-20 place-items-center rounded-2xl bg-[#dc171c] text-[#f1cf86] shadow-xl shadow-[#dc171c]/15">
                             <svg class="h-9 w-9" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 aria-hidden="true">
                                 <rect x="3" y="5" width="18" height="16" rx="2" stroke-width="1.7" />
@@ -698,7 +650,7 @@
                             </svg>
                         </span>
                         <div>
-                            <p class="text-[9px] font-extrabold uppercase tracking-[.2em] text-[#d6ad55]">Segera hadir</p>
+                            <p class="text-[9px] font-extrabold uppercase tracking-[.2em] text-[#f3f4f6]">Segera hadir</p>
                             <h3 class="mt-2 font-display text-2xl font-black sm:text-3xl">Agenda berikutnya sedang
                                 disiapkan.</h3>
                             <p class="mt-3 max-w-2xl text-sm leading-7 text-white/50">Jadwal resmi kegiatan KKI
@@ -716,11 +668,11 @@
             <div class="mx-auto max-w-7xl px-5 lg:px-8">
                 <div class="grid gap-10 lg:grid-cols-[1fr_.72fr] lg:items-end">
                     <div>
-                        <p class="mb-5 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#941722]">Jejak
+                        <p class="mb-5 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#dc171c]">Jejak
                             KKI di
                             Sumatera Utara</p>
                         <h2 class="font-display text-5xl font-black leading-[.92] sm:text-6xl">Temukan dojo dan
-                            <span class="text-[#941722]">cabang terdekat.</span>
+                            <span class="text-[#dc171c]">cabang terdekat.</span>
                         </h2>
                         <p class="mt-6 max-w-2xl text-base leading-7 text-white/50">Eksplor dojo aktif di bawah naungan
                             KKI Pengprov Sumatera Utara berdasarkan cabang kabupaten dan kota.</p>
@@ -729,12 +681,12 @@
                     <div
                         class="grid grid-cols-2 overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#111111] shadow-lg shadow-black/30">
                         <div class="border-r border-white/10 p-6">
-                            <p class="font-display text-4xl font-black text-[#d6ad55]">{{ $dojos->count() }}</p>
+                            <p class="font-display text-4xl font-black text-[#f3f4f6]">{{ $dojos->count() }}</p>
                             <p class="mt-1 text-[10px] font-extrabold uppercase tracking-[.18em] text-white/45">Dojo
                                 aktif</p>
                         </div>
                         <div class="p-6">
-                            <p class="font-display text-4xl font-black text-[#d6ad55]">{{ $dojoRegions->count() }}</p>
+                            <p class="font-display text-4xl font-black text-[#f3f4f6]">{{ $dojoRegions->count() }}</p>
                             <p class="mt-1 text-[10px] font-extrabold uppercase tracking-[.18em] text-white/45">Cabang
                                 kab/kota</p>
                         </div>
@@ -751,7 +703,7 @@
                         </svg>
                         <input id="dojo-search" type="search" x-model="query"
                             placeholder="Cari nama dojo, pelatih, atau kabupaten/kota..."
-                            class="w-full rounded-2xl border-0 bg-white py-4 pl-14 pr-5 text-sm shadow-lg shadow-black/5 ring-1 ring-black/10 placeholder:text-black/35 focus:ring-2 focus:ring-[#941722]">
+                            class="w-full rounded-2xl border-0 bg-white py-4 pl-14 pr-5 text-sm shadow-lg shadow-black/5 ring-1 ring-black/10 placeholder:text-black/35 focus:ring-2 focus:ring-[#dc171c]">
                     </div>
 
                     <div class="mt-10 space-y-8">
@@ -775,7 +727,7 @@
                                     class="flex flex-col justify-between gap-4 border-b border-black/10 bg-[#171515] px-6 py-5 text-white sm:flex-row sm:items-center sm:px-8">
                                     <div class="flex items-center gap-3">
                                         <span
-                                            class="grid h-9 w-9 place-items-center rounded-full bg-[#941722] text-[#e7c57f]">
+                                            class="grid h-9 w-9 place-items-center rounded-full bg-[#dc171c] text-[#f3f4f6]">
                                             <svg class="h-4 w-4" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24" aria-hidden="true">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -791,7 +743,7 @@
                                         </div>
                                     </div>
                                     <span
-                                        class="w-fit rounded-full border border-white/15 px-4 py-2 text-[9px] font-extrabold uppercase tracking-[.16em] text-[#e7c57f]">
+                                        class="w-fit rounded-full border border-white/15 px-4 py-2 text-[9px] font-extrabold uppercase tracking-[.16em] text-[#f3f4f6]">
                                         {{ $regionDojos->count() }} Dojo
                                     </span>
                                 </div>
@@ -808,13 +760,13 @@
                                             <h4 class="font-display text-2xl font-black leading-none text-[#171515]">
                                                 {{ $dojo->name }}</h4>
                                             @if ($dojo->sensei_name)
-                                                <p class="mt-3 text-xs font-bold text-[#941722]">Pelatih:
+                                                <p class="mt-3 text-xs font-bold text-[#dc171c]">Pelatih:
                                                     {{ $dojo->sensei_name }}</p>
                                             @endif
                                             <p class="mt-4 text-sm leading-6 text-black/50">{{ $dojo->address }}</p>
                                             <a href="https://www.google.com/maps/search/?api=1&query={{ urlencode($dojo->name . ' ' . $dojo->address . ' ' . $region) }}"
                                                 target="_blank" rel="noopener noreferrer"
-                                                class="mt-auto inline-flex items-center gap-2 pt-7 text-xs font-extrabold uppercase tracking-[.12em] text-[#941722] transition hover:text-[#650811]">
+                                                class="mt-auto inline-flex items-center gap-2 pt-7 text-xs font-extrabold uppercase tracking-[.12em] text-[#dc171c] transition hover:text-[#a10d12]">
                                                 Lihat lokasi
                                                 <svg class="h-4 w-4" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24" aria-hidden="true">
@@ -833,7 +785,7 @@
                         class="mt-12 grid min-h-72 place-items-center rounded-[2rem] border border-dashed border-white/15 bg-[#111111] p-8 text-center">
                         <div class="max-w-md">
                             <span
-                                class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#941722] text-white shadow-lg shadow-[#941722]/20">
+                                class="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#dc171c] text-white shadow-lg shadow-[#dc171c]/20">
                                 <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                     aria-hidden="true">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7"
@@ -854,7 +806,7 @@
         <section class="bg-[#0a0a0a] py-24 text-white sm:py-28" aria-labelledby="faq-title">
             <div class="mx-auto max-w-4xl px-5 lg:px-8" x-data="{ active: 0 }">
                 <div class="mb-12 text-center">
-                    <p class="mb-4 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#941722]">Informasi umum
+                    <p class="mb-4 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#dc171c]">Informasi umum
                     </p>
                     <h2 id="faq-title" class="font-display text-4xl font-extrabold sm:text-5xl">Pertanyaan yang sering
                         ditanyakan</h2>
@@ -885,7 +837,7 @@
                                     :aria-expanded="(active === {{ $loop->index }}).toString()">
                                     <span>{{ $question }}</span>
                                     <span
-                                        class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/15 text-[#d6ad55]">
+                                        class="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-white/15 text-[#f3f4f6]">
                                         <svg class="h-4 w-4 transition"
                                             :class="active === {{ $loop->index }} && 'rotate-45'" fill="none"
                                             stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -904,14 +856,14 @@
             </div>
         </section>
 
-        <section class="relative overflow-hidden bg-[#941722] py-20 text-white">
+        <section class="relative overflow-hidden bg-[#dc171c] py-20 text-white">
             <div class="hero-grid absolute inset-0 opacity-30"></div>
-            <img src="{{ asset('images/shotokan.png') }}" alt="" aria-hidden="true"
+            <img src="{{ asset('images/logo-kki.png') }}" alt="" aria-hidden="true"
                 class="absolute -bottom-32 -right-20 w-96 opacity-[.06] brightness-0 invert">
             <div
                 class="relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-5 md:flex-row md:items-center lg:px-8">
                 <div>
-                    <p class="mb-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#e7c57f]">Dari Sumatera
+                    <p class="mb-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#f3f4f6]">Dari Sumatera
                         Utara
                         untuk karate-do</p>
                     <h2 class="font-display max-w-2xl text-4xl font-black leading-[.95] sm:text-5xl">Temukan tempat
@@ -919,7 +871,7 @@
                         dan keluarga KKI terdekat.</h2>
                 </div>
                 <a href="#dojo"
-                    class="inline-flex shrink-0 items-center gap-3 rounded-full bg-white px-7 py-4 text-sm font-extrabold text-[#7a0d16] transition hover:bg-[#f1dfb6]">
+                    class="inline-flex shrink-0 items-center gap-3 rounded-full bg-white px-7 py-4 text-sm font-extrabold text-[#a10d12] transition hover:bg-[#f1dfb6]">
                     Eksplor Dojo & Cabang
                     <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                         aria-hidden="true">
@@ -935,12 +887,12 @@
             <div>
                 <a href="#beranda" class="inline-flex items-center gap-3">
                     <span class="grid h-12 w-12 place-items-center rounded-full bg-white p-1">
-                        <img src="{{ asset('images/logo-shokaido.webp') }}" alt=""
+                        <img src="{{ asset('images/logo-kki.png') }}" alt=""
                             class="h-full w-full object-contain" width="48" height="48" loading="lazy">
                     </span>
                     <span>
                         <span class="block text-xl font-extrabold tracking-[.12em]">KKI</span>
-                        <span class="text-[9px] font-bold uppercase tracking-[.2em] text-[#d7ad5d]">Pengprov Sumatera
+                        <span class="text-[9px] font-bold uppercase tracking-[.2em] text-[#f3f4f6]">Pengprov Sumatera
                             Utara</span>
                     </span>
                 </a>
@@ -948,9 +900,10 @@
                     karakter, menjaga tradisi, dan mendorong prestasi karateka Sumatera Utara.</p>
             </div>
             <div>
-                <h2 class="text-xs font-extrabold uppercase tracking-[.18em] text-[#d7ad5d]">Jelajahi</h2>
+                <h2 class="text-xs font-extrabold uppercase tracking-[.18em] text-[#f3f4f6]">Jelajahi</h2>
                 <nav class="mt-5 grid gap-3 text-sm text-white/55" aria-label="Navigasi footer">
                     <a href="#tentang" class="transition hover:text-white">Tentang kami</a>
+                    <a href="#lambang" class="transition hover:text-white">Makna lambang KKI</a>
                     <a href="#nilai" class="transition hover:text-white">Nilai organisasi</a>
                     <a href="#program" class="transition hover:text-white">Program pembinaan</a>
                     <a href="#agenda" class="transition hover:text-white">Agenda kegiatan</a>
@@ -958,7 +911,7 @@
                 </nav>
             </div>
             <div>
-                <h2 class="text-xs font-extrabold uppercase tracking-[.18em] text-[#d7ad5d]">Akses</h2>
+                <h2 class="text-xs font-extrabold uppercase tracking-[.18em] text-[#f3f4f6]">Akses</h2>
                 <div class="mt-5 grid gap-3 text-sm text-white/55">
                     <a href="{{ route('login') }}" class="transition hover:text-white">Masuk portal</a>
                     <a href="#dojo" class="transition hover:text-white">Direktori dojo</a>

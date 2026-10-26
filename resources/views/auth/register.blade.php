@@ -1,6 +1,6 @@
 <x-guest-layout>
     @php($googleIdentity = $googleIdentity ?? null)
-    <div class="auth-heading auth-heading-with-logo"><img src="{{ asset('images/logo-shokaido.webp') }}" alt="Logo KKI" width="64" height="64" class="auth-heading-logo"><div><span class="auth-eyebrow">Bergabung bersama KKI</span><h1>Pendaftaran anggota</h1><p>Lengkapi identitas, pilih dojo, lalu buat akses akun Anda.</p></div></div>
+    <div class="auth-heading auth-heading-with-logo"><img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" width="64" height="64" class="auth-heading-logo"><div><span class="auth-eyebrow">Bergabung bersama KKI</span><h1>Pendaftaran anggota</h1><p>Lengkapi identitas, pilih dojo, lalu buat akses akun Anda.</p></div></div>
     @if ($googleIdentity)
         <p class="auth-status">Google terverifikasi: {{ $googleIdentity['email'] }}. Lengkapi profil anggota di bawah ini.</p>
     @else

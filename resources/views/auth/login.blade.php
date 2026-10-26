@@ -1,5 +1,5 @@
 <x-guest-layout>
-    <div class="auth-heading auth-heading-with-logo"><img src="{{ asset('images/logo-shokaido.webp') }}" alt="Logo KKI" width="64" height="64" class="auth-heading-logo"><div><span class="auth-eyebrow">Selamat datang kembali</span><h1>Masuk ke akun Anda</h1><p>Kelola keanggotaan dan administrasi KKI.</p></div></div>
+    <div class="auth-heading auth-heading-with-logo"><img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" width="64" height="64" class="auth-heading-logo"><div><span class="auth-eyebrow">Selamat datang kembali</span><h1>Masuk ke akun Anda</h1><p>Kelola keanggotaan dan administrasi KKI.</p></div></div>
     <x-auth-session-status class="auth-status" :status="session('status')" />
     @if ($errors->has('google'))<p role="alert" class="auth-error-summary mb-3">{{ $errors->first('google') }}</p>@endif
     <x-google-auth-button />
