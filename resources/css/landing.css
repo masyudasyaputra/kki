@@ -928,9 +928,9 @@ html {
     }
 }
 
-/* Logo pada wordmark tampil tanpa bidang putih tambahan. */
+/* Latar putih menjaga logo pada wordmark terbaca di header dan footer. */
 .pp .pp-brand img[src] {
-    background-color: transparent;
-    border-radius: 0;
-    padding: 0;
+    background-color: #fff;
+    border-radius: 6px;
+    padding: 3px;
 }
