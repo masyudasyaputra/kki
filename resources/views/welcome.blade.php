@@ -309,7 +309,7 @@
                     <div class="absolute inset-8 rounded-full bg-[#dc171c]/20 blur-[90px]"></div>
                     <img src="{{ asset('images/logo-kki.png') }}"
                         alt="Lambang Kushin Ryu M Karate-Do Indonesia"
-                        class="relative mx-auto w-full max-w-[520px] object-contain px-8 pb-16 pt-4 drop-shadow-[0_25px_60px_rgba(220,23,28,.2)]"
+                        class="relative mx-auto w-full max-w-[520px] object-contain drop-shadow-[0_25px_60px_rgba(220,23,28,.2)]"
                         width="520" height="520" fetchpriority="high">
 
                     <aside
