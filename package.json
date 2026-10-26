@@ -1,4 +1,5 @@
 {
+    "name": "kki",
     "private": true,
     "type": "module",
     "scripts": {

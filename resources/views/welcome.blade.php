@@ -7,26 +7,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#8F1018">
 
-    <title>SHOKAIDO Sumatera Utara | Perguruan Karate-Do</title>
+    <title>KKI Sumatera Utara | Perguruan Karate-Do</title>
     <meta name="description"
-        content="Website resmi Perguruan Karate-Do SHOKAIDO Pengprov Sumatera Utara. Temukan dojo dan cabang SHOKAIDO di kabupaten/kota Sumatera Utara.">
+        content="Website resmi Perguruan Karate-Do KKI Pengprov Sumatera Utara. Temukan dojo dan cabang KKI di kabupaten/kota Sumatera Utara.">
     <meta name="keywords"
-        content="SHOKAIDO Sumatera Utara, karate Sumut, perguruan karate Medan, dojo karate Sumatera Utara, Shotokan Karate-Do Indonesia">
-    <meta name="author" content="SHOKAIDO Pengprov Sumatera Utara">
+        content="KKI Sumatera Utara, karate Sumut, perguruan karate Medan, dojo karate Sumatera Utara, KKI">
+    <meta name="author" content="KKI Pengprov Sumatera Utara">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="{{ url('/') }}">
 
     <meta property="og:type" content="website">
     <meta property="og:locale" content="id_ID">
-    <meta property="og:site_name" content="SHOKAIDO Sumatera Utara">
-    <meta property="og:title" content="SHOKAIDO Sumatera Utara | Perguruan Karate-Do">
+    <meta property="og:site_name" content="KKI Sumatera Utara">
+    <meta property="og:title" content="KKI Sumatera Utara | Perguruan Karate-Do">
     <meta property="og:description"
-        content="Membentuk karateka berkarakter, menjaga tradisi, dan menumbuhkan prestasi bersama SHOKAIDO Sumatera Utara.">
+        content="Membentuk karateka berkarakter, menjaga tradisi, dan menumbuhkan prestasi bersama KKI Sumatera Utara.">
     <meta property="og:url" content="{{ url('/') }}">
     <meta property="og:image" content="{{ asset('images/logo.png') }}">
-    <meta property="og:image:alt" content="Lambang Perguruan Karate-Do SHOKAIDO">
+    <meta property="og:image:alt" content="Lambang Perguruan Karate-Do KKI">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="SHOKAIDO Sumatera Utara">
+    <meta name="twitter:title" content="KKI Sumatera Utara">
     <meta name="twitter:description" content="Perguruan Karate-Do untuk pembinaan karakter, tradisi, dan prestasi.">
     <meta name="twitter:image" content="{{ asset('images/logo.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -124,8 +124,8 @@
         {
             "@@context": "https://schema.org",
             "@type": "SportsOrganization",
-            "name": "SHOKAIDO Pengprov Sumatera Utara",
-            "alternateName": "Perguruan Karate-Do SHOKAIDO Sumut",
+            "name": "KKI Pengprov Sumatera Utara",
+            "alternateName": "Perguruan Karate-Do KKI Sumut",
             "url": "{{ url('/') }}",
             "logo": "{{ asset('images/logo.png') }}",
             "description": "Perguruan Karate-Do untuk pembinaan karakter, tradisi, dan prestasi di Sumatera Utara.",
@@ -143,7 +143,7 @@
             "mainEntity": [
                 {
                     "@type": "Question",
-                    "name": "Bagaimana menemukan dojo SHOKAIDO di Sumatera Utara?",
+                    "name": "Bagaimana menemukan dojo KKI di Sumatera Utara?",
                     "acceptedAnswer": {
                         "@type": "Answer",
                         "text": "Gunakan bagian Eksplor Dojo dan Cabang untuk melihat dojo aktif berdasarkan kabupaten atau kota di Sumatera Utara."
@@ -179,13 +179,13 @@
 
     <header class="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/90 text-white backdrop-blur-xl">
         <div class="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 lg:px-8">
-            <a href="#beranda" class="flex items-center gap-3" aria-label="SHOKAIDO Sumatera Utara - Beranda">
+            <a href="#beranda" class="flex items-center gap-3" aria-label="KKI Sumatera Utara - Beranda">
                 <span class="grid h-11 w-11 place-items-center rounded-full bg-white p-1 shadow-lg shadow-black/30">
                     <img src="{{ asset('images/logo-shokaido.webp') }}" alt=""
                         class="h-full w-full object-contain" width="44" height="44">
                 </span>
                 <span class="leading-none">
-                    <span class="block text-lg font-extrabold tracking-[0.12em]">SHOKAIDO</span>
+                    <span class="block text-lg font-extrabold tracking-[0.12em]">KKI</span>
                     <span class="mt-1 block text-[9px] font-bold uppercase tracking-[0.22em] text-[#d6ad55]">Pengprov
                         Sumatera Utara</span>
                 </span>
@@ -271,7 +271,7 @@
             <div class="absolute -right-20 top-36 -z-10 h-[420px] w-[420px] rounded-full border border-[#d6ad55]/10">
             </div>
             <p class="font-display pointer-events-none absolute left-1/2 top-32 -z-10 -translate-x-1/2 whitespace-nowrap text-[19vw] font-black leading-none tracking-[.04em] text-white/[.035]"
-                aria-hidden="true">SHOKAIDO</p>
+                aria-hidden="true">KKI</p>
 
             <div
                 class="mx-auto grid min-h-[calc(100vh-76px)] max-w-7xl items-center gap-8 px-5 py-16 lg:grid-cols-[.82fr_1.18fr] lg:px-8 lg:py-20">
@@ -310,13 +310,13 @@
                 <div class="relative mx-auto w-full max-w-[900px] lg:ml-auto">
                     <div class="absolute inset-8 rounded-full bg-[#941722]/20 blur-[90px]"></div>
                     <img src="{{ asset('images/hero-karate-action.webp') }}"
-                        alt="Karateka SHOKAIDO melakukan pukulan lurus dalam latihan"
+                        alt="Karateka KKI melakukan pukulan lurus dalam latihan"
                         class="relative z-0 w-[105%] max-w-none -translate-x-[2.5%] object-contain drop-shadow-[0_30px_40px_rgba(0,0,0,.45)] sm:w-[115%] sm:-translate-x-[7%] lg:w-[118%] lg:-translate-x-[9%] xl:w-[125%] xl:-translate-x-[12%]"
                         width="1792" height="896" fetchpriority="high">
 
                     <aside
                         class="relative z-20 ml-auto -mt-10 w-[92%] rounded-[1.5rem] border border-white/15 bg-black/85 p-5 text-white shadow-xl shadow-black/30 backdrop-blur sm:w-72 lg:absolute lg:-bottom-8 lg:right-0 lg:mt-0 lg:w-64"
-                        aria-label="Afiliasi SHOKAIDO">
+                        aria-label="Afiliasi KKI">
                         <div class="flex items-center gap-4">
                             <img src="{{ asset('images/skif-optimized.webp') }}" alt="Logo SKIF Indonesia"
                                 class="h-14 w-14 object-contain" width="56" height="56">
@@ -355,7 +355,7 @@
                                 </div>
                                 <div class="absolute h-56 w-56 rounded-full bg-black/10 sm:h-64 sm:w-64"></div>
                                 <img src="{{ asset('images/logo-shokaido.webp') }}"
-                                    alt="Lambang resmi Perguruan Karate-Do SHOKAIDO"
+                                    alt="Lambang resmi Perguruan Karate-Do KKI"
                                     class="relative h-52 w-52 object-contain drop-shadow-[0_22px_24px_rgba(0,0,0,.35)] sm:h-60 sm:w-60"
                                     width="240" height="240" fetchpriority="high">
                             </div>
@@ -415,11 +415,11 @@
         <section class="border-y border-white/10 bg-[#090909] py-12 text-white" aria-label="Identitas dan afiliasi organisasi">
             <div class="mx-auto flex max-w-4xl flex-col items-center justify-center gap-7 px-5 sm:flex-row sm:gap-12">
                 <div class="flex items-center gap-4">
-                    <img src="{{ asset('images/logo-shokaido.webp') }}" alt="Logo SHOKAIDO"
+                    <img src="{{ asset('images/logo-shokaido.webp') }}" alt="Logo KKI"
                         class="h-14 w-14 object-contain" width="56" height="56">
                     <div>
                         <p class="text-[9px] font-bold uppercase tracking-[.2em] text-white/35">Perguruan</p>
-                        <p class="font-display text-xl font-black">SHOKAIDO Sumut</p>
+                        <p class="font-display text-xl font-black">KKI Sumut</p>
                     </div>
                 </div>
                 <div class="hidden h-px w-20 bg-white/15 sm:block"></div>
@@ -441,7 +441,7 @@
                 <div>
                     <p
                         class="mb-5 flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#ef4651]">
-                        <span class="h-px w-9 bg-[#ef4651]"></span> Tentang SHOKAIDO SUMUT
+                        <span class="h-px w-9 bg-[#ef4651]"></span> Tentang KKI SUMUT
                     </p>
                     <h2 class="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">Lebih
                         dari
@@ -452,7 +452,7 @@
                         karate-do
                         adalah jalan untuk mengenali diri, melatih keteguhan, dan memberi manfaat bagi sesama.</p>
                     <div class="mt-8 grid gap-6 border-t border-white/10 pt-8 sm:grid-cols-2">
-                        <p class="text-sm leading-7 text-white/50">SHOKAIDO Pengprov Sumatera Utara menaungi proses
+                        <p class="text-sm leading-7 text-white/50">KKI Pengprov Sumatera Utara menaungi proses
                             pembinaan
                             organisasi dan karateka melalui latihan yang terarah, tata kelola yang tertib, serta
                             semangat
@@ -478,7 +478,7 @@
                     </div>
                     <p class="max-w-md text-sm leading-7 text-white/50">Nilai utama yang menjadi napas pembinaan dan
                         hubungan
-                        antarkarateka di lingkungan SHOKAIDO Sumatera Utara.</p>
+                        antarkarateka di lingkungan KKI Sumatera Utara.</p>
                 </div>
 
                 <div class="grid border-y border-white/10 md:grid-cols-3">
@@ -619,14 +619,14 @@
                 <div class="mb-14 flex flex-col justify-between gap-7 md:flex-row md:items-end">
                     <div>
                         <p class="mb-5 flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#d6ad55]">
-                            <span class="h-px w-9 bg-[#d6ad55]"></span> Kalender SHOKAIDO SUMUT
+                            <span class="h-px w-9 bg-[#d6ad55]"></span> Kalender KKI SUMUT
                         </p>
                         <h2 class="font-display max-w-2xl text-4xl font-black leading-[.95] sm:text-6xl">Agenda
                             <span class="text-[#d6ad55]">kegiatan.</span>
                         </h2>
                     </div>
                     <p class="max-w-md text-sm leading-7 text-white/50">Pantau jadwal kegiatan dan ujian resmi di
-                        lingkungan SHOKAIDO Pengprov Sumatera Utara.</p>
+                        lingkungan KKI Pengprov Sumatera Utara.</p>
                 </div>
 
                 @if ($agendas->isNotEmpty())
@@ -701,7 +701,7 @@
                             <p class="text-[9px] font-extrabold uppercase tracking-[.2em] text-[#d6ad55]">Segera hadir</p>
                             <h3 class="mt-2 font-display text-2xl font-black sm:text-3xl">Agenda berikutnya sedang
                                 disiapkan.</h3>
-                            <p class="mt-3 max-w-2xl text-sm leading-7 text-white/50">Jadwal resmi kegiatan SHOKAIDO
+                            <p class="mt-3 max-w-2xl text-sm leading-7 text-white/50">Jadwal resmi kegiatan KKI
                                 Sumatera Utara akan tampil di sini setelah pendaftaran dibuka.</p>
                         </div>
                     </div>
@@ -717,13 +717,13 @@
                 <div class="grid gap-10 lg:grid-cols-[1fr_.72fr] lg:items-end">
                     <div>
                         <p class="mb-5 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#941722]">Jejak
-                            SHOKAIDO di
+                            KKI di
                             Sumatera Utara</p>
                         <h2 class="font-display text-5xl font-black leading-[.92] sm:text-6xl">Temukan dojo dan
                             <span class="text-[#941722]">cabang terdekat.</span>
                         </h2>
                         <p class="mt-6 max-w-2xl text-base leading-7 text-white/50">Eksplor dojo aktif di bawah naungan
-                            SHOKAIDO Pengprov Sumatera Utara berdasarkan cabang kabupaten dan kota.</p>
+                            KKI Pengprov Sumatera Utara berdasarkan cabang kabupaten dan kota.</p>
                     </div>
 
                     <div
@@ -844,7 +844,7 @@
                             <h3 class="font-display mt-6 text-3xl font-black">Direktori dojo sedang disiapkan</h3>
                             <p class="mt-3 text-sm leading-7 text-white/50">Data dojo dan cabang kabupaten/kota akan
                                 tampil
-                                otomatis di sini setelah diverifikasi oleh pengurus SHOKAIDO Sumatera Utara.</p>
+                                otomatis di sini setelah diverifikasi oleh pengurus KKI Sumatera Utara.</p>
                         </div>
                     </div>
                 @endif
@@ -862,7 +862,7 @@
                 @php
                     $faqs = [
                         [
-                            'Bagaimana menemukan dojo SHOKAIDO di Sumatera Utara?',
+                            'Bagaimana menemukan dojo KKI di Sumatera Utara?',
                             'Gunakan bagian Eksplor Dojo dan Cabang untuk melihat dojo aktif berdasarkan kabupaten atau kota di Sumatera Utara.',
                         ],
                         [
@@ -916,7 +916,7 @@
                         untuk karate-do</p>
                     <h2 class="font-display max-w-2xl text-4xl font-black leading-[.95] sm:text-5xl">Temukan tempat
                         berlatih
-                        dan keluarga SHOKAIDO terdekat.</h2>
+                        dan keluarga KKI terdekat.</h2>
                 </div>
                 <a href="#dojo"
                     class="inline-flex shrink-0 items-center gap-3 rounded-full bg-white px-7 py-4 text-sm font-extrabold text-[#7a0d16] transition hover:bg-[#f1dfb6]">
@@ -939,7 +939,7 @@
                             class="h-full w-full object-contain" width="48" height="48" loading="lazy">
                     </span>
                     <span>
-                        <span class="block text-xl font-extrabold tracking-[.12em]">SHOKAIDO</span>
+                        <span class="block text-xl font-extrabold tracking-[.12em]">KKI</span>
                         <span class="text-[9px] font-bold uppercase tracking-[.2em] text-[#d7ad5d]">Pengprov Sumatera
                             Utara</span>
                     </span>
@@ -969,7 +969,7 @@
         <div class="border-t border-white/10">
             <div
                 class="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-6 text-[10px] font-bold uppercase tracking-[.16em] text-white/35 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-                <p>&copy; {{ date('Y') }} SHOKAIDO Pengprov Sumatera Utara.</p>
+                <p>&copy; {{ date('Y') }} KKI Pengprov Sumatera Utara.</p>
                 <p>Karate-do • Karakter • Persaudaraan</p>
             </div>
         </div>

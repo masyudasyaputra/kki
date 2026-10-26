@@ -5,20 +5,20 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'SHOKAIDO OS') }}</title>
+    <title>{{ config('app.name', 'KKI OS') }}</title>
     <link rel="icon" type="image/webp" href="{{ asset('images/logo-shokaido.webp') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body data-authenticated="false" class="{{ $authEmbedded ? 'auth-embedded' : '' }} auth-page font-sans antialiased">
     <main class="auth-shell {{ request()->routeIs('register') ? 'auth-shell-wide' : '' }}">
         @unless($authEmbedded)
-        <a href="{{ url('/') }}" class="auth-brand" aria-label="Beranda Shokaido">
-            <img src="{{ asset('images/logo-shokaido.webp') }}" alt="Logo Shokaido" width="48" height="48">
-            <span><strong>SHOKAIDO<span class="text-red-600">.OS</span></strong><small>Shotokan Kandaga Indonesia</small></span>
+        <a href="{{ url('/') }}" class="auth-brand" aria-label="Beranda KKI">
+            <img src="{{ asset('images/logo-shokaido.webp') }}" alt="Logo KKI" width="48" height="48">
+            <span><strong>KKI<span class="text-red-600">.OS</span></strong><small>KKI</small></span>
         </a>
         @endunless
         <div class="auth-card">{{ $slot }}</div>
-        @unless($authEmbedded)<footer class="auth-footer">&copy; {{ date('Y') }} Shokaido Indonesia <span aria-hidden="true">/</span> <a href="{{ url('/') }}">Kembali ke beranda</a></footer>@endunless
+        @unless($authEmbedded)<footer class="auth-footer">&copy; {{ date('Y') }} KKI Indonesia <span aria-hidden="true">/</span> <a href="{{ url('/') }}">Kembali ke beranda</a></footer>@endunless
     </main>
 </body>
 </html>

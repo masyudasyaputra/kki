@@ -11,7 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'SHOKAIDO OS') }}</title>
+    <title>{{ config('app.name', 'KKI OS') }}</title>
 
     {{-- Font: Inter --}}
     <link rel="preconnect" href="https://rsms.me/">
@@ -97,12 +97,12 @@
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
                     <div class="flex items-center gap-2">
-                        <span class="font-bold text-slate-800 tracking-tight">SHOKAIDO<span class="text-red-600">.OS</span></span>
+                        <span class="font-bold text-slate-800 tracking-tight">KKI<span class="text-red-600">.OS</span></span>
                         <span class="text-slate-300">•</span>
-                        <span>Sistem Administrasi Shotokan Kandaga Indonesia</span>
+                        <span>Sistem Administrasi KKI</span>
                     </div>
                     <div class="flex items-center gap-4 text-[11px]">
-                        <span>&copy; {{ date('Y') }} Shokaido. All rights reserved.</span>
+                        <span>&copy; {{ date('Y') }} KKI. All rights reserved.</span>
                     </div>
                 </div>
             </div>

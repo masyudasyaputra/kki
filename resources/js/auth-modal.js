@@ -53,7 +53,7 @@ function initAuthModal() {
             const close = document.createElement('button'); close.type = 'button'; close.className = 'btn btn-secondary'; close.textContent = 'Tutup'; close.onclick = () => { dialog.close(); opener?.focus(); };
             header.append(title, close);
             loading = document.createElement('p'); loading.className = 'create-form-feedback'; loading.setAttribute('role', 'status'); loading.textContent = 'Memuat formulir...';
-            frame = document.createElement('iframe'); frame.className = 'create-form-frame'; frame.title = 'Masuk atau daftar anggota Shokaido';
+            frame = document.createElement('iframe'); frame.className = 'create-form-frame'; frame.title = 'Masuk atau daftar anggota KKI';
             frame.addEventListener('load', showFrame);
             dialog.append(header, loading, frame);
             dialog.addEventListener('close', () => {

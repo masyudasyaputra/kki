@@ -43,8 +43,8 @@
 <aside id="backend-sidebar" class="backend-sidebar" :class="{ 'is-open': sidebarOpen }" :inert="!sidebarOpen && !desktopSidebar" @keydown.escape.window="sidebarOpen = false">
     <div class="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
         <a href="{{ $homeHref }}" class="flex items-center gap-3">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo Shokaido" class="h-10 w-10 object-contain">
-            <div><span class="text-lg font-bold tracking-tight text-white">SHOKAIDO<span class="text-red-400">.OS</span></span><p class="mt-1 text-[10px] text-slate-400">Shotokan Kandaga Indonesia</p></div>
+            <img src="{{ asset('images/logo.png') }}" alt="Logo KKI" class="h-10 w-10 object-contain">
+            <div><span class="text-lg font-bold tracking-tight text-white">KKI<span class="text-red-400">.OS</span></span><p class="mt-1 text-[10px] text-slate-400">KKI</p></div>
         </a>
         <button type="button" @click="sidebarOpen = false" class="rounded-lg p-2 text-slate-400 lg:hidden" aria-label="Tutup navigasi">&times;</button>
     </div>
