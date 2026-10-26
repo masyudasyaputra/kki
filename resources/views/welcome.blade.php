@@ -7,26 +7,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#dc171c">
 
-    <title>KKI Sumatera Utara | Kushin Ryu M Karate-Do Indonesia</title>
+    <title>PP KKI | Kushin Ryu M Karate-Do Indonesia</title>
     <meta name="description"
-        content="Kushin Ryu M Karate-Do Indonesia (KKI) Sumatera Utara. Temukan dojo dan cabang KKI di kabupaten/kota Sumatera Utara.">
+        content="Pengurus Pusat Kushin Ryu M Karate-Do Indonesia (PP KKI). Temukan dojo dan cabang KKI di seluruh Indonesia.">
     <meta name="keywords"
-        content="KKI Sumatera Utara, karate Sumut, perguruan karate Medan, dojo karate Sumatera Utara, KKI">
-    <meta name="author" content="KKI Pengprov Sumatera Utara">
+        content="PP KKI, karate Indonesia, perguruan karate Indonesia, dojo karate Indonesia, KKI">
+    <meta name="author" content="PP KKI">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="{{ url('/') }}">
 
     <meta property="og:type" content="website">
     <meta property="og:locale" content="id_ID">
-    <meta property="og:site_name" content="KKI Sumatera Utara">
-    <meta property="og:title" content="KKI Sumatera Utara | Kushin Ryu M Karate-Do Indonesia">
+    <meta property="og:site_name" content="PP KKI">
+    <meta property="og:title" content="PP KKI | Kushin Ryu M Karate-Do Indonesia">
     <meta property="og:description"
-        content="Membentuk karateka berkarakter, menjaga tradisi, dan menumbuhkan prestasi bersama KKI Sumatera Utara.">
+        content="Membentuk karateka berkarakter, menjaga tradisi, dan menumbuhkan prestasi bersama PP KKI.">
     <meta property="og:url" content="{{ url('/') }}">
     <meta property="og:image" content="{{ asset('images/logo-kki.png') }}">
     <meta property="og:image:alt" content="Lambang Perguruan Karate-Do KKI">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="KKI Sumatera Utara">
+    <meta name="twitter:title" content="PP KKI">
     <meta name="twitter:description" content="Perguruan Karate-Do untuk pembinaan karakter, tradisi, dan prestasi.">
     <meta name="twitter:image" content="{{ asset('images/logo-kki.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -124,15 +124,15 @@
         {
             "@@context": "https://schema.org",
             "@type": "SportsOrganization",
-            "name": "KKI Pengprov Sumatera Utara",
-            "alternateName": "Kushin Ryu M Karate-Do Indonesia Sumatera Utara",
+            "name": "Pengurus Pusat KKI",
+            "alternateName": "PP KKI - Kushin Ryu M Karate-Do Indonesia",
             "url": "{{ url('/') }}",
             "logo": "{{ asset('images/logo-kki.png') }}",
-            "description": "Perguruan Karate-Do untuk pembinaan karakter, tradisi, dan prestasi di Sumatera Utara.",
+            "description": "Perguruan Karate-Do untuk pembinaan karakter, tradisi, dan prestasi di Indonesia.",
             "sport": "Karate",
             "areaServed": {
-                "@type": "AdministrativeArea",
-                "name": "Sumatera Utara"
+                "@type": "Country",
+                "name": "Indonesia"
             }
         }
     </script>
@@ -143,10 +143,10 @@
             "mainEntity": [
                 {
                     "@type": "Question",
-                    "name": "Bagaimana menemukan dojo KKI di Sumatera Utara?",
+                    "name": "Bagaimana menemukan dojo KKI di Indonesia?",
                     "acceptedAnswer": {
                         "@type": "Answer",
-                        "text": "Gunakan bagian Eksplor Dojo dan Cabang untuk melihat dojo aktif berdasarkan kabupaten atau kota di Sumatera Utara."
+                        "text": "Gunakan bagian Eksplor Dojo dan Cabang untuk melihat dojo aktif berdasarkan kabupaten atau kota di Indonesia."
                     }
                 },
                 {
@@ -179,15 +179,14 @@
 
     <header class="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-[#050505]/90 text-white backdrop-blur-xl">
         <div class="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 lg:px-8">
-            <a href="#beranda" class="flex items-center gap-3" aria-label="KKI Sumatera Utara - Beranda">
+            <a href="#beranda" class="flex items-center gap-3" aria-label="PP KKI - Beranda">
                 <span class="grid h-11 w-11 place-items-center rounded-full bg-white p-1 shadow-lg shadow-black/30">
                     <img src="{{ asset('images/logo-kki.png') }}" alt=""
                         class="h-full w-full object-contain" width="44" height="44">
                 </span>
                 <span class="leading-none">
-                    <span class="block text-lg font-extrabold tracking-[0.12em]">KKI</span>
-                    <span class="mt-1 block text-[9px] font-bold uppercase tracking-[0.22em] text-[#f3f4f6]">Pengprov
-                        Sumatera Utara</span>
+                    <span class="block text-lg font-extrabold tracking-[0.12em]">PP KKI</span>
+                    <span class="mt-1 block text-[9px] font-bold uppercase tracking-[0.22em] text-[#f3f4f6]">Pengurus Pusat</span>
                 </span>
             </a>
 
@@ -271,7 +270,7 @@
             <div class="absolute -right-20 top-36 -z-10 h-[420px] w-[420px] rounded-full border border-[#f3f4f6]/10">
             </div>
             <p class="font-display pointer-events-none absolute left-1/2 top-32 -z-10 -translate-x-1/2 whitespace-nowrap text-[19vw] font-black leading-none tracking-[.04em] text-white/[.035]"
-                aria-hidden="true">KKI</p>
+                aria-hidden="true">PP KKI</p>
 
             <div
                 class="mx-auto grid min-h-[calc(100vh-76px)] max-w-7xl items-center gap-8 px-5 py-16 lg:grid-cols-[.82fr_1.18fr] lg:px-8 lg:py-20">
@@ -280,7 +279,7 @@
                         <span class="h-px w-10 bg-[#f3f4f6]"></span>
                         <p class="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#f3f4f6]">Perguruan
                             Karate-Do
-                            • Sumatera Utara</p>
+                            • Indonesia</p>
                     </div>
                     <h1
                         class="font-display reveal-up reveal-delay-1 text-6xl font-black leading-[.86] sm:text-7xl lg:text-[84px]">
@@ -288,7 +287,7 @@
                         <span class="text-[#f3f4f6]">Satu keluarga.</span>
                     </h1>
                     <p class="reveal-up reveal-delay-2 mt-7 max-w-md text-base leading-7 text-white/55">
-                        Kushin Ryu M Karate-Do Indonesia. Rumah pembinaan karateka Sumatera Utara yang menjunjung disiplin, persaudaraan, dan
+                        Kushin Ryu M Karate-Do Indonesia. Rumah pembinaan karateka di seluruh Indonesia yang menjunjung disiplin, persaudaraan, dan
                         semangat untuk terus bertumbuh.
                     </p>
                     <div class="reveal-up reveal-delay-2 mt-9 flex flex-col gap-3 sm:flex-row">
@@ -364,7 +363,7 @@
                 <div>
                     <p class="text-[10px] font-bold uppercase tracking-[.25em] text-red-400">Satu perguruan. Satu keluarga.</p>
                     <h2 class="font-display mt-2 text-2xl font-black sm:text-3xl">Kushin Ryu M Karate-Do Indonesia</h2>
-                    <p class="mt-2 text-sm text-white/50">Pembinaan karate, karakter, dan persaudaraan di Sumatera Utara.</p>
+                    <p class="mt-2 text-sm text-white/50">Pembinaan karate, karakter, dan persaudaraan di Indonesia.</p>
                 </div>
                 <a href="#lambang" class="sm:ml-auto shrink-0 rounded-full border border-white/20 px-5 py-3 text-xs font-bold transition hover:border-red-500">Makna lambang KKI &rarr;</a>
             </div>
@@ -375,7 +374,7 @@
                 <div>
                     <p
                         class="mb-5 flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#ef4651]">
-                        <span class="h-px w-9 bg-[#ef4651]"></span> Tentang KKI SUMUT
+                        <span class="h-px w-9 bg-[#ef4651]"></span> Tentang PP KKI
                     </p>
                     <h2 class="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">Lebih
                         dari
@@ -384,7 +383,7 @@
                 <div class="lg:pt-8">
                     <p class="text-xl font-semibold leading-9 text-white/85 sm:text-2xl sm:leading-10">Kushin Ryu M Karate-Do Indonesia (KKI) adalah keluarga karate beraliran Kushin Ryu yang menjunjung kesatuan, persaudaraan, dan pembentukan karakter.</p>
                     <div class="mt-8 grid gap-6 border-t border-white/10 pt-8 sm:grid-cols-2">
-                        <p class="text-sm leading-7 text-white/50">KKI Pengprov Sumatera Utara menaungi proses
+                        <p class="text-sm leading-7 text-white/50">Pengurus Pusat KKI mengoordinasikan proses
                             pembinaan
                             organisasi dan karateka melalui latihan yang terarah, tata kelola yang tertib, serta
                             semangat
@@ -430,7 +429,7 @@
                     </div>
                     <p class="max-w-md text-sm leading-7 text-white/50">Nilai utama yang menjadi napas pembinaan dan
                         hubungan
-                        antarkarateka di lingkungan KKI Sumatera Utara.</p>
+                        antarkarateka di lingkungan PP KKI.</p>
                 </div>
 
                 <div class="grid border-y border-white/10 md:grid-cols-3">
@@ -571,14 +570,14 @@
                 <div class="mb-14 flex flex-col justify-between gap-7 md:flex-row md:items-end">
                     <div>
                         <p class="mb-5 flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#f3f4f6]">
-                            <span class="h-px w-9 bg-[#f3f4f6]"></span> Kalender KKI SUMUT
+                            <span class="h-px w-9 bg-[#f3f4f6]"></span> Kalender PP KKI
                         </p>
                         <h2 class="font-display max-w-2xl text-4xl font-black leading-[.95] sm:text-6xl">Agenda
                             <span class="text-[#f3f4f6]">kegiatan.</span>
                         </h2>
                     </div>
                     <p class="max-w-md text-sm leading-7 text-white/50">Pantau jadwal kegiatan dan ujian resmi di
-                        lingkungan KKI Pengprov Sumatera Utara.</p>
+                        lingkungan PP KKI.</p>
                 </div>
 
                 @if ($agendas->isNotEmpty())
@@ -653,14 +652,13 @@
                             <p class="text-[9px] font-extrabold uppercase tracking-[.2em] text-[#f3f4f6]">Segera hadir</p>
                             <h3 class="mt-2 font-display text-2xl font-black sm:text-3xl">Agenda berikutnya sedang
                                 disiapkan.</h3>
-                            <p class="mt-3 max-w-2xl text-sm leading-7 text-white/50">Jadwal resmi kegiatan KKI
-                                Sumatera Utara akan tampil di sini setelah pendaftaran dibuka.</p>
+                            <p class="mt-3 max-w-2xl text-sm leading-7 text-white/50">Jadwal resmi kegiatan PP KKI akan tampil di sini setelah pendaftaran dibuka.</p>
                         </div>
                     </div>
                 @endif
 
                 <p class="mt-6 text-xs leading-6 text-white/35">Jadwal dapat berubah mengikuti keputusan panitia dan
-                    pengurus wilayah.</p>
+                    pengurus pusat dan pengurus daerah.</p>
             </div>
         </section>
 
@@ -669,13 +667,11 @@
                 <div class="grid gap-10 lg:grid-cols-[1fr_.72fr] lg:items-end">
                     <div>
                         <p class="mb-5 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#dc171c]">Jejak
-                            KKI di
-                            Sumatera Utara</p>
+                            KKI di seluruh Indonesia</p>
                         <h2 class="font-display text-5xl font-black leading-[.92] sm:text-6xl">Temukan dojo dan
                             <span class="text-[#dc171c]">cabang terdekat.</span>
                         </h2>
-                        <p class="mt-6 max-w-2xl text-base leading-7 text-white/50">Eksplor dojo aktif di bawah naungan
-                            KKI Pengprov Sumatera Utara berdasarkan cabang kabupaten dan kota.</p>
+                        <p class="mt-6 max-w-2xl text-base leading-7 text-white/50">Eksplor dojo aktif dalam jaringan PP KKI di seluruh Indonesia, berdasarkan cabang kabupaten dan kota.</p>
                     </div>
 
                     <div
@@ -796,7 +792,7 @@
                             <h3 class="font-display mt-6 text-3xl font-black">Direktori dojo sedang disiapkan</h3>
                             <p class="mt-3 text-sm leading-7 text-white/50">Data dojo dan cabang kabupaten/kota akan
                                 tampil
-                                otomatis di sini setelah diverifikasi oleh pengurus KKI Sumatera Utara.</p>
+                                otomatis di sini setelah diverifikasi oleh PP KKI.</p>
                         </div>
                     </div>
                 @endif
@@ -814,8 +810,8 @@
                 @php
                     $faqs = [
                         [
-                            'Bagaimana menemukan dojo KKI di Sumatera Utara?',
-                            'Gunakan bagian Eksplor Dojo dan Cabang untuk melihat dojo aktif berdasarkan kabupaten atau kota di Sumatera Utara.',
+                            'Bagaimana menemukan dojo KKI di Indonesia?',
+                            'Gunakan bagian Eksplor Dojo dan Cabang untuk melihat dojo aktif berdasarkan kabupaten atau kota di Indonesia.',
                         ],
                         [
                             'Apa saja pembinaan yang tersedia?',
@@ -863,8 +859,7 @@
             <div
                 class="relative mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-5 md:flex-row md:items-center lg:px-8">
                 <div>
-                    <p class="mb-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#f3f4f6]">Dari Sumatera
-                        Utara
+                    <p class="mb-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#f3f4f6]">Dari Indonesia
                         untuk karate-do</p>
                     <h2 class="font-display max-w-2xl text-4xl font-black leading-[.95] sm:text-5xl">Temukan tempat
                         berlatih
@@ -891,13 +886,12 @@
                             class="h-full w-full object-contain" width="48" height="48" loading="lazy">
                     </span>
                     <span>
-                        <span class="block text-xl font-extrabold tracking-[.12em]">KKI</span>
-                        <span class="text-[9px] font-bold uppercase tracking-[.2em] text-[#f3f4f6]">Pengprov Sumatera
-                            Utara</span>
+                        <span class="block text-xl font-extrabold tracking-[.12em]">PP KKI</span>
+                        <span class="text-[9px] font-bold uppercase tracking-[.2em] text-[#f3f4f6]">Pengurus Pusat</span>
                     </span>
                 </a>
                 <p class="mt-6 max-w-md text-sm leading-7 text-white/45">Wadah pembinaan karate-do yang menumbuhkan
-                    karakter, menjaga tradisi, dan mendorong prestasi karateka Sumatera Utara.</p>
+                    karakter, menjaga tradisi, dan mendorong prestasi karateka di seluruh Indonesia.</p>
             </div>
             <div>
                 <h2 class="text-xs font-extrabold uppercase tracking-[.18em] text-[#f3f4f6]">Jelajahi</h2>
@@ -915,14 +909,14 @@
                 <div class="mt-5 grid gap-3 text-sm text-white/55">
                     <a href="{{ route('login') }}" class="transition hover:text-white">Masuk portal</a>
                     <a href="#dojo" class="transition hover:text-white">Direktori dojo</a>
-                    <p>Sumatera Utara, Indonesia</p>
+                    <p>Indonesia</p>
                 </div>
             </div>
         </div>
         <div class="border-t border-white/10">
             <div
                 class="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-6 text-[10px] font-bold uppercase tracking-[.16em] text-white/35 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-                <p>&copy; {{ date('Y') }} KKI Pengprov Sumatera Utara.</p>
+                <p>&copy; {{ date('Y') }} PP KKI.</p>
                 <p>Karate-do • Karakter • Persaudaraan</p>
             </div>
         </div>

@@ -26,9 +26,6 @@ Route::get('/', function () {
         ->with(['city.province'])
         ->where('is_active', true)
         ->whereDate('sk_expiry_date', '>=', today())
-        ->whereHas('city.province', function ($query) {
-            $query->whereRaw('LOWER(name) LIKE ?', ['%sumatera utara%']);
-        })
         ->orderBy('name')
         ->get()
         ->sortBy(fn(Dojo $dojo) => $dojo->city?->name ?? '')
@@ -40,9 +37,6 @@ Route::get('/', function () {
         ->with('province')
         ->whereDate('execution_date', '>=', today())
         ->whereIn('status', ['open', 'ongoing'])
-        ->whereHas('province', function ($query) {
-            $query->whereRaw('LOWER(name) LIKE ?', ['%sumatera utara%']);
-        })
         ->orderBy('execution_date')
         ->limit(6)
         ->get();

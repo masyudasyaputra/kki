@@ -1,6 +1,6 @@
-# KKI
+# PP KKI
 
-Aplikasi keanggotaan dan administrasi KKI berbasis Laravel 12 dan Vite.
+Aplikasi Pengurus Pusat KKI untuk keanggotaan dan administrasi nasional berbasis Laravel 12 dan Vite.
 Dikembangkan dari https://github.com/masyudasyaputra/perguruan dengan riwayat Git asal dipertahankan.
 
 ## Menjalankan secara lokal
@@ -21,4 +21,4 @@ php artisan serve
 Sesuaikan `APP_URL` di `.env` dengan alamat lokal yang digunakan. Untuk Laragon, gunakan `http://kki.test`.
 Konfigurasi bawaan menggunakan MySQL dengan database terpisah bernama `kki`; migrasi proyek memerlukan MySQL.
 
-Identitas aplikasi menggunakan Kushin Ryu M Karate-Do Indonesia (KKI). Logo digunakan dari `public/images/logo-kki.png` di landing page, portal anggota, halaman autentikasi, dan favicon.
+Identitas aplikasi menggunakan PP KKI (Pengurus Pusat KKI), Kushin Ryu M Karate-Do Indonesia (KKI). Logo digunakan dari `public/images/logo-kki.png` di landing page, portal anggota, halaman autentikasi, dan favicon.
