@@ -927,3 +927,10 @@ html {
         transform: none;
     }
 }
+
+/* Logo pada wordmark tampil tanpa bidang putih tambahan. */
+.pp .pp-brand img[src] {
+    background-color: transparent;
+    border-radius: 0;
+    padding: 0;
+}
