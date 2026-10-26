@@ -7,26 +7,26 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#dc171c">
 
-    <title>PP KKI | Kushin Ryu M Karate-Do Indonesia</title>
+    <title>PP KKI | Pengurus Pusat Kushin Ryu M Karate-Do Indonesia</title>
     <meta name="description"
         content="Pengurus Pusat Kushin Ryu M Karate-Do Indonesia (PP KKI). Temukan dojo dan cabang KKI di seluruh Indonesia.">
     <meta name="keywords"
         content="PP KKI, karate Indonesia, perguruan karate Indonesia, dojo karate Indonesia, KKI">
-    <meta name="author" content="PP KKI">
+    <meta name="author" content="Pengurus Pusat KKI">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <link rel="canonical" href="{{ url('/') }}">
 
     <meta property="og:type" content="website">
     <meta property="og:locale" content="id_ID">
-    <meta property="og:site_name" content="PP KKI">
-    <meta property="og:title" content="PP KKI | Kushin Ryu M Karate-Do Indonesia">
+    <meta property="og:site_name" content="Pengurus Pusat KKI">
+    <meta property="og:title" content="PP KKI | Pengurus Pusat Kushin Ryu M Karate-Do Indonesia">
     <meta property="og:description"
         content="Membentuk karateka berkarakter, menjaga tradisi, dan menumbuhkan prestasi bersama PP KKI.">
     <meta property="og:url" content="{{ url('/') }}">
     <meta property="og:image" content="{{ asset('images/logo-kki.png') }}">
     <meta property="og:image:alt" content="Lambang Perguruan Karate-Do KKI">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="PP KKI">
+    <meta name="twitter:title" content="Pengurus Pusat KKI">
     <meta name="twitter:description" content="Perguruan Karate-Do untuk pembinaan karakter, tradisi, dan prestasi.">
     <meta name="twitter:image" content="{{ asset('images/logo-kki.png') }}">
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -277,9 +277,8 @@
                 <div class="relative z-10 max-w-3xl">
                     <div class="reveal-up mb-7 flex items-center gap-3">
                         <span class="h-px w-10 bg-[#f3f4f6]"></span>
-                        <p class="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#f3f4f6]">Perguruan
-                            Karate-Do
-                            • Indonesia</p>
+                        <p class="text-[11px] font-extrabold uppercase tracking-[0.3em] text-[#f3f4f6]">Pengurus Pusat
+                            • Kushin Ryu M Karate-Do Indonesia</p>
                     </div>
                     <h1
                         class="font-display reveal-up reveal-delay-1 text-6xl font-black leading-[.86] sm:text-7xl lg:text-[84px]">
@@ -287,7 +286,7 @@
                         <span class="text-[#f3f4f6]">Satu keluarga.</span>
                     </h1>
                     <p class="reveal-up reveal-delay-2 mt-7 max-w-md text-base leading-7 text-white/55">
-                        Kushin Ryu M Karate-Do Indonesia. Rumah pembinaan karateka di seluruh Indonesia yang menjunjung disiplin, persaudaraan, dan
+                        Pengurus Pusat Kushin Ryu M Karate-Do Indonesia. Rumah pembinaan karateka di seluruh Indonesia yang menjunjung disiplin, persaudaraan, dan
                         semangat untuk terus bertumbuh.
                     </p>
                     <div class="reveal-up reveal-delay-2 mt-9 flex flex-col gap-3 sm:flex-row">
@@ -374,7 +373,7 @@
                 <div>
                     <p
                         class="mb-5 flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#ef4651]">
-                        <span class="h-px w-9 bg-[#ef4651]"></span> Tentang PP KKI
+                        <span class="h-px w-9 bg-[#ef4651]"></span> Tentang Pengurus Pusat KKI
                     </p>
                     <h2 class="font-display text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">Lebih
                         dari
@@ -570,7 +569,7 @@
                 <div class="mb-14 flex flex-col justify-between gap-7 md:flex-row md:items-end">
                     <div>
                         <p class="mb-5 flex items-center gap-3 text-[10px] font-extrabold uppercase tracking-[.3em] text-[#f3f4f6]">
-                            <span class="h-px w-9 bg-[#f3f4f6]"></span> Kalender PP KKI
+                            <span class="h-px w-9 bg-[#f3f4f6]"></span> Kalender Pengurus Pusat KKI
                         </p>
                         <h2 class="font-display max-w-2xl text-4xl font-black leading-[.95] sm:text-6xl">Agenda
                             <span class="text-[#f3f4f6]">kegiatan.</span>
@@ -916,7 +915,7 @@
         <div class="border-t border-white/10">
             <div
                 class="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-6 text-[10px] font-bold uppercase tracking-[.16em] text-white/35 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-                <p>&copy; {{ date('Y') }} PP KKI.</p>
+                <p>&copy; {{ date('Y') }} Pengurus Pusat KKI.</p>
                 <p>Karate-do • Karakter • Persaudaraan</p>
             </div>
         </div>

@@ -14,7 +14,7 @@
         @unless($authEmbedded)
         <a href="{{ url('/') }}" class="auth-brand" aria-label="Beranda PP KKI">
             <img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" width="48" height="48">
-            <span><strong>PP KKI</strong><small>Kushin Ryu M Karate-Do Indonesia</small></span>
+            <span><strong>PP KKI</strong><small>Pengurus Pusat KKI</small></span>
         </a>
         @endunless
         <div class="auth-card">{{ $slot }}</div>

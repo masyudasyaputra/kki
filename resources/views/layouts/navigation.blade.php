@@ -44,7 +44,7 @@
     <div class="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
         <a href="{{ $homeHref }}" class="flex items-center gap-3">
             <img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" class="h-10 w-10 object-contain">
-            <div><span class="text-lg font-bold tracking-tight text-white">PP KKI</span><p class="mt-1 text-[10px] text-slate-400">Kushin Ryu M Karate-Do Indonesia</p></div>
+            <div><span class="text-lg font-bold tracking-tight text-white">PP KKI</span><p class="mt-1 text-[10px] text-slate-400">Pengurus Pusat KKI</p></div>
         </a>
         <button type="button" @click="sidebarOpen = false" class="rounded-lg p-2 text-slate-400 lg:hidden" aria-label="Tutup navigasi">&times;</button>
     </div>

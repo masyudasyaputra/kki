@@ -99,7 +99,7 @@
                     <div class="flex items-center gap-2">
                         <span class="font-bold text-slate-800 tracking-tight">PP KKI</span>
                         <span class="text-slate-300">•</span>
-                        <span>Sistem Administrasi PP KKI</span>
+                        <span>Sistem Administrasi Pengurus Pusat KKI</span>
                     </div>
                     <div class="flex items-center gap-4 text-[11px]">
                         <span>&copy; {{ date('Y') }} PP KKI. All rights reserved.</span>
