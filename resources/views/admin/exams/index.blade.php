@@ -240,6 +240,8 @@
                             class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all">
                     </div>
 
+                    <div><label for="exam_type" class="block text-xs font-semibold">Jenis Ujian</label><select name="exam_type" id="exam_type" required class="mt-1 w-full rounded-lg border-slate-200"><option value="kyu">Ujian KYU</option><option value="dan">Ujian DAN</option></select></div>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1.5">
@@ -313,6 +315,8 @@
                             class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all">
                     </div>
 
+                    <div><label for="edit_exam_type" class="block text-xs font-semibold">Jenis Ujian</label><select name="exam_type" id="edit_exam_type" required class="mt-1 w-full rounded-lg border-slate-200"><option value="kyu">Ujian KYU</option><option value="dan">Ujian DAN</option></select></div>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                             <label class="block text-xs font-semibold text-slate-700 mb-1.5">
@@ -366,6 +370,7 @@
         function openEditModal(exam) {
             document.getElementById('editForm').action = `/admin/exams/${exam.id}`;
             document.getElementById('edit_name').value = exam.name;
+            document.getElementById('edit_exam_type').value = exam.exam_type || 'kyu';
             document.getElementById('edit_location').value = exam.location;
             document.getElementById('edit_status').value = exam.status;
 

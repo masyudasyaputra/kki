@@ -19,6 +19,8 @@
         "vite": "^6.0.11"
     },
     "dependencies": {
-        "@fontsource/inter": "^5.2.8"
+        "@fontsource/inter": "^5.2.8",
+        "pdf-lib": "^1.17.1",
+        "pdfjs-dist": "^6.4.299"
     }
 }

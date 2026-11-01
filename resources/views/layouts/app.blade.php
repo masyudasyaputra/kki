@@ -88,6 +88,7 @@
         </header>
 
         {{-- Main Content --}}
+        @include('layouts.impersonation-banner')
         <main class="flex-grow">
             {{ $slot }}
         </main>

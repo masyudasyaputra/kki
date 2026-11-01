@@ -291,7 +291,7 @@
                                                     <div
                                                         class="text-[10px] text-slate-600 font-black uppercase tracking-widest flex items-center">
                                                         <span class="text-indigo-500/50 mr-1.5">ID</span>
-                                                        #{{ str_pad($member->id, 5, '0', STR_PAD_LEFT) }}
+                                                        {{ $member->member_number }}
                                                     </div>
                                                 </div>
                                             </div>
@@ -360,7 +360,7 @@
                                                 {{ $member->name }}</h4>
                                             <p
                                                 class="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">
-                                                #{{ str_pad($member->id, 5, '0', STR_PAD_LEFT) }}</p>
+                                                {{ $member->member_number }}</p>
                                         </div>
                                     </div>
                                     <span

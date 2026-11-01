@@ -1,0 +1,350 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\{User, Exam, ExamParticipant, ExamScore, CertificateTemplate, ExamCertificate};
+use App\Services\ExamCertificates;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
+
+class ExamCertificateTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        parent::setUp();
+        config(['database.default' => 'certificate_test', 'database.connections.certificate_test' => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']]);
+        Schema::create('users', function (Blueprint $t) {
+            $t->id(); foreach (['name', 'email', 'password', 'role', 'parent_name', 'whatsapp', 'district'] as $field) $t->string($field)->nullable();
+            $t->json('roles')->nullable(); $t->boolean('is_active')->default(false); $t->timestamp('email_verified_at')->nullable();
+            foreach (['province_id', 'city_id', 'dojo_id', 'belt_level_id'] as $field) $t->integer($field)->nullable(); $t->timestamps();
+        });
+        foreach (['provinces', 'cities', 'dojos', 'belt_levels'] as $name) {
+            Schema::create($name, function (Blueprint $t) {
+                $t->id(); $t->string('name'); $t->integer('province_id')->nullable(); $t->integer('city_id')->nullable();
+                $t->string('kyu_dan')->nullable(); $t->integer('order')->default(1); $t->timestamps();
+            });
+        }
+        Schema::create('exams', function (Blueprint $t) {
+            $t->id(); $t->string('name'); $t->date('execution_date'); $t->string('location'); $t->integer('province_id')->nullable(); $t->string('status'); $t->timestamps();
+        });
+        Schema::create('exam_participants', function (Blueprint $t) {
+            $t->id(); foreach (['exam_id', 'user_id', 'dojo_id', 'current_belt_id', 'target_belt_id'] as $field) $t->integer($field)->nullable();
+            $t->integer('fee_amount')->default(0); $t->string('payment_status')->default('paid'); $t->string('result')->default('pending'); $t->timestamps();
+        });
+        Schema::create('exam_scores', function (Blueprint $t) {
+            $t->id(); foreach (['exam_id', 'member_id', 'examiner_id', 'new_belt_level_id'] as $field) $t->integer($field)->nullable();
+            foreach (['kihon', 'kata', 'kumite', 'result'] as $field) $t->string($field)->nullable(); $t->timestamps();
+        });
+        Schema::create('exam_examiners', function (Blueprint $t) { $t->id(); $t->integer('exam_id'); $t->integer('user_id'); $t->timestamps(); });
+        Schema::create('belt_histories', function (Blueprint $t) { $t->id(); $t->integer('user_id'); $t->integer('exam_id'); $t->integer('belt_level_id'); $t->date('achieved_at'); $t->text('description')->nullable(); $t->timestamps(); });
+        (require database_path('migrations/2026_11_01_000003_add_exam_certificates.php'))->up();
+        (require database_path('migrations/2026_11_01_000004_add_certificate_delivery.php'))->up();
+        DB::table('provinces')->insert([['id' => 1, 'name' => 'SUMATERA UTARA'], ['id' => 2, 'name' => 'JAWA BARAT']]);
+        DB::table('cities')->insert(['id' => 1, 'name' => 'MEDAN', 'province_id' => 1]);
+        DB::table('belt_levels')->insert([['id' => 1, 'name' => 'Cokelat', 'kyu_dan' => 'Kyu 2'], ['id' => 2, 'name' => 'Hitam', 'kyu_dan' => 'DAN I']]);
+    }
+
+    private function actor(string $role = 'pb', int $province = 1): User
+    {
+        $actor = User::create(['name' => 'Penguji Admin', 'email' => uniqid().'@example.com', 'role' => $role, 'province_id' => $province, 'city_id' => 1]);
+        $actor->forceFill(['email_verified_at' => now()])->save();
+        return $actor;
+    }
+
+    private function fixture(string $type = 'dan', string $status = 'completed'): array
+    {
+        $actor = $this->actor(); $this->actingAs($actor);
+        $exam = Exam::create(['name' => 'Ujian '.$type, 'exam_type' => $type, 'execution_date' => '2026-10-25', 'location' => 'Medan', 'province_id' => 1, 'status' => $status]);
+        $member = $this->actor('member');
+        $participant = ExamParticipant::create(['exam_id' => $exam->id, 'user_id' => $member->id, 'target_belt_id' => $type === 'dan' ? 2 : 1]);
+        $values = array_fill_keys(array_keys(ExamCertificates::materials($type)), 75);
+        $score = ExamScore::create($values + ['exam_id' => $exam->id, 'member_id' => $member->id, 'examiner_id' => $actor->id, 'result' => 'Lulus', 'new_belt_level_id' => $type === 'dan' ? 2 : 1]);
+        $template = CertificateTemplate::create(['name' => 'Template '.$type, 'exam_type' => $type, 'settings' => array_replace(ExamCertificates::defaults($type), ['signer_left_name' => 'Ketua KKI', 'signer_right_name' => 'Ketua Dewan Guru'])]);
+        $exam->update(['certificate_settings' => ['template_id' => $template->id, 'issue_place' => 'Medan', 'issue_date' => '2026-11-01']]);
+        return [$exam, $participant, $score, $template];
+    }
+
+    public function test_dan_and_kyu_certificates_use_input_scores_and_immutable_snapshots(): void
+    {
+        foreach (['dan', 'kyu'] as $type) {
+            [$exam, $participant, $score, $template] = $this->fixture($type);
+            $this->get(route('admin.exams.certificates.index', $exam))->assertRedirect(route('admin.exams.show', $exam));
+            $this->get(route('admin.exams.certificates.preview', [$exam, $participant]))->assertOk()->assertSee('DRAF');
+            $url = route('admin.exams.certificates.issue', [$exam, $participant]);
+            $this->post($url, ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertSessionHasNoErrors()->assertRedirect();
+            $certificate = ExamCertificate::where('exam_participant_id', $participant->id)->firstOrFail();
+            $this->assertSame($type, $certificate->snapshot['type']);
+            $this->assertCount($type === 'dan' ? 8 : 6, $certificate->snapshot['scores']);
+            $this->assertSame('Tujuh Puluh Lima', $certificate->snapshot['scores']['kihon']['words']);
+            $score->update(['kihon' => 80]);
+            $this->get(route('admin.exams.certificates.print', [$exam, $participant]))->assertOk()->assertSee('Tujuh Puluh Lima');
+            $this->assertSame('75', (string) $certificate->fresh()->snapshot['scores']['kihon']['value']);
+            $this->post($url, ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertRedirect();
+            $this->assertSame(2, $certificate->fresh()->revision);
+            $this->assertCount(1, $certificate->fresh()->previous_versions);
+            $this->assertSame('80', (string) $certificate->fresh()->snapshot['scores']['kihon']['value']);
+        }
+    }
+
+    public function test_certificate_requires_finalized_pass_complete_scores_and_matching_rank(): void
+    {
+        [$exam, $participant, $score] = $this->fixture('dan', 'open');
+        $url = route('admin.exams.certificates.issue', [$exam, $participant]); $identity = ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'];
+        $this->post($url, $identity)->assertSessionHasErrors('certificate');
+        $exam->update(['status' => 'completed']); $score->update(['result' => 'Tidak Lulus']);
+        $this->post($url, $identity)->assertSessionHasErrors('certificate');
+        $score->update(['result' => 'Lulus', 'paper' => null]);
+        $this->post($url, $identity)->assertSessionHasErrors('certificate');
+        $score->update(['paper' => 70, 'new_belt_level_id' => 1]);
+        $this->post($url, $identity)->assertSessionHasErrors('certificate');
+        $this->assertDatabaseCount('exam_certificates', 0);
+    }
+
+    public function test_certificate_access_is_scoped_and_examiners_cannot_issue(): void
+    {
+        [$exam, $participant] = $this->fixture();
+        $this->actingAs($this->actor('pengprov', 2))->get(route('admin.exams.certificates.index', $exam))->assertForbidden();
+        $examiner = $this->actor('penguji');
+        $this->actingAs($examiner)->get(route('admin.exams.certificates.index', $exam))->assertForbidden();
+        $exam->examiners()->attach($examiner);
+        $this->get(route('admin.exams.certificates.index', $exam))->assertRedirect(route('admin.exams.show', $exam));
+        $this->post(route('admin.exams.certificates.issue', [$exam, $participant]), [])->assertForbidden();
+        $this->actingAs($this->actor('member'))->get(route('admin.exams.certificates.index', $exam))->assertForbidden();
+    }
+
+    public function test_scoring_accepts_numbers_preserves_zero_and_uses_authenticated_examiner(): void
+    {
+        [$exam, $participant, $score] = $this->fixture('kyu', 'open');
+        $examiner = $this->actor('penguji'); $exam->examiners()->attach($examiner); $this->actingAs($examiner);
+        $this->get(route('admin.exams.scoring', $exam))->assertOk()->assertSee('Ippon Kumite');
+        $values = array_fill_keys(array_keys(ExamCertificates::materials('kyu')), 70);
+        $values['kihon'] = 0; $values['examiner_id'] = 999; $values['result'] = 'Lulus'; $values['new_belt_level_id'] = 1;
+        $url = route('admin.exams.scoring.store', $exam);
+        $this->postJson($url, ['scores' => [$participant->user_id => $values]])->assertOk();
+        $this->assertSame($examiner->id, $score->fresh()->examiner_id);
+        $this->assertSame('0', $score->fresh()->kihon);
+        $values['kata'] = 101;
+        $this->postJson($url, ['scores' => [$participant->user_id => $values]])->assertUnprocessable();
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertForbidden();
+    }
+
+    public function test_template_type_validation_and_legacy_scores_are_not_converted_to_guessed_numbers(): void
+    {
+        [$exam, $participant, $score, $template] = $this->fixture('kyu');
+        $score->update(['kihon' => 'Baik']);
+        $data = app(ExamCertificates::class)->payload($exam, $participant, $template, [], true);
+        $this->assertSame('Baik', $data['scores']['kihon']['value']);
+        $this->assertSame('Baik', $data['scores']['kihon']['words']);
+        $this->assertSame('Nol', ExamCertificates::words(0));
+        $this->assertSame('Seratus', ExamCertificates::words(100));
+        $this->assertSame('Tujuh Puluh Lima Koma Lima', ExamCertificates::words('75.50'));
+        $this->post(route('admin.exams.certificates.settings', $exam), ['exam_type' => 'dan', 'template_id' => $template->id, 'issue_place' => 'Medan', 'issue_date' => '2026-11-01'])->assertNotFound();
+    }
+
+    public function test_template_management_can_create_edit_and_select_a_template(): void
+    {
+        [$exam] = $this->fixture('dan');
+        $settings = array_replace(ExamCertificates::defaults('dan'), ['signer_left_name' => 'Ketua Nasional', 'signer_right_name' => 'Ketua Dewan Guru']);
+        $payload = $settings + ['name' => 'Template DAN Baru', 'exam_type' => 'dan'];
+        $this->post(route('admin.certificate-templates.store'), $payload)->assertSessionHasNoErrors()->assertRedirect();
+        $template = CertificateTemplate::where('name', 'Template DAN Baru')->firstOrFail();
+        $this->post(route('admin.certificate-templates.store'), array_replace($payload, ['template_id' => $template->id, 'signer_right_name' => 'Ketua Baru']))->assertSessionHasNoErrors();
+        $this->assertSame('Ketua Baru', $template->fresh()->settings['signer_right_name']);
+        $this->post(route('admin.exams.certificates.settings', $exam), ['exam_type' => 'dan', 'template_id' => $template->id, 'issue_place' => 'Jakarta', 'issue_date' => '2026-11-01'])->assertSessionHasNoErrors();
+        $this->assertSame($template->id, (int) $exam->fresh()->certificate_settings['template_id']);
+        $this->actingAs($this->actor('pengprov'));
+        $this->post(route('admin.certificate-templates.store'), $payload + ['template_id' => $template->id])->assertForbidden();
+    }
+
+    public function test_admin_finalization_waits_for_certificate_delivery_before_updating_belt(): void
+    {
+        [$exam, $participant] = $this->fixture('kyu', 'open');
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertRedirect(route('admin.exams.show', $exam));
+        $this->assertSame('completed', $exam->fresh()->status);
+        $this->assertNull($participant->user->fresh()->belt_level_id);
+        $this->assertDatabaseCount('belt_histories', 0);
+        $this->post(route('admin.exams.certificates.issue', [$exam, $participant]), ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('exam_certificates', 1);
+        $this->post(route('admin.exams.certificates.send', [$exam, $participant]))->assertSessionHasNoErrors();
+        $this->assertSame(1, $participant->user->fresh()->belt_level_id);
+        $this->assertDatabaseHas('belt_histories', ['user_id' => $participant->user_id, 'exam_id' => $exam->id]);
+    }
+
+    public function test_pdf_layout_is_validated_saved_and_frozen_in_issued_certificate(): void
+    {
+        [$exam, $participant, $score, $template] = $this->fixture('dan');
+        $settings = $template->settings + ['render_mode' => 'pdf', 'pdf_path' => 'certificates/pdf-templates/example.pdf'];
+        $template->update(['settings' => $settings]);
+        $this->get(route('admin.certificate-templates.layout', $template))->assertOk()->assertSee('Editor Koordinat');
+        $payload = ['version' => hash('sha256', json_encode($template->fresh()->settings)), 'pages' => [['width' => 297, 'height' => 210]],
+            'layout' => [['key' => 'name', 'page' => 1, 'x' => 40, 'y' => 70, 'width' => 150, 'font_size' => 20, 'align' => 'center', 'font' => 'serif', 'bold' => true, 'color' => '#000000']]];
+        $url = route('admin.certificate-templates.layout.save', $template);
+        $bad = $payload; $bad['layout'][0]['x'] = 280;
+        $this->postJson($url, $bad)->assertUnprocessable();
+        $bad = $payload; $bad['layout'][0]['key'] = 'password';
+        $this->postJson($url, $bad)->assertUnprocessable();
+        $saved = $this->postJson($url, $payload)->assertOk();
+        $this->postJson($url, $payload)->assertConflict();
+        $this->assertSame(40, $template->fresh()->settings['pdf_layout'][0]['x']);
+        $this->post(route('admin.exams.certificates.issue', [$exam, $participant]), ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertSessionHasNoErrors()->assertRedirect();
+        $certificate = ExamCertificate::firstOrFail();
+        $this->assertSame(40, $certificate->snapshot['template']['pdf_layout'][0]['x']);
+        $this->get(route('admin.exams.certificates.print', [$exam, $participant]))->assertOk()->assertSee('certificate-output-config');
+        $settings = $template->fresh()->settings; $settings['pdf_layout'][0]['x'] = 60; $template->update(['settings' => $settings]);
+        $this->assertSame(40, $certificate->fresh()->snapshot['template']['pdf_layout'][0]['x']);
+        $this->actingAs($this->actor('pengprov'));
+        $this->get(route('admin.certificate-templates.layout', $template))->assertForbidden();
+    }
+
+    public function test_pdf_mode_requires_file_and_coordinates_before_issuance(): void
+    {
+        [$exam, $participant, $score, $template] = $this->fixture();
+        $payload = $template->settings + ['render_mode' => 'pdf', 'name' => 'PDF Tanpa File', 'exam_type' => 'dan'];
+        $this->post(route('admin.certificate-templates.store'), $payload)->assertSessionHasErrors('template_pdf');
+        $settings = $template->settings + ['render_mode' => 'pdf', 'pdf_path' => 'example.pdf'];
+        $template->update(['settings' => $settings]);
+        $this->post(route('admin.exams.certificates.issue', [$exam, $participant]), ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertSessionHasErrors('certificate');
+    }
+
+    public function test_pdf_upload_opens_editor_and_replacement_clears_old_coordinates(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        [$exam, , , $template] = $this->fixture();
+        $pdf = "%PDF-1.4\n";
+        $objects = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Contents 4 0 R >>', "<< /Length 0 >>\nstream\n\nendstream"];
+        $offsets = [0];
+        foreach ($objects as $i => $object) { $offsets[] = strlen($pdf); $pdf .= ($i + 1)." 0 obj\n$object\nendobj\n"; }
+        $xref = strlen($pdf); $pdf .= "xref\n0 5\n0000000000 65535 f \n";
+        foreach (array_slice($offsets, 1) as $offset) $pdf .= sprintf("%010d 00000 n \n", $offset);
+        $pdf .= "trailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n$xref\n%%EOF";
+        $payload = ['name' => 'Desain PDF', 'exam_type' => 'dan', 'render_mode' => 'pdf', 'color' => '#000000',
+            'template_pdf' => \Illuminate\Http\UploadedFile::fake()->createWithContent('desain.pdf', $pdf)];
+        $this->post(route('admin.certificate-templates.store'), $payload)->assertSessionHasNoErrors();
+        $created = CertificateTemplate::where('name', 'Desain PDF')->firstOrFail();
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($created->settings['pdf_path']);
+        $this->get(route('admin.certificate-templates.layout', $created))->assertOk();
+        $previous = $created->settings['pdf_path'];
+        $settings = $created->settings; $settings['pdf_layout'] = [['key' => 'name']]; $created->update(['settings' => $settings]);
+        $payload['template_id'] = $created->id;
+        $payload['template_pdf'] = \Illuminate\Http\UploadedFile::fake()->createWithContent('baru.pdf', $pdf);
+        $this->post(route('admin.certificate-templates.store'), $payload)->assertRedirect(route('admin.certificate-templates.layout', $created));
+        $this->assertSame([], $created->fresh()->settings['pdf_layout']);
+        $this->assertNotSame($previous, $created->fresh()->settings['pdf_path']);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($previous);
+    }
+
+    public function test_template_delete_blocks_active_use_and_preserves_issued_certificates(): void
+    {
+        [$exam, $participant, , $template] = $this->fixture();
+        $url = route('admin.certificate-templates.destroy', $template);
+        $this->delete($url)->assertSessionHasErrors('template');
+        $settings = $exam->certificate_settings; $settings['template_id'] = (string) $template->id; $exam->update(['certificate_settings' => $settings]);
+        $this->delete($url)->assertSessionHasErrors('template');
+        $this->assertDatabaseHas('certificate_templates', ['id' => $template->id]);
+        $this->post(route('admin.exams.certificates.issue', [$exam, $participant]), ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertSessionHasNoErrors();
+        $exam->update(['certificate_settings' => []]);
+        $this->delete($url)->assertRedirect(route('admin.certificate-templates.index'));
+        $this->assertDatabaseMissing('certificate_templates', ['id' => $template->id]);
+        $this->assertDatabaseCount('exam_certificates', 1);
+        $this->get(route('admin.exams.certificates.print', [$exam, $participant]))->assertOk()->assertSee('Tujuh Puluh Lima');
+    }
+
+    public function test_provincial_admin_can_delete_own_template_but_not_shared_or_other_region(): void
+    {
+        [$exam, , , $template] = $this->fixture();
+        $this->actingAs($this->actor('pengprov'));
+        $this->delete(route('admin.certificate-templates.destroy', $template))->assertForbidden();
+        $own = CertificateTemplate::create(['name' => 'Template Provinsi', 'exam_type' => 'dan', 'province_id' => 1, 'settings' => []]);
+        $other = CertificateTemplate::create(['name' => 'Template Provinsi Lain', 'exam_type' => 'dan', 'province_id' => 2, 'settings' => []]);
+        $this->delete(route('admin.certificate-templates.destroy', $other))->assertNotFound();
+        $this->delete(route('admin.certificate-templates.destroy', $own))->assertRedirect();
+        $this->assertDatabaseMissing('certificate_templates', ['id' => $own->id]);
+    }
+
+    public function test_master_templates_are_managed_without_exam_and_selected_independently_per_session(): void
+    {
+        $this->actingAs($this->actor());
+        $this->get(route('admin.certificate-templates.index'))->assertOk()->assertSee('Pengaturan master');
+        $payload = array_replace(ExamCertificates::defaults('dan'), ['name' => 'Template Master DAN', 'exam_type' => 'dan', 'signer_left_name' => 'Ketua', 'signer_right_name' => 'Dewan Guru']);
+        $this->post(route('admin.certificate-templates.store'), $payload)->assertSessionHasNoErrors()->assertRedirect(route('admin.certificate-templates.index'));
+        $template = CertificateTemplate::where('name', 'Template Master DAN')->firstOrFail();
+        $this->get(route('admin.certificate-templates.index'))->assertOk()->assertSee('Edit template Template Master DAN')->assertSee('Hapus template Template Master DAN');
+        $sessions = [];
+        foreach (['Ujian A', 'Ujian B'] as $name) {
+            $exam = Exam::create(['name' => $name, 'exam_type' => 'dan', 'location' => 'Medan', 'execution_date' => '2026-11-01', 'status' => 'open']);
+            $this->post(route('admin.exams.certificates.settings', $exam), ['exam_type' => 'dan', 'template_id' => $template->id, 'issue_place' => 'Medan', 'issue_date' => '2026-11-01'])->assertSessionHasNoErrors();
+            $sessions[] = $exam;
+        }
+        $this->assertSame($sessions[0]->fresh()->certificate_settings['template_id'], $sessions[1]->fresh()->certificate_settings['template_id']);
+        $this->get(route('admin.exams.show', $sessions[0]))->assertOk()->assertSee('Template Master DAN')->assertDontSee('Manajemen Sertifikat')->assertDontSee('template-new');
+        $this->actingAs($this->actor('penguji'))->get(route('admin.certificate-templates.index'))->assertForbidden();
+    }
+
+    public function test_delivery_updates_member_once_and_only_recipient_can_open_certificate(): void
+    {
+        [$exam, $person] = $this->fixture('dan');
+        $identityUrl = route('admin.exams.certificates.identity', [$exam, $person]);
+        $this->post($identityUrl, ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertSessionHasNoErrors();
+        $sendUrl = route('admin.exams.certificates.send', [$exam, $person]);
+        $this->post($sendUrl)->assertSessionHasNoErrors()->assertRedirect(route('admin.exams.show', $exam));
+        $certificate = ExamCertificate::where('exam_participant_id', $person->id)->firstOrFail();
+        $this->assertNotNull($certificate->sent_at);
+        $this->assertSame(2, $person->user->fresh()->belt_level_id);
+        $this->assertSame('passed', $person->fresh()->result);
+        $this->assertDatabaseCount('belt_histories', 1);
+        $this->post($sendUrl)->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('exam_certificates', 1);
+        $this->assertDatabaseCount('belt_histories', 1);
+        $this->assertSame($certificate->sent_at->toIso8601String(), $certificate->fresh()->sent_at->toIso8601String());
+        $this->actingAs($person->user)->get(route('member.certificates.show', $certificate))->assertOk()->assertSee($certificate->number);
+        $this->actingAs($this->actor('member'))->get(route('member.certificates.show', $certificate))->assertNotFound();
+    }
+
+    public function test_bulk_delivery_skips_ineligible_members_and_sends_ready_certificates(): void
+    {
+        [$exam, $ready] = $this->fixture();
+        $ready->certificate_identity = ['birth_place' => 'Medan', 'birth_date' => '2000-01-01']; $ready->save();
+        $failedMember = $this->actor('member');
+        $failed = ExamParticipant::create(['exam_id' => $exam->id, 'user_id' => $failedMember->id, 'target_belt_id' => 2]);
+        ExamScore::create(['exam_id' => $exam->id, 'member_id' => $failedMember->id, 'examiner_id' => auth()->id(), 'result' => 'Tidak Lulus', 'new_belt_level_id' => 2]);
+        $missingMember = $this->actor('member');
+        $missing = ExamParticipant::create(['exam_id' => $exam->id, 'user_id' => $missingMember->id, 'target_belt_id' => 2]);
+        ExamScore::create(array_fill_keys(array_keys(ExamCertificates::materials('dan')), 75) + ['exam_id' => $exam->id, 'member_id' => $missingMember->id, 'examiner_id' => auth()->id(), 'result' => 'Lulus', 'new_belt_level_id' => 2]);
+        $this->post(route('admin.exams.certificates.send-all', $exam))->assertSessionHas('certificate_delivery_errors', fn ($items) => count($items) === 2);
+        $this->assertDatabaseCount('exam_certificates', 1);
+        $this->assertDatabaseCount('belt_histories', 1);
+        $this->assertSame(2, $ready->user->fresh()->belt_level_id);
+        $this->assertNull($failedMember->fresh()->belt_level_id);
+        $this->assertNull($missingMember->fresh()->belt_level_id);
+        $this->get(route('admin.exams.show', $exam))->assertOk()->assertSee('Kirim semua sertifikat')->assertSee('Kirim sertifikat')->assertDontSee('Manajemen Sertifikat');
+    }
+
+    public function test_unsent_certificate_is_private_and_delivery_uses_issued_rank_snapshot(): void
+    {
+        [$exam, $person, $score] = $this->fixture('dan');
+        $admin = auth()->user();
+        $this->post(route('admin.exams.certificates.issue', [$exam, $person]), ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertSessionHasNoErrors();
+        $certificate = ExamCertificate::firstOrFail();
+        $this->actingAs($person->user)->get(route('member.certificates.show', $certificate))->assertNotFound();
+        $score->update(['new_belt_level_id' => 1]);
+        $this->actingAs($admin)->post(route('admin.exams.certificates.send', [$exam, $person]))->assertSessionHasNoErrors();
+        $this->assertSame(2, $person->user->fresh()->belt_level_id);
+    }
+
+    public function test_delivery_checks_scope_and_does_not_replace_newer_promotion(): void
+    {
+        [$exam, $person] = $this->fixture('kyu');
+        $admin = auth()->user();
+        $person->certificate_identity = ['birth_place' => 'Medan', 'birth_date' => '2000-01-01']; $person->save();
+        $this->actingAs($this->actor('pengprov', 2))->post(route('admin.exams.certificates.send', [$exam, $person]))->assertForbidden();
+        $this->assertDatabaseCount('exam_certificates', 0);
+        $newer = Exam::create(['name' => 'Ujian Baru', 'exam_type' => 'dan', 'execution_date' => '2026-11-01', 'status' => 'completed', 'location' => 'Medan']);
+        $person->user->update(['belt_level_id' => 2]);
+        \App\Models\BeltHistory::create(['user_id' => $person->user_id, 'exam_id' => $newer->id, 'belt_level_id' => 2, 'achieved_at' => '2026-11-01']);
+        $this->actingAs($admin)->post(route('admin.exams.certificates.send', [$exam, $person]))->assertSessionHasNoErrors();
+        $this->assertSame(2, $person->user->fresh()->belt_level_id);
+        $this->assertDatabaseCount('belt_histories', 2);
+    }
+}

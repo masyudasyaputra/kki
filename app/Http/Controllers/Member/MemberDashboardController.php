@@ -13,6 +13,8 @@ class MemberDashboardController extends Controller
     {
         // 1. Ambil data user beserta relasinya
         $user = Auth::user()->load(['beltLevel', 'province', 'city', 'dojo']);
+        $latestVerification = $user->membershipVerifications()->latest('id')->first();
+        $myCertificates = \App\Models\ExamCertificate::whereNotNull('sent_at')->whereHas('participant', fn ($q) => $q->where('user_id', $user->id))->latest('sent_at')->get();
 
         // 2. Ambil data tagihan yang belum lunas
         $unpaidBill = \App\Models\Payment::where('user_id', $user->id)
@@ -23,11 +25,11 @@ class MemberDashboardController extends Controller
         $qrCode = QrCode::format('svg')
             ->size(150)
             ->errorCorrection('H')
-            ->generate($user->id); // Bisa diganti dengan URL atau Nomor Anggota
+            ->generate($user->member_number);
         
         $qrPngBase64 = base64_encode($qrCode);
 
         // 4. Kirim SEMUA variabel ke view
-        return view('member.dashboard', compact('user', 'unpaidBill', 'qrPngBase64'));
+        return view('member.dashboard', compact('user', 'unpaidBill', 'qrPngBase64', 'latestVerification', 'myCertificates'));
     }
 }

@@ -10,6 +10,20 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    protected static function booted(): void
+    {
+        static::updating(function (User $user) {
+            if (array_key_exists('verification_status', $user->getAttributes()) && $user->isDirty(\App\Services\MembershipReview::FIELDS)) {
+                $user->verification_status = 'pending';
+            }
+        });
+    }
+
+    public function membershipVerifications()
+    {
+        return $this->hasMany(MembershipVerification::class, 'member_id');
+    }
+
     protected $fillable = [
         'name',
         'email',
@@ -25,6 +39,7 @@ class User extends Authenticatable
         'is_active',
         'province_id',
         'city_id',
+        'district',
         'dojo_id',
         'belt_level_id',
         'whatsapp',
@@ -115,6 +130,27 @@ class User extends Authenticatable
     }
 
     // --- ATTRIBUTES ---
+
+    public function getMemberNumberAttribute(): string
+    {
+        return ($this->province?->member_prefix ?? 'UNK') . '-' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+    }
+
+    public function scopeWhereMemberNumber($query, string $number)
+    {
+        if (!preg_match('/^([A-Z]{3})-(\d{6,})$/', strtoupper(trim($number)), $matches)) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        $query->where('id', (int) $matches[2]);
+        if ($matches[1] === 'UNK') {
+            return $query->whereDoesntHave('province');
+        }
+
+        $provinceIds = Province::all()->filter(fn ($province) => $province->member_prefix === $matches[1])->modelKeys();
+
+        return $query->whereIn('province_id', $provinceIds);
+    }
 
     /**
      * Status aktif berdasarkan pembayaran SUCCESS untuk belt yang sedang disandang.

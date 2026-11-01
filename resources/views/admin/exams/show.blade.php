@@ -58,12 +58,15 @@
         }
 
         $user = auth()->user();
-        $isStruktural = $user->hasRole(['pb', 'pengprov']);
+        $isStruktural = $user->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab']);
 
         $allParticipants = $exam
             ->participants()
             ->with(['user', 'currentBelt', 'targetBelt', 'dojo'])
             ->get();
+        if ($user->hasRole(['pengcab', 'admin_pengcab']) && !$user->hasRole(['pb', 'pengprov', 'admin_pengprov'])) {
+            $allParticipants = $allParticipants->filter(fn ($person) => (int) $person->user->city_id === (int) $user->city_id);
+        }
         $examScores = \App\Models\ExamScore::where('exam_id', $exam->id)->get()->keyBy('member_id');
 
         $myParticipants = $isStruktural ? $allParticipants : $allParticipants->where('dojo_id', $user->dojo_id);
@@ -204,6 +207,8 @@
                         </form>
                     </div>
                 </div>
+
+                @include('admin.exams.certificate-delivery')
 
                 {{-- Bulk Payment Notification --}}
                 @if (!$isStruktural && $pendingCount > 0)
@@ -527,6 +532,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @include('admin.exams.participant-certificate-actions')
                         </div>
                     @empty
                         <div
@@ -589,11 +595,11 @@
 
                             @foreach ($rekapPerSabuk->sortBy(fn($val, $key) => $key) as $beltId => $items)
                                 @php
-                                    $beltInfo = $items->first()->currentBelt;
+                                    $beltInfo = $items->first()->targetBelt ?? $items->first()->currentBelt;
                                     $count = $items->count();
                                     $percentage = ($count / $totalSiswa) * 100;
 
-                                    $colorTheme = match (strtolower($beltInfo->name)) {
+                                    $colorTheme = match (strtolower($beltInfo?->name ?? '')) {
                                         'putih' => ['bg' => 'bg-slate-200', 'bar' => 'bg-slate-400'],
                                         'kuning' => ['bg' => 'bg-yellow-400', 'bar' => 'bg-yellow-400'],
                                         'hijau' => ['bg' => 'bg-emerald-500', 'bar' => 'bg-emerald-500'],
@@ -619,7 +625,7 @@
                                             <div>
                                                 <span
                                                     class="text-[11px] font-black text-slate-800 uppercase block leading-none mb-1">
-                                                    {{ $beltInfo->name }}
+                                                    {{ $beltInfo?->name ?? 'Belum ditetapkan' }}
                                                 </span>
                                                 <span
                                                     class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">

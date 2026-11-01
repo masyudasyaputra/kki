@@ -65,7 +65,8 @@ class DashboardController extends Controller
             $search = trim((string) $request->search);
             $memberQuery->where(function ($q) use ($search) {
                 $q->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('id', 'like', '%' . $search . '%');
+                    ->orWhere('id', 'like', '%' . $search . '%')
+                    ->orWhere(fn ($numberQuery) => $numberQuery->whereMemberNumber($search));
             });
         }
 

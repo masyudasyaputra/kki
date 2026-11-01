@@ -108,6 +108,7 @@
                                         <p class="font-semibold text-slate-800 text-xs uppercase truncate">
                                             {{ $item['name'] }}
                                         </p>
+                                        <p class="text-[11px] text-slate-500">{{ $item['city_name'] ?? '-' }} / Kec. {{ $item['district'] ?? '-' }}</p>
                                         <div class="flex items-center gap-2 mt-0.5">
                                             <span class="text-[11px] text-slate-500 font-medium">
                                                 WA: <span class="font-semibold text-slate-700">{{ $item['whatsapp'] }}</span>
@@ -221,6 +222,8 @@
                             <input type="hidden" name="members[{{ $index }}][whatsapp]" value="{{ $item['whatsapp'] }}">
                             <input type="hidden" name="members[{{ $index }}][belt_level_id]" value="{{ $item['belt_level_id'] }}">
                             <input type="hidden" name="members[{{ $index }}][parent_name]" value="{{ $item['parent_name'] ?? '' }}">
+                            <input type="hidden" name="members[{{ $index }}][city_id]" value="{{ $item['city_id'] }}">
+                            <input type="hidden" name="members[{{ $index }}][district]" value="{{ $item['district'] ?? '' }}">
 
                             @if (!empty($item['email']))
                                 <input type="hidden" name="members[{{ $index }}][email]" value="{{ $item['email'] }}">

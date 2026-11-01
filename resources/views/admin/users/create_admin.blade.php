@@ -162,7 +162,7 @@
                                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                                     Provinsi <span class="text-red-500">*</span>
                                 </label>
-                                <select name="province_id" id="province_id" required
+                                <select name="province_id" id="province_id"
                                     class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all">
                                     <option value="">Pilih Provinsi</option>
                                     @foreach ($provinces as $p)

@@ -45,6 +45,7 @@ class ExamController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'exam_type' => 'required|in:dan,kyu',
             'execution_date' => 'required|date',
             'location' => 'required|string|max:255',
             'status' => 'required|in:open,draft',
@@ -71,6 +72,7 @@ class ExamController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'exam_type' => 'required|in:dan,kyu',
             'execution_date' => 'required|date',
             'location' => 'required|string|max:255',
             'status' => 'required|in:open,draft',
@@ -140,7 +142,12 @@ class ExamController extends Controller
         }
         $members = $memberQuery->orderBy('name')->get();
 
-        return view('admin.exams.show', compact('exam', 'members', 'dojos', 'cities', 'belts'));
+        $certificateService = app(\App\Services\ExamCertificates::class);
+        $canSendCertificates = $user->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab']);
+        if ($canSendCertificates) $certificateService->authorize($user, $exam, true);
+        $certificateTemplates = $canSendCertificates ? $certificateService->templates($user)->orderBy('name')->get() : collect();
+        $examCertificates = \App\Models\ExamCertificate::whereIn('exam_participant_id', $exam->participants->pluck('id'))->get()->keyBy('exam_participant_id');
+        return view('admin.exams.show', compact('exam', 'members', 'dojos', 'cities', 'belts', 'certificateTemplates', 'examCertificates', 'canSendCertificates'));
     }
 
     /**

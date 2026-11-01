@@ -47,6 +47,13 @@
             @endif
         </div>
 
+        <div>
+            <x-input-label for="district" value="Kecamatan" />
+            <x-text-input id="district" name="district" type="text" class="mt-1 block w-full" :value="old('district', $user->district)" maxlength="150" placeholder="Nama Kecamatan" />
+            <x-input-error class="mt-2" :messages="$errors->get('district')" />
+            <p class="mt-1 text-xs text-gray-500">Kabupaten / Kota: {{ $user->city?->name ?? 'Belum ditetapkan' }}</p>
+        </div>
+
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
 

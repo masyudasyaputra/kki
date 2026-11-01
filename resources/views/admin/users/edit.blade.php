@@ -56,7 +56,7 @@
                     @method('PUT')
 
                     {{-- SECTION 1: ROLE --}}
-                    <div class="space-y-4" x-data="{ selectedRoles: @js(old('roles', is_array($user->roles) ? $user->roles : [$user->role])) }">
+                    <div class="space-y-4" x-data="{ selectedRoles: @js(old('roles', $user->allRoles())) }">
                         <div class="flex items-center justify-between pb-2 border-b border-slate-100">
                             <div class="flex items-center gap-2.5">
                                 <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">1</span>
@@ -170,7 +170,7 @@
                                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                                     Provinsi <span class="text-red-500">*</span>
                                 </label>
-                                <select name="province_id" id="province_id" required
+                                <select name="province_id" id="province_id"
                                     class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all">
                                     <option value="">Pilih Provinsi</option>
                                     @foreach ($provinces as $p)

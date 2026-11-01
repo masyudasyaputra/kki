@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class ExamParticipant extends Model
 {
     use HasFactory;
+    protected $casts = ['certificate_identity' => 'array'];
 
     protected $fillable = [
         'exam_id',

@@ -29,6 +29,7 @@ class PublicGoogleAuthTest extends TestCase
             $table->string('role')->default('member');
             $table->json('roles')->nullable();
             $table->string('parent_name')->nullable();
+            $table->string('district', 150)->nullable();
             $table->string('whatsapp')->nullable();
             $table->boolean('is_active')->default(false);
             foreach (['province_id', 'city_id', 'dojo_id', 'belt_level_id'] as $column) {
@@ -41,11 +42,13 @@ class PublicGoogleAuthTest extends TestCase
         Schema::create('provinces', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->timestamps();
         });
         Schema::create('cities', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->integer('province_id');
+            $table->timestamps();
         });
         Schema::create('dojos', function (Blueprint $table) {
             $table->id();
@@ -57,6 +60,31 @@ class PublicGoogleAuthTest extends TestCase
             $table->string('name');
             $table->integer('order');
         });
+    }
+
+    public function test_member_registration_saves_city_and_district(): void
+    {
+        $province = \App\Models\Province::create(['name' => 'SUMATERA UTARA']);
+        $city = \App\Models\City::create(['name' => 'KOTA MEDAN', 'province_id' => $province->id]);
+        $this->post('/register', [
+            'name' => 'Anggota Medan', 'email' => 'medan@example.com',
+            'password' => 'Password123!', 'password_confirmation' => 'Password123!',
+            'province_id' => $province->id, 'city_id' => $city->id, 'district' => 'Medan Johor',
+        ])->assertRedirect(route('dashboard'));
+
+        $this->assertDatabaseHas('users', ['email' => 'medan@example.com', 'city_id' => $city->id, 'district' => 'Medan Johor']);
+    }
+
+    public function test_district_requires_a_city_and_city_must_belong_to_province(): void
+    {
+        $province = \App\Models\Province::create(['name' => 'SUMATERA UTARA']);
+        $other = \App\Models\Province::create(['name' => 'JAWA BARAT']);
+        $city = \App\Models\City::create(['name' => 'BANDUNG', 'province_id' => $other->id]);
+        $data = ['name' => 'Anggota', 'email' => 'wilayah@example.com', 'password' => 'Password123!',
+            'password_confirmation' => 'Password123!', 'province_id' => $province->id, 'district' => 'Medan Johor'];
+        $this->post('/register', $data)->assertSessionHasErrors('city_id');
+        $this->post('/register', $data + ['city_id' => $city->id])->assertSessionHasErrors('city_id');
+        $this->assertDatabaseMissing('users', ['email' => 'wilayah@example.com']);
     }
 
     private function flow(): array

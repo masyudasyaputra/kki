@@ -88,6 +88,10 @@ class RoleManager
             'admin_pengcab',
             'admin_dojo',
             'penguji',
+            'verifikator_pb',
+            'verifikator_dewan_guru',
+            'verifikator_pengprov',
+            'verifikator_pengcab',
             'member',
         ];
 

@@ -64,7 +64,8 @@ class RegisteredUserController extends Controller
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
             'password' => [$identity ? 'nullable' : 'required', 'confirmed', Rules\Password::defaults()],
             'province_id' => ['nullable', 'required_with:city_id', 'integer', 'exists:provinces,id'],
-            'city_id' => ['nullable', 'required_with:dojo_id', 'integer', Rule::exists('cities', 'id')->where('province_id', $request->input('province_id'))],
+            'city_id' => ['nullable', 'required_with:dojo_id,district', 'integer', Rule::exists('cities', 'id')->where('province_id', $request->input('province_id'))],
+            'district' => ['nullable', 'string', 'max:150'],
             'dojo_id' => ['nullable', 'integer', Rule::exists('dojos', 'id')->where('city_id', $request->input('city_id'))],
             'belt_level_id' => ['nullable', 'integer', 'exists:belt_levels,id'],
         ], [
@@ -78,6 +79,7 @@ class RegisteredUserController extends Controller
                 'name' => $data['name'], 'email' => $data['email'], 'parent_name' => $data['parent_name'] ?? null,
                 'whatsapp' => $data['whatsapp'] ?? null, 'password' => Hash::make($data['password'] ?? Str::random(64)),
                 'province_id' => $data['province_id'] ?? null, 'city_id' => $data['city_id'] ?? null,
+                'district' => $data['district'] ?? null,
                 'dojo_id' => $data['dojo_id'] ?? null, 'belt_level_id' => $data['belt_level_id'] ?? null,
                 'role' => 'member', 'is_active' => false, 'google_id' => $identity['id'] ?? null,
             ]);

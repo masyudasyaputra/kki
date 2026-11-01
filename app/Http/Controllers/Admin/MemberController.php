@@ -39,7 +39,8 @@ class MemberController extends Controller
         if (!empty($filters['search'])) {
             $term = '%' . trim($filters['search']) . '%';
             $query->where(fn ($q) => $q->where('name', 'like', $term)->orWhere('email', 'like', $term)
-                ->orWhere('whatsapp', 'like', $term)->orWhere('id', 'like', $term));
+                ->orWhere('whatsapp', 'like', $term)->orWhere('id', 'like', $term)
+                ->orWhere(fn ($numberQuery) => $numberQuery->whereMemberNumber($filters['search'])));
         }
         foreach (['province_id', 'city_id', 'dojo_id', 'belt_level_id'] as $column) {
             if (!empty($filters[$column])) $query->where($column, $filters[$column]);
@@ -108,6 +109,8 @@ class MemberController extends Controller
             'members.*.whatsapp' => ['required', 'string', 'max:30', 'regex:/^[0-9+\s()-]{8,30}$/'],
             'members.*.belt_level_id' => ['required', 'integer', 'exists:belt_levels,id'],
             'members.*.email' => ['nullable', 'email', 'max:255'],
+            'members.*.city_id' => ['required', 'integer', 'exists:cities,id'],
+            'members.*.district' => ['nullable', 'string', 'max:150'],
             'province_id' => ['nullable', 'integer', 'exists:provinces,id'],
         ], [
             'members.*.whatsapp.regex' => 'Format WhatsApp tidak valid.',
@@ -121,6 +124,8 @@ class MemberController extends Controller
                 ->withErrors(['province_id' => 'Province belum di-set pada akun admin / dojo.']);
         }
 
+        $this->validateMemberRegions($member_data, $provinceId);
+
         // IMPORTANT: fee map key biasanya INT, kita normalisasi biar aman di akses (int) key
         $beltFees = DB::table('fee_configurations')
             ->where('province_id', $provinceId)
@@ -130,8 +135,10 @@ class MemberController extends Controller
 
         $beltIds = collect($member_data)->pluck('belt_level_id')->map(fn($v) => (int) $v)->unique()->values()->all();
         $beltMap = BeltLevel::whereIn('id', $beltIds)->get()->keyBy('id');
+        $cityNames = City::where('province_id', $provinceId)->pluck('name', 'id');
 
         foreach ($member_data as $i => $item) {
+            $member_data[$i]['city_name'] = $cityNames[$item['city_id']] ?? '-';
             $beltId = (int) $item['belt_level_id'];
             $belt = $beltMap->get($beltId);
             $unit = (int) ($beltFees[$beltId] ?? 0);
@@ -182,6 +189,8 @@ class MemberController extends Controller
             'members.*.whatsapp' => ['required', 'string', 'max:30', 'regex:/^[0-9+\s()-]{8,30}$/'],
             'members.*.belt_level_id' => ['required', 'integer', 'exists:belt_levels,id'],
             'members.*.email' => ['nullable', 'email', 'max:255'],
+            'members.*.city_id' => ['required', 'integer', 'exists:cities,id'],
+            'members.*.district' => ['nullable', 'string', 'max:150'],
             'province_id' => ['nullable', 'integer', 'exists:provinces,id'],
         ], [
             'members.*.whatsapp.regex' => 'Format WhatsApp tidak valid.',
@@ -193,6 +202,8 @@ class MemberController extends Controller
             return redirect()->route('admin.members.create')
                 ->withErrors(['province_id' => 'Province belum di-set pada akun admin / dojo.']);
         }
+
+        $this->validateMemberRegions($validated['members'], $provinceId);
 
         $feeMap = DB::table('fee_configurations')
             ->where('province_id', $provinceId)
@@ -238,7 +249,8 @@ class MemberController extends Controller
                         'role' => 'member',
                         'is_active' => false,
                         'province_id' => $provinceId,
-                        'city_id' => $admin->city_id,
+                        'city_id' => $data['city_id'],
+                        'district' => $data['district'] ?? null,
                         'dojo_id' => $admin->dojo_id,
                         'belt_level_id' => $beltLevelId,
                     ]);
@@ -312,6 +324,18 @@ class MemberController extends Controller
      * - PB: boleh override dari form
      * - lainnya: pakai admin->province_id, fallback ke admin->dojo->province_id
      */
+    protected function validateMemberRegions(array $members, int $provinceId): void
+    {
+        $cityIds = City::where('province_id', $provinceId)->pluck('id')->all();
+        foreach ($members as $index => $member) {
+            if (!in_array((int) $member['city_id'], $cityIds, true)) {
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    "members.$index.city_id" => 'Kabupaten / Kota harus sesuai dengan provinsi anggota.',
+                ]);
+            }
+        }
+    }
+
     protected function resolveProvinceId($admin, string $role, int $overrideProvinceId = 0): int
     {
         $provinceId = (int) ($admin->province_id ?? 0);

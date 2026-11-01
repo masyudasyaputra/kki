@@ -38,9 +38,9 @@
             'Putih' => 'bg-slate-100 text-slate-600 border border-slate-200',
         ];
 
-        $allBeltLevels = \App\Models\BeltLevel::orderBy('order')->get();
+        $allBeltLevels = \App\Models\BeltLevel::where('kyu_dan', 'like', '%' . ($exam->exam_type ?? 'kyu') . '%')->orderBy('order')->get();
         $currentUser = auth()->user();
-        $isStruktural = $currentUser->hasRole(['pb', 'pengprov', 'admin']);
+        $isStruktural = $currentUser->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab']);
 
         $assignedExaminers = \DB::table('exam_examiners')
             ->join('users', 'exam_examiners.user_id', '=', 'users.id')
@@ -53,7 +53,7 @@
             ->where('user_id', $currentUser->id)
             ->exists();
 
-        $canScore = $isStruktural || $isAuthorizedExaminer;
+        $canScore = ($isStruktural || $isAuthorizedExaminer) && $exam->status !== 'completed';
 
         $allScores = \App\Models\ExamScore::where('exam_id', $exam->id)
             ->leftJoin('users', 'exam_scores.examiner_id', '=', 'users.id')
@@ -244,37 +244,17 @@
 
                                 {{-- compact score blocks --}}
                                 <div class="space-y-2.5">
-                                    @foreach (['kihon', 'kata', 'kumite'] as $field)
-                                        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-3">
-                                            <div class="flex items-center justify-between mb-2">
-                                                <span
-                                                    class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                                    {{ $field }}
-                                                </span>
-                                                <span
-                                                    class="text-[9px] font-black text-slate-300 uppercase tracking-widest">
-                                                    K / B / SB
-                                                </span>
-                                            </div>
-
-                                            <div class="grid grid-cols-3 gap-2">
-                                                @foreach (['Kurang' => 'K', 'Baik' => 'B', 'Sangat Baik' => 'SB'] as $full => $short)
-                                                    <label
-                                                        class="{{ $canScore ? 'cursor-pointer' : 'cursor-not-allowed' }}">
-                                                        <input type="radio"
-                                                            name="scores[{{ $targetUserId }}][{{ $field }}]"
-                                                            value="{{ $full }}" @click="markAsEdited()"
-                                                            class="hidden peer {{ $canScore ? 'auto-save' : '' }}"
-                                                            x-model="scores.{{ $field }}"
-                                                            {{ !$canScore ? 'disabled' : '' }}>
-                                                        <span
-                                                            class="block text-center py-2 rounded-2xl bg-white border-2 border-slate-200 text-[10px] font-black text-slate-500
-                                                                   peer-checked:bg-slate-900 peer-checked:text-white peer-checked:border-slate-900 transition-all uppercase italic">
-                                                            {{ $short }}
-                                                        </span>
-                                                    </label>
-                                                @endforeach
-                                            </div>
+                                    @foreach (\App\Services\ExamCertificates::materials($exam->exam_type ?? 'kyu') as $field => $label)
+                                        <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                            <label class="block text-xs font-semibold" for="score-{{ $targetUserId }}-{{ $field }}">{{ $label }}</label>
+                                            @if ($score && $score->$field !== null && !is_numeric($score->$field))
+                                                <p class="my-1 text-xs text-slate-500">Nilai lama: {{ $score->$field }}</p>
+                                                <input type="hidden" name="scores[{{ $targetUserId }}][{{ $field }}]" value="{{ $score->$field }}" :disabled="scores.{{ $field }} !== @js($score->$field)">
+                                            @endif
+                                            <input id="score-{{ $targetUserId }}-{{ $field }}" type="number" min="0" max="100" step="0.01" name="scores[{{ $targetUserId }}][{{ $field }}]" :value="!isNaN(parseFloat(scores.{{ $field }})) ? scores.{{ $field }} : ''" :disabled="!@js($canScore) || (scores.{{ $field }} && isNaN(parseFloat(scores.{{ $field }})))" @input="scores.{{ $field }} = $event.target.value; markAsEdited()" class="auto-save mt-2 w-full rounded-lg border-slate-200" placeholder="0–100">
+                                            @if ($score && $score->$field !== null && !is_numeric($score->$field) && $canScore)
+                                                <button type="button" @click="scores.{{ $field }} = ''; markAsEdited()" class="text-xs text-red-600">Ganti dengan angka</button>
+                                            @endif
                                         </div>
                                     @endforeach
                                 </div>
@@ -396,23 +376,31 @@
                 scores: {
                     kihon: '',
                     kata: '',
-                    kumite: ''
+                    kumite: '', theory: '', paper: '', physical: '', self_defense: '', ippon_kumite: ''
                 },
                 isEditing: false,
+                editVersion: 0,
 
                 init() {
                     @foreach ($allScores as $mid => $s)
                         if (this.userId == "{{ $mid }}") {
                             this.scores.kihon = "{{ $s->kihon }}";
                             this.scores.kata = "{{ $s->kata }}";
-                            this.scores.kumite = "{{ $s->kumite }}";
+                            this.scores.kumite = @js($s->kumite);
+                            @foreach (['theory', 'paper', 'physical', 'self_defense', 'ippon_kumite'] as $extraField)
+                            this.scores.{{ $extraField }} = @js($s->$extraField ?? '');
+                            @endforeach
                             this.newBeltId = "{{ $s->new_belt_level_id }}";
                             this.examinerIdInput = "{{ $s->examiner_id }}";
                         }
                     @endforeach
+                    if (!this.newBeltId) {
+                        this.newBeltId = this.$el.querySelector('select[name*="new_belt_level_id"]')?.value || '';
+                    }
                 },
 
                 markAsEdited() {
+                    this.editVersion++;
                     this.isEditing = true;
                     this.examiner = CURRENT_USER_NAME;
                     this.examinerIdInput = CURRENT_USER_ID;
@@ -459,13 +447,31 @@
                 resumeContainer.innerHTML = html;
             };
 
-            const autoSave = async () => {
+            let pendingSave = Promise.resolve(true);
+            const autoSave = () => {
+                pendingSave = pendingSave.then(() => saveChanges());
+                return pendingSave;
+            };
+            const saveChanges = async () => {
                 statusIndicator.classList.remove('hidden');
                 statusIndicator.classList.add('flex');
 
                 const formData = new FormData(form);
+                const submittedVersions = new Map();
+                document.querySelectorAll('.participant-card').forEach(card => {
+                    if (!Alpine.$data(card).isEditing) {
+                        const prefix = 'scores[' + card.getAttribute('data-user-id') + ']';
+                        Array.from(formData.keys()).filter(key => key.startsWith(prefix)).forEach(key => formData.delete(key));
+                    } else {
+                        submittedVersions.set(card, Alpine.$data(card).editVersion);
+                    }
+                });
+                if (!Array.from(formData.keys()).some(key => key.startsWith('scores['))) {
+                    statusIndicator.classList.add('hidden');
+                    return true;
+                }
                 try {
-                    await fetch("{{ route('admin.exams.scoring.store', $exam) }}", {
+                    const response = await fetch("{{ route('admin.exams.scoring.store', $exam) }}", {
                         method: 'POST',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -474,19 +480,31 @@
                         },
                         body: formData
                     });
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(Object.values(error.errors || {}).flat().join('\n') || error.message || 'Nilai gagal disimpan.');
+                    }
 
                     document.querySelectorAll('.participant-card').forEach(card => {
                         const alpineData = Alpine.$data(card);
-                        if (alpineData) alpineData.isEditing = false;
+                        if (alpineData && submittedVersions.get(card) === alpineData.editVersion) alpineData.isEditing = false;
                     });
 
                     setTimeout(() => {
                         statusIndicator.classList.add('hidden');
                     }, 700);
+                    return true;
                 } catch (e) {
-                    console.error('Save failed', e);
+                    statusIndicator.classList.add('hidden');
+                    alert(e.message || 'Nilai gagal disimpan. Silakan coba kembali.');
+                    return false;
                 }
             };
+
+            document.querySelector('form[action="{{ route('admin.exams.scoring.finalize', $exam) }}"]')?.addEventListener('submit', async event => {
+                event.preventDefault();
+                if (await autoSave()) event.target.submit();
+            });
 
             const fetchUpdates = async () => {
                 try {
@@ -510,7 +528,7 @@
                                 alpineData.examiner = data.scores[userId].examiner_name;
                                 alpineData.scores.kihon = data.scores[userId].kihon;
                                 alpineData.scores.kata = data.scores[userId].kata;
-                                alpineData.scores.kumite = data.scores[userId].kumite;
+                                Object.keys(alpineData.scores).forEach(field => alpineData.scores[field] = data.scores[userId][field] ?? '');
                                 alpineData.newBeltId = data.scores[userId].new_belt_level_id;
                             }
                         });

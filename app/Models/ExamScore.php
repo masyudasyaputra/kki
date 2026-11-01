@@ -14,6 +14,7 @@ class ExamScore extends Model
         'member_id',
         'examiner_id',
         'kihon',
+        'theory', 'paper', 'physical', 'self_defense', 'ippon_kumite',
         'kata',
         'kumite',
         'result',

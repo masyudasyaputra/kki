@@ -4,7 +4,7 @@
         $qrCode = QrCode::format('svg')
             ->size(200)
             ->errorCorrection('H')
-            ->generate('#' . str_pad($user->id, 5, '0', STR_PAD_LEFT));
+            ->generate($user->member_number);
         
         $qrPngBase64 = base64_encode($qrCode);
     @endphp
@@ -14,6 +14,21 @@
             Digital ID Member
         </h1>
     </x-slot>
+
+    <section class="mx-auto mt-4 max-w-7xl rounded-xl border border-slate-200 bg-white p-4" aria-label="Status verifikasi pendaftaran">
+        <p class="text-sm font-semibold">Verifikasi pendaftaran: {{ ['pending' => 'Menunggu pemeriksaan', 'approved' => 'Disetujui', 'revision' => 'Perlu perbaikan'][$user->verification_status ?? 'pending'] ?? 'Menunggu pemeriksaan' }}</p>
+        @if ($user->verification_status === 'revision' && $latestVerification?->notes)
+            <p class="mt-2 whitespace-pre-wrap text-sm text-red-700">{{ $latestVerification->notes }}</p>
+            <a href="{{ route('profile.edit') }}" class="mt-2 inline-flex text-sm font-semibold text-red-600">Perbarui profil</a>
+        @endif
+    </section>
+
+    <section class="mx-auto mt-4 max-w-7xl rounded-xl border border-slate-200 bg-white p-4" aria-label="Sertifikat saya">
+        <h2 class="text-sm font-semibold">Sertifikat Saya</h2>
+        @forelse($myCertificates as $certificate)
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3"><div><p class="text-sm font-semibold">{{ $certificate->snapshot['exam_name'] }} · {{ $certificate->snapshot['rank'] }}</p><p class="mt-1 text-xs text-slate-500">{{ $certificate->number }} · Diterima {{ $certificate->sent_at->format('d/m/Y') }}</p></div><a class="btn btn-secondary" href="{{ route('member.certificates.show', $certificate) }}" target="_blank" rel="noopener">Buka / Unduh sertifikat</a></div>
+        @empty<p class="mt-2 text-xs text-slate-500">Sertifikat yang dikirim pengurus akan tampil di sini.</p>@endforelse
+    </section>
 
     <div x-data="{
         showPreview: false,
@@ -120,7 +135,7 @@
                                                 <div>
                                                     <p class="text-[5px] text-white/40 uppercase font-black">ID Member</p>
                                                     <p class="text-[9px] font-bold uppercase font-mono italic">
-                                                        #{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }}
+                                                        {{ $user->member_number }}
                                                     </p>
                                                 </div>
                                             </div>
@@ -163,7 +178,15 @@
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">ID Registrasi</label>
-                                <p class="font-bold text-slate-800 text-lg">#{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }}</p>
+                                <p class="font-bold text-slate-800 text-lg">{{ $user->member_number }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">Kabupaten / Kota</label>
+                                <p class="font-bold text-slate-800 text-lg uppercase">{{ $user->city?->name ?? '-' }}</p>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">Kecamatan</label>
+                                <p class="font-bold text-slate-800 text-lg uppercase">{{ $user->district ?: '-' }}</p>
                             </div>
                             <div class="space-y-1">
                                 <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">Asal Dojo</label>
@@ -247,7 +270,7 @@
                                             </div>
                                             <div>
                                                 <p class="text-[6px] text-white/40 uppercase font-black mb-0.5">ID Member</p>
-                                                <p class="text-[9px] font-bold uppercase font-mono tracking-tighter">#{{ str_pad($user->id, 5, '0', STR_PAD_LEFT) }}</p>
+                                                <p class="text-[9px] font-bold uppercase font-mono tracking-tighter">{{ $user->member_number }}</p>
                                             </div>
                                         </div>
                                         <div class="bg-white p-1 rounded-lg shrink-0 shadow-xl">

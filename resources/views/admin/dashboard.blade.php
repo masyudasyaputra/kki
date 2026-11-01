@@ -405,7 +405,7 @@
                                                     {{ $member->name }}
                                                 </div>
                                                 <div class="text-[11px] text-slate-400 font-normal">
-                                                    ID: #{{ str_pad($member->id, 5, '0', STR_PAD_LEFT) }}
+                                                    ID: {{ $member->member_number }}
                                                 </div>
                                             </div>
                                         </div>
@@ -465,7 +465,7 @@
                                     </div>
                                     <div class="min-w-0">
                                         <h4 class="font-semibold text-slate-900 text-sm truncate">{{ $member->name }}</h4>
-                                        <p class="text-[11px] text-slate-400">#{{ str_pad($member->id, 5, '0', STR_PAD_LEFT) }}</p>
+                                        <p class="text-[11px] text-slate-400">{{ $member->member_number }}</p>
                                     </div>
                                 </div>
                                 <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium border

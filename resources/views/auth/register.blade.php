@@ -13,7 +13,7 @@
         cities: [], dojos: [], loadingCities: false, loadingDojos: false, regionError: '', visible: false,
         async loadCities(restore = false) {
             const selected = this.province;
-            if (!restore) { this.city = ''; this.dojo = ''; this.dojos = []; }
+            if (!restore) { this.city = ''; this.dojo = ''; this.dojos = []; document.getElementById('district').value = ''; }
             this.cities = []; this.regionError = '';
             if (!selected) return;
             this.loadingCities = true;
@@ -23,7 +23,7 @@
         },
         async loadDojos(restore = false) {
             const selected = this.city;
-            if (!restore) this.dojo = '';
+            if (!restore) { this.dojo = ''; document.getElementById('district').value = ''; }
             this.dojos = []; this.regionError = '';
             if (!selected) return;
             this.loadingDojos = true;
@@ -47,6 +47,7 @@
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div><x-input-label for="province_id" value="Provinsi (opsional)" /><select id="province_id" name="province_id" x-model="province" @change="loadCities()"><option value="">Belum tersedia / belum tahu</option>@foreach ($provinces as $province)<option value="{{ $province->id }}" @selected((string) old('province_id') === (string) $province->id)>{{ $province->name }}</option>@endforeach</select></div>
                 <div><x-input-label for="city_id" value="Kabupaten / kota (opsional)" /><select id="city_id" name="city_id" x-model="city" @change="loadDojos()" :disabled="!province || loadingCities"><option value="" x-text="loadingCities ? 'Memuat cabang...' : 'Belum tersedia / belum tahu'">Belum tersedia / belum tahu</option><template x-for="item in cities" :key="item.id"><option :value="String(item.id)" :selected="String(item.id) === city" x-text="item.name"></option></template></select></div>
+                <div><x-input-label for="district" value="Kecamatan (opsional)" /><x-text-input id="district" name="district" type="text" :value="old('district')" maxlength="150" placeholder="Nama Kecamatan" /><x-input-error :messages="$errors->get('district')" class="mt-1" /></div>
                 <div><x-input-label for="dojo_id" value="Dojo (opsional)" /><select id="dojo_id" name="dojo_id" x-model="dojo" :disabled="!city || loadingDojos"><option value="" x-text="loadingDojos ? 'Memuat dojo...' : 'Belum tersedia / belum tahu'">Belum tersedia / belum tahu</option><template x-for="item in dojos" :key="item.id"><option :value="String(item.id)" x-text="item.name"></option></template></select></div>
                 <div><x-input-label for="belt_level_id" value="Tingkat sabuk (opsional)" /><select id="belt_level_id" name="belt_level_id"><option value="">Belum tersedia / belum tahu</option>@foreach ($beltLevels as $belt)<option value="{{ $belt->id }}" @selected((string) old('belt_level_id') === (string) $belt->id)>{{ $belt->name }} {{ $belt->kyu_dan }}</option>@endforeach</select></div>
             </div><p x-show="regionError" x-cloak x-text="regionError" role="alert" class="mt-2 text-xs text-red-600"></p>

@@ -16,6 +16,8 @@ class Exam extends Model
      */
     protected $fillable = [
         'name',
+        'exam_type',
+        'certificate_settings',
         'execution_date',
         'location',
         'province_id',
@@ -28,6 +30,7 @@ class Exam extends Model
      * otomatis menjadi objek Carbon, sehingga bisa menggunakan fungsi ->format().
      */
     protected $casts = [
+        'certificate_settings' => 'array',
         'execution_date' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

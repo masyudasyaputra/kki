@@ -40,6 +40,21 @@
 
         city_id: '{{ auth()->user()->city_id ?? '' }}',
         dojo_id: '{{ auth()->user()->dojo_id ?? '' }}',
+        memberCities: [],
+        regionError: '',
+        async loadMemberCities(reset = false) {
+            const selected = this.province_id;
+            this.memberCities = [];
+            this.regionError = '';
+            if (reset) this.members.forEach(member => { member.city_id = ''; member.district = ''; });
+            if (!selected) return;
+            try {
+                const response = await fetch(@js(url('/api/cities')) + '/' + selected);
+                if (!response.ok) throw new Error();
+                const cities = await response.json();
+                if (this.province_id === selected) this.memberCities = cities;
+            } catch { this.regionError = 'Kabupaten / Kota gagal dimuat. Muat ulang halaman untuk mencoba kembali.'; }
+        },
 
         get defaultPass() {
             let nameParts = (this.rawDojoName || 'DOJO').trim().split(' ');
@@ -76,6 +91,8 @@
                 parent_name: '',
                 whatsapp: '',
                 email: '',
+                city_id: this.city_id,
+                district: '',
                 belt_level_id: '',
                 errorWa: ''
             });
@@ -97,6 +114,9 @@
             }
 
             if (this.members.length === 0) this.addMember();
+            this.members.forEach(member => { member.city_id ??= this.city_id; member.district ??= ''; });
+            this.loadMemberCities();
+            this.$watch('province_id', () => this.loadMemberCities(true));
 
             this.$watch('members', (val) => {
                 localStorage.setItem('dojo_collective_2026', JSON.stringify(val));
@@ -351,6 +371,19 @@
                                             :name="'members[' + index + '][email]'"
                                             class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
                                             placeholder="alamat@email.com">
+                                    </div>
+
+                                    <div class="md:col-span-6">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1.5" :for="'member-city-' + member.id">Kabupaten / Kota *</label>
+                                        <select :id="'member-city-' + member.id" :name="'members[' + index + '][city_id]'" x-model="member.city_id" @change="member.district = ''" required class="w-full rounded-lg border-slate-200">
+                                            <option value="">Pilih Kabupaten / Kota</option>
+                                            <template x-for="city in memberCities" :key="city.id"><option :value="String(city.id)" :selected="String(city.id) === String(member.city_id)" x-text="city.name"></option></template>
+                                        </select>
+                                        <p x-show="regionError" x-text="regionError" class="text-xs text-red-600" role="alert"></p>
+                                    </div>
+                                    <div class="md:col-span-6">
+                                        <label class="block text-xs font-semibold text-slate-700 mb-1.5" :for="'member-district-' + member.id">Kecamatan</label>
+                                        <input :id="'member-district-' + member.id" type="text" :name="'members[' + index + '][district]'" x-model="member.district" maxlength="150" placeholder="Nama Kecamatan" class="w-full rounded-lg border-slate-200">
                                     </div>
 
                                     {{-- Sabuk Saat Ini --}}

@@ -77,6 +77,10 @@ Route::middleware(['auth'])->get('/dashboard', function () {
         ->values()
         ->all();
 
+    if (!$u->hasRole('pb') && $u->hasRole(array_keys(\App\Services\MembershipReview::ROLES))) {
+        return redirect()->route('admin.verifications.index');
+    }
+
     // Role admin/pengurus
     $adminRoles = ['pb', 'pengprov', 'pengcab', 'admin_dojo', 'penguji', 'admin_pengprov', 'admin_pengcab'];
 
@@ -91,6 +95,7 @@ Route::middleware(['auth'])->get('/dashboard', function () {
 // DASHBOARD MEMBER (KHUSUS MEMBER)
 // ============================
 Route::middleware(['auth', 'role:member'])->group(function () {
+    Route::get('/member/certificates/{certificate}', [\App\Http\Controllers\Admin\CertificateController::class, 'member'])->name('member.certificates.show');
     Route::get('/member/dashboard', [MemberDashboardController::class, 'index'])
         ->name('member.dashboard');
 });
@@ -102,6 +107,20 @@ Route::middleware(['auth', 'verified'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+
+        Route::middleware('role:pb,pengprov,admin_pengprov,pengcab,admin_pengcab')->group(function () {
+            Route::get('/certificate-templates', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'index'])->name('certificate-templates.index');
+            Route::post('/certificate-templates', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'template'])->name('certificate-templates.store');
+            Route::delete('/certificate-templates/{template}', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'destroyTemplate'])->name('certificate-templates.destroy');
+            Route::get('/certificate-templates/{template}/layout', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'layout'])->name('certificate-templates.layout');
+            Route::post('/certificate-templates/{template}/layout', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'saveLayout'])->name('certificate-templates.layout.save');
+        });
+
+        Route::middleware('role:verifikator_pb,verifikator_dewan_guru,verifikator_pengprov,verifikator_pengcab')->group(function () {
+            Route::get('/verifikasi-anggota', [\App\Http\Controllers\Admin\MembershipVerificationController::class, 'index'])->name('verifications.index');
+            Route::get('/verifikasi-anggota/{member}', [\App\Http\Controllers\Admin\MembershipVerificationController::class, 'show'])->name('verifications.show');
+            Route::post('/verifikasi-anggota/{member}', [\App\Http\Controllers\Admin\MembershipVerificationController::class, 'store'])->name('verifications.store');
+        });
 
         /**
          * 1) AKSES SEMUA LEVEL (pb/pengprov/pengcab/admin_dojo/penguji)
@@ -132,6 +151,14 @@ Route::middleware(['auth', 'verified'])
             // =========================
             Route::get('/exams', [ExamController::class, 'index'])->name('exams.index');
             Route::get('/exams/{exam}', [ExamController::class, 'show'])->name('exams.show');
+            Route::get('/exams/{exam}/certificates', [\App\Http\Controllers\Admin\CertificateController::class, 'index'])->name('exams.certificates.index');
+            Route::post('/exams/{exam}/certificates/settings', [\App\Http\Controllers\Admin\CertificateController::class, 'settings'])->name('exams.certificates.settings');
+            Route::post('/exams/{exam}/certificates/send-all', [\App\Http\Controllers\Admin\CertificateController::class, 'sendAll'])->name('exams.certificates.send-all');
+            Route::post('/exams/{exam}/certificates/{participant}/send', [\App\Http\Controllers\Admin\CertificateController::class, 'send'])->name('exams.certificates.send');
+            Route::post('/exams/{exam}/certificates/{participant}/identity', [\App\Http\Controllers\Admin\CertificateController::class, 'identity'])->name('exams.certificates.identity');
+            Route::get('/exams/{exam}/certificates/{participant}/preview', [\App\Http\Controllers\Admin\CertificateController::class, 'preview'])->name('exams.certificates.preview');
+            Route::post('/exams/{exam}/certificates/{participant}/issue', [\App\Http\Controllers\Admin\CertificateController::class, 'issue'])->name('exams.certificates.issue');
+            Route::get('/exams/{exam}/certificates/{participant}/print', [\App\Http\Controllers\Admin\CertificateController::class, 'print'])->name('exams.certificates.print');
 
             Route::get('/exams/{exam}/scoring/{member}', [ExamController::class, 'showScoring'])
                 ->name('exams.scoring.member');
@@ -194,6 +221,8 @@ Route::middleware(['auth', 'verified'])
          */
         Route::middleware(['role:pb,pengprov,admin_pengprov'])->group(function () {
 
+            Route::post('/users/{user}/login-as', [\App\Http\Controllers\Admin\ImpersonationController::class, 'start'])->name('users.login-as');
+
             Route::resource('users', UserController::class);
             Route::resource('provinces', ProvinceController::class);
 
@@ -211,6 +240,7 @@ Route::middleware(['auth', 'verified'])
 // PROFILE UMUM
 // ============================
 Route::middleware('auth')->group(function () {
+    Route::post('/impersonation/stop', [\App\Http\Controllers\Admin\ImpersonationController::class, 'stop'])->name('impersonation.stop');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

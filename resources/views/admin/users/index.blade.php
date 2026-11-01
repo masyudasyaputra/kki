@@ -56,6 +56,7 @@
                                 </option>
                                 <option value="admin_dojo" {{ request('role') == 'admin_dojo' ? 'selected' : '' }}>Admin
                                     Dojo</option>
+                                @foreach (\App\Services\MembershipReview::ROLES as $roleKey => $roleName)<option value="{{ $roleKey }}" @selected(request('role') === $roleKey)>{{ $roleName }}</option>@endforeach
                                 <option value="penguji" {{ request('role') == 'penguji' ? 'selected' : '' }}>Penguji
                                 </option>
                                 <option value="member" {{ request('role') == 'member' ? 'selected' : '' }}>Member
@@ -166,7 +167,7 @@
                                         @foreach ($allRoles as $r)
                                             <span
                                                 class="inline-flex items-center px-2 py-1 rounded-xl border text-[9px] font-black uppercase tracking-widest {{ $roleColors[$r] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
-                                                {{ str_replace('_', ' ', $r) }}
+                                                {{ \App\Services\MembershipReview::ROLES[$r] ?? str_replace('_', ' ', $r) }}
                                             </span>
                                         @endforeach
                                     </div>
@@ -199,6 +200,7 @@
 
                                 <td class="px-8 py-6">
                                     <div class="flex justify-end items-center gap-2">
+                                        @include('admin.users.login-as-button')
                                         <x-action-button href="{{ route('admin.users.edit', $user->id) }}" icon="edit" label="Edit" />
 
                                         <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
@@ -312,7 +314,8 @@
                             </div>
 
                             <div class="flex gap-2">
-                                <x-action-button href="{{ route('admin.users.edit', $user->id) }}" icon="edit" label="Edit" />
+                                @include('admin.users.login-as-button')
+                                        <x-action-button href="{{ route('admin.users.edit', $user->id) }}" icon="edit" label="Edit" />
                                 <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST"
                                     onsubmit="return confirm('Hapus user?')">
                                     @csrf @method('DELETE')
