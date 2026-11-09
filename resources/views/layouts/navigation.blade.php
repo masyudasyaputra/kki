@@ -51,7 +51,7 @@
 <div x-cloak x-show="sidebarOpen" @click="sidebarOpen = false" x-transition.opacity class="fixed inset-0 z-[60] bg-slate-950/50 lg:hidden"></div>
 <aside id="backend-sidebar" class="backend-sidebar" :class="{ 'is-open': sidebarOpen }" :inert="!sidebarOpen && !desktopSidebar" @keydown.escape.window="sidebarOpen = false">
     <div class="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
-        <a href="{{ $homeHref }}" class="flex items-center gap-3">
+        <a href="{{ url('/') }}" class="flex items-center gap-3">
             <img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" class="h-10 w-10 object-contain">
             <div><span class="text-lg font-bold tracking-tight text-white">PP KKI</span><p class="mt-1 text-[10px] text-slate-400">Pengurus Pusat KKI</p></div>
         </a>
@@ -82,7 +82,7 @@
 
         @if ($canViewMembers || $canVerifyMembers)
             <details class="sidebar-group" @if($activeMembers || request()->routeIs('admin.verifications.*')) open @endif>
-                <summary><x-sidebar-icon name="membership" /><span>Keanggotaan</span><span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>
+                <summary><x-sidebar-icon name="membership" /><span>Keanggotaan</span>@if($pendingMemberVerifications > 0)<span class="sidebar-notification-badge" aria-label="{{ $pendingMemberVerifications }} pengajuan keanggotaan menunggu verifikasi">{{ $pendingMemberVerifications }}</span>@endif<span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>
                 <div class="sidebar-group-items">
                     @if ($canViewMembers)<a href="{{ route('admin.members.index') }}" class="sidebar-link {{ $activeMembers ? 'is-active' : '' }}" @if($activeMembers) aria-current="page" @endif><x-sidebar-icon name="people" /><span>Anggota</span></a>@endif
                     @if ($canVerifyMembers)<a href="{{ route('admin.verifications.index') }}" class="sidebar-link {{ request()->routeIs('admin.verifications.*') ? 'is-active' : '' }}" @if(request()->routeIs('admin.verifications.*')) aria-current="page" @endif><x-sidebar-icon name="people" /><span class="min-w-0 flex-1">Verifikasi Keanggotaan</span>@if($pendingMemberVerifications > 0)<span class="sidebar-notification-badge" aria-label="{{ $pendingMemberVerifications }} pengajuan menunggu verifikasi">{{ $pendingMemberVerifications }}</span>@endif</a>@endif

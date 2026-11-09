@@ -69,13 +69,15 @@ class GoogleAuthController extends Controller
             return redirect()->route('profile.edit')->with('status', 'google-connected');
         }
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return new \Illuminate\Http\RedirectResponse(\App\Support\DashboardDestination::url($request->user()));
         }
         if ($linked) {
             Auth::login($linked);
             $request->session()->regenerate();
 
-            return redirect()->intended(route('dashboard'));
+            $request->session()->forget('url.intended');
+
+            return new \Illuminate\Http\RedirectResponse(\App\Support\DashboardDestination::url($request->user()));
         }
         if (User::where('email', $email)->exists()) {
             return $this->failure('login', 'Email ini sudah terdaftar. Masuk dengan kata sandi, lalu hubungkan Google melalui profil akun.');

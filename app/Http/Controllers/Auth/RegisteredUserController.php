@@ -99,7 +99,7 @@ class RegisteredUserController extends Controller
         $request->session()->regenerate();
 
         return $request->expectsJson()
-            ? response()->json(['redirect' => route('member.dashboard')], 201)
+            ? response()->json(['redirect' => route('member.dashboard', [], false)], 201)
             : redirect()->route('member.dashboard');
     }
 }

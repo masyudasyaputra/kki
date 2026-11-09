@@ -81,14 +81,7 @@ Route::get('/verifikasi-sertifikat/{certificate}', [\App\Http\Controllers\Certif
 // - INI WAJIB: hanya auth, tanpa role:member
 // ============================
 Route::middleware(['auth'])->get('/dashboard', function () {
-    $u = auth()->user();
-    if ($u->hasRole('super_admin')) return redirect()->route('admin.dashboard');
-    if ($u->hasRole('pb')) return redirect()->route('admin.dashboard');
-    if ($u->hasRole('dewan_guru_pusat')) return redirect()->route('admin.oversight');
-    if ($u->hasRole(['verifikator_ujian_pb', 'pengelola_sertifikat_pb', 'panitia_ujian', 'penguji'])) return redirect()->route('admin.exam-reviews.index');
-    if ($u->hasRole(array_keys(\App\Services\MembershipReview::ROLES))) return redirect()->route('admin.verifications.index');
-    if ($u->hasRole(['pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo'])) return redirect()->route('admin.dashboard');
-    return redirect()->route('member.dashboard');
+    return redirect()->to(\App\Support\DashboardDestination::url(auth()->user()));
 })->name('dashboard');
 
 // ============================

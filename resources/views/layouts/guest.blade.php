@@ -24,6 +24,7 @@
         <div class="auth-card">{{ $slot }}</div>
         @unless($authEmbedded)<footer class="auth-footer">&copy; {{ date('Y') }} PP KKI <span aria-hidden="true">/</span> <a href="{{ url('/') }}">Kembali ke beranda</a></footer>@endunless
     </main>
+<x-auth-modals />
 </body>
 </html>
 @endif

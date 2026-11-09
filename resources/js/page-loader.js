@@ -36,5 +36,11 @@ if (loader) {
     }, true);
 
     window.addEventListener('pageshow', hideLoader);
+    window.addEventListener('auth-modal:closed', () => {
+        window.clearTimeout(hideTimer);
+        loader.classList.remove('is-visible');
+        loader.hidden = true;
+        loader.setAttribute('aria-hidden', 'true');
+    });
     window.addEventListener('pagehide', hideLoader);
 }

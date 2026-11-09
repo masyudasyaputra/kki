@@ -28,7 +28,12 @@
         title = document.createElement('h2'); title.id = 'auth-modal-title';
         const close = document.createElement('button');
         close.type = 'button'; close.className = 'btn btn-secondary'; close.textContent = 'Tutup';
-        close.addEventListener('click', () => dialog.close());
+        close.setAttribute('data-no-loading', '');
+        close.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            dialog.close();
+        });
         header.append(title, close);
         feedback = document.createElement('div');
         feedback.className = 'create-form-feedback'; feedback.hidden = true; feedback.tabIndex = -1;
@@ -40,8 +45,9 @@
             content.replaceChildren();
             document.body.classList.remove('auth-modal-open');
             document.body.style.removeProperty('top');
-            window.scrollTo(0, scrollPosition);
+            window.scrollTo({ top: scrollPosition, left: 0, behavior: 'instant' });
             opener?.focus({ preventScroll: true });
+            window.dispatchEvent(new Event('auth-modal:closed'));
         });
         dialog.addEventListener('submit', async event => {
             const form = event.target;
@@ -63,8 +69,9 @@
                     headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
                 });
                 const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : {};
-                if (response.ok && data.redirect) {
-                    const destination = new URL(data.redirect, location.href);
+                if (version !== loadVersion || !dialog.open) return;
+                if (response.ok && (data.redirect || form.dataset.authRedirect)) {
+                    const destination = new URL(data.redirect || form.dataset.authRedirect, location.href);
                     if (destination.origin !== location.origin) throw new Error('Tujuan masuk tidak valid.');
                     location.assign(destination.href);
                     return;
@@ -97,8 +104,10 @@
             }
         });
     };
-    const open = async (href, mode, source) => {
+    const open = (href, mode, source) => {
         if (submitting) return;
+        const template = document.querySelector(`template[data-auth-form="${mode}"]`);
+        if (!template) return;
         ensureDialog();
         if (!dialog.open) {
             opener = source;
@@ -107,38 +116,20 @@
             document.body.classList.add('auth-modal-open');
             dialog.showModal();
         }
-        const version = ++loadVersion;
+        ++loadVersion;
         title.textContent = titles[mode];
         dialog.classList.toggle('auth-dialog-wide', mode === 'register');
-        content.replaceChildren();
-        content.setAttribute('aria-busy', 'true');
-        showFeedback('Memuat formulir...');
+        content.replaceChildren(template.content.cloneNode(true));
+        showFeedback('');
         fitViewport();
-        try {
-            const url = new URL(href, location.href);
-            url.searchParams.set('_auth_modal', '1');
-            const response = await fetch(url, { credentials: 'same-origin', headers: { 'X-Auth-Modal': '1', Accept: 'text/html' } });
-            if (!response.ok) throw new Error('Formulir belum dapat dimuat. Tutup dan coba lagi.');
-            const html = await response.text();
-            if (version !== loadVersion || !dialog.open) return;
-            const template = document.createElement('template');
-            template.innerHTML = html;
-            const card = template.content.querySelector('.auth-modal-card');
-            if (!card) throw new Error('Formulir belum dapat dimuat. Muat ulang halaman lalu coba lagi.');
-            content.replaceChildren(card);
-            showFeedback('');
-            // Alpine initializes inserted forms through its existing DOM observer.
-            requestAnimationFrame(() => content.querySelector('input:not([type="hidden"]):not([disabled])')?.focus({ preventScroll: true }));
-        } catch (error) {
-            if (version === loadVersion && dialog.open) showFeedback(error.message, true);
-        } finally { if (version === loadVersion) content.removeAttribute('aria-busy'); }
+        requestAnimationFrame(() => content.querySelector('input:not([type="hidden"]):not([disabled])')?.focus({ preventScroll: true }));
     };
     document.addEventListener('click', event => {
         if (!(event.target instanceof Element)) return;
         const link = event.target.closest('a[href]');
         if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         const url = new URL(link.href, location.href), mode = modeFor(url);
-        if (!mode || url.origin !== location.origin) return;
+        if (!mode || url.origin !== location.origin || !document.querySelector(`template[data-auth-form="${mode}"]`)) return;
         if (mode === 'forgot-password' && !dialog?.contains(link)) return;
         event.preventDefault();
         open(url.href, mode, dialog?.contains(link) ? opener : link);

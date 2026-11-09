@@ -89,20 +89,70 @@ class PublicGoogleAuthTest extends TestCase
         }
     }
 
+    public function test_landing_page_already_contains_all_auth_forms(): void
+    {
+        Schema::table('dojos', function (Blueprint $table) {
+            $table->boolean('is_active')->default(true);
+            $table->date('sk_expiry_date')->nullable();
+        });
+        Schema::create('exams', function (Blueprint $table) {
+            $table->id();
+            $table->date('execution_date');
+            $table->string('status');
+        });
+        $this->get('/')->assertOk()
+            ->assertSee('data-auth-form="login"', false)->assertSee('data-auth-form="register"', false)
+            ->assertSee('data-auth-form="forgot-password"', false)->assertSee('name="password_confirmation"', false)
+            ->assertSee('name="login"', false)->assertDontSee('<iframe', false)->assertDontSee('Memuat formulir');
+    }
+
     public function test_modal_registration_returns_dashboard_url_and_logs_in(): void
     {
         $this->postJson('/register?_auth_modal=1', ['name' => 'Anggota Modal', 'email' => 'modal@example.com', 'password' => 'Password123!', 'password_confirmation' => 'Password123!'])
-            ->assertCreated()->assertJsonPath('redirect', route('member.dashboard'));
+            ->assertCreated()->assertJsonPath('redirect', route('member.dashboard', [], false));
         $this->assertAuthenticated();
     }
 
-    public function test_modal_login_returns_intended_destination(): void
+    public function test_modal_login_returns_role_dashboard_instead_of_previous_destination(): void
     {
         User::create(['name' => 'Anggota Modal', 'email' => 'modal@example.com', 'password' => 'Password123!', 'role' => 'member']);
-        $this->withSession(['url.intended' => route('member.certificates')])
+        $this->withSession(['url.intended' => url('/admin/verifikasi-anggota/2')])
             ->postJson('/login?_auth_modal=1', ['login' => 'modal@example.com', 'password' => 'Password123!'])
-            ->assertOk()->assertJsonPath('redirect', route('member.certificates'));
+            ->assertOk()->assertJsonPath('redirect', route('member.dashboard', [], false))->assertSessionMissing('url.intended');
         $this->assertAuthenticated();
+        $this->get(route('dashboard'))->assertRedirect(route('member.dashboard'));
+    }
+
+    public function test_regular_login_does_not_return_a_member_to_an_admin_page(): void
+    {
+        User::create(['name' => 'Anggota', 'email' => 'member@example.com', 'password' => 'Password123!', 'role' => 'member']);
+        $this->withSession(['url.intended' => url('/admin/verifikasi-anggota/2')])
+            ->post('/login', ['login' => 'member@example.com', 'password' => 'Password123!'])
+            ->assertRedirect(route('member.dashboard', [], false))->assertSessionMissing('url.intended');
+        $this->get(route('dashboard'))->assertRedirect(route('member.dashboard'));
+    }
+
+    public function test_login_returns_each_roles_dashboard_directly(): void
+    {
+        foreach ([
+            'member' => 'member.dashboard', 'super_admin' => 'admin.dashboard', 'pb' => 'admin.dashboard',
+            'pengprov' => 'admin.dashboard', 'admin_dojo' => 'admin.dashboard',
+            'verifikator_pengprov' => 'admin.verifications.index', 'verifikator_anggota_pb' => 'admin.verifications.index',
+            'dewan_guru_pusat' => 'admin.oversight', 'penguji' => 'admin.exam-reviews.index',
+        ] as $role => $destination) {
+            User::create(['name' => $role, 'email' => $role.'@example.test', 'password' => 'Password123!', 'role' => $role]);
+            $this->postJson('/login', ['login' => $role.'@example.test', 'password' => 'Password123!'])
+                ->assertOk()->assertJsonPath('redirect', route($destination, [], false));
+            \Illuminate\Support\Facades\Auth::logout();
+        }
+    }
+
+    public function test_modal_redirect_does_not_depend_on_the_configured_host_or_protocol(): void
+    {
+        \Illuminate\Support\Facades\URL::forceRootUrl('http://internal-server.test');
+        User::create(['name' => 'Member', 'email' => 'member@example.test', 'password' => 'Password123!', 'role' => 'member']);
+        $this->postJson('/login', ['login' => 'member@example.test', 'password' => 'Password123!'])
+            ->assertOk()->assertJsonPath('redirect', '/member/dashboard');
     }
 
     public function test_invalid_modal_submission_returns_field_errors_without_redirecting(): void
@@ -232,7 +282,8 @@ class PublicGoogleAuthTest extends TestCase
     {
         $user = User::create(['name' => 'Linked', 'email' => 'new@example.com', 'password' => 'Password123!', 'google_id' => 'google-123']);
         $this->fakeGoogle();
-        $this->withSession(['google_oauth' => $this->flow()])->get('/auth/google/callback?state=valid-state&code=code')->assertRedirect(route('dashboard'));
+        $this->withSession(['google_oauth' => $this->flow(), 'url.intended' => url('/admin/verifikasi-anggota/2')])
+            ->get('/auth/google/callback?state=valid-state&code=code')->assertRedirect(route('member.dashboard', [], false))->assertSessionMissing('url.intended');
         $this->assertAuthenticatedAs($user);
         $this->assertSame(1, User::count());
     }
@@ -250,7 +301,7 @@ class PublicGoogleAuthTest extends TestCase
         $url = route('register', ['_auth_modal' => 1]);
         $this->from($url)->post($url, [])->assertRedirect($url)->assertSessionHasErrors(['name', 'email', 'password']);
         $this->get($url)->assertOk()->assertSee('auth-embedded')->assertSee('Periksa kembali data Anda.')
-            ->assertSee('action="' . $url . '"', false);
+            ->assertSee('action="' . route('register', ['_auth_modal' => 1], false) . '"', false);
     }
 
 }

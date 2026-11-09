@@ -87,7 +87,8 @@ class MembershipVerificationTest extends TestCase
         DB::table('users')->where('id', $revision->id)->update(['verification_status' => 'revision']);
         foreach (['verifikator_anggota_pb' => 3, 'verifikator_pengprov' => 2, 'verifikator_pengcab' => 1, 'super_admin' => 3] as $role => $count) {
             $this->actingAs($this->actor($role))->get(route('admin.verifications.index', ['status' => 'approved', 'search' => 'Tidak cocok']))
-                ->assertOk()->assertSee('aria-label="'.$count.' pengajuan menunggu verifikasi"', false);
+                ->assertOk()->assertSee('aria-label="'.$count.' pengajuan menunggu verifikasi"', false)
+                ->assertSee('aria-label="'.$count.' pengajuan keanggotaan menunggu verifikasi"', false);
         }
     }
 

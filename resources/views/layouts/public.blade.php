@@ -55,5 +55,6 @@
         <div class="pp-footer-bottom"><p>&copy; {{ date('Y') }} Pengurus Pusat KKI. Kushin Ryu M Karate-Do Indonesia.</p><p>Karakter. Disiplin. Persaudaraan.</p></div>
     </div>
 </footer>
+<x-auth-modals />
 </body>
 </html>

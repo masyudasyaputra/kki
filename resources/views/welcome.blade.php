@@ -347,5 +347,6 @@ $faqs = [
 </div>
 </div>
 </footer>
+<x-auth-modals />
 </body>
 </html>

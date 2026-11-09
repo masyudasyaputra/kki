@@ -44,7 +44,6 @@ class AuthenticatedSessionController extends Controller
         // 3. Coba login standar (Password Akun)
         if (Auth::attempt([$fieldType => $login, 'password' => $passwordInput], $request->boolean('remember'))) {
             $request->session()->regenerate();
-            // Ganti '/dashboard' sesuai dengan rute setelah login Anda
             return $this->authenticatedResponse($request);
         }
 
@@ -77,7 +76,8 @@ class AuthenticatedSessionController extends Controller
 
     private function authenticatedResponse(Request $request): RedirectResponse|JsonResponse
     {
-        $redirect = redirect()->intended('/dashboard');
+        $request->session()->forget('url.intended');
+        $redirect = new RedirectResponse(\App\Support\DashboardDestination::url($request->user()));
 
         return $request->expectsJson()
             ? response()->json(['redirect' => $redirect->getTargetUrl()])
