@@ -19,13 +19,20 @@
 <script type="application/ld+json">{!! json_encode(['@context' => 'https://schema.org', '@type' => 'SportsOrganization', 'name' => 'Pengurus Pusat KKI', 'url' => url('/'), 'logo' => asset('images/logo-kki.png'), 'sport' => 'Karate', 'areaServed' => ['@type' => 'Country', 'name' => 'Indonesia']], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_SLASHES) !!}</script>
 </head>
 <body class="pp" x-data="{ menuOpen: false }">
+<x-page-loader variant="public" />
 @php
 $entryUrl = auth()->check() ? route('dashboard') : route('login');
-$navigation = ['layanan' => 'Layanan', 'alur' => 'Alur anggota', 'agenda' => 'Agenda UKT', 'dojo' => 'Direktori dojo'];
+$navigation = [
+ ['label' => 'Layanan', 'href' => '#layanan'],
+ ['label' => 'Alur anggota', 'href' => '#alur'],
+ ['label' => 'Agenda UKT', 'href' => route('public.agenda')],
+ ['label' => 'Direktori dojo', 'href' => route('public.dojos')],
+ ['label' => 'Direktori anggota', 'href' => route('public.members')],
+];
 $services = [
  ['Keanggotaan', 'Lengkapi profil, akses kartu anggota dengan QR, dan lihat informasi sabuk serta dojo Anda.', 'Buka ruang anggota', $entryUrl, 'M8 7h8M8 11h5M4 3h16v18H4zM8 16h2v2H8zM14 16h2v2h-2z'],
- ['Ujian kenaikan tingkat', 'Temukan jadwal UKT. Pengurus mengelola peserta, penguji, hingga hasil kenaikan tingkat.', 'Lihat agenda ujian', '#agenda', 'M4 5h16v16H4zM8 3v4M16 3v4M4 10h16M8 15l3 3 5-5'],
- ['Jaringan dojo', 'Cari tempat berlatih melalui direktori dojo aktif beserta wilayah, pelatih, dan lokasinya.', 'Temukan dojo', '#dojo', 'M12 22s8-7 8-13a8 8 0 0 0-16 0c0 6 8 13 8 13zM15 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0'],
+ ['Ujian kenaikan tingkat', 'Temukan jadwal UKT. Pengurus mengelola peserta, penguji, hingga hasil kenaikan tingkat.', 'Lihat agenda ujian', route('public.agenda'), 'M4 5h16v16H4zM8 3v4M16 3v4M4 10h16M8 15l3 3 5-5'],
+ ['Jaringan dojo', 'Cari tempat berlatih melalui direktori dojo aktif beserta wilayah, pelatih, dan lokasinya.', 'Temukan dojo', route('public.dojos'), 'M12 22s8-7 8-13a8 8 0 0 0-16 0c0 6 8 13 8 13zM15 9a3 3 0 1 1-6 0 3 3 0 0 1 6 0'],
  ['Iuran & pembayaran', 'Akses informasi tagihan anggota. Pengurus mengelola iuran dan pembayaran peserta ujian.', 'Masuk ke administrasi', $entryUrl, 'M3 5h18v15H3zM3 10h18M7 15h4M16 15h1'],
 ];
 $steps = [
@@ -58,7 +65,7 @@ $faqs = [
 </span>
 </a>
 <nav class="pp-nav" aria-label="Navigasi utama">
-@foreach($navigation as $id => $label)<a href="#{{ $id }}">{{ $label }}</a>
+@foreach($navigation as $item)<a href="{{ $item['href'] }}">{{ $item['label'] }}</a>
 @endforeach
 <a href="{{ $entryUrl }}">{{ auth()->check() ? 'Dashboard' : 'Masuk portal' }}</a>
 @guest<a href="{{ route('register') }}" class="pp-btn pp-red">Daftar anggota ↗</a>
@@ -69,7 +76,7 @@ $faqs = [
 </button>
 </div>
 <nav id="pp-mobile" class="pp-mobile" x-cloak x-show="menuOpen" @click.outside="menuOpen = false" @keydown.escape.window="menuOpen = false" aria-label="Navigasi seluler">
-@foreach($navigation as $id => $label)<a href="#{{ $id }}" @click="menuOpen = false">{{ $label }}</a>
+@foreach($navigation as $item)<a href="{{ $item['href'] }}" @click="menuOpen = false">{{ $item['label'] }}</a>
 @endforeach
 <a href="{{ $entryUrl }}" @click="menuOpen = false">{{ auth()->check() ? 'Dashboard' : 'Masuk portal' }}</a>
 @guest<a href="{{ route('register') }}" @click="menuOpen = false">Daftar anggota ↗</a>
@@ -220,6 +227,7 @@ $faqs = [
 </div>
 </div>
 @endif
+<div class="pp-section-action"><a href="{{ route('public.agenda') }}" class="pp-btn pp-outline-dark">Lihat semua agenda UKT <span aria-hidden="true">↗</span></a></div>
 </div>
 </section>
 <section id="dojo" class="pp-section pp-directory" x-data="{ query: '', hasMatches: true, filterDojos() { const term = this.query.trim().toLocaleLowerCase('id'); let total = 0; this.$refs.regions.querySelectorAll('[data-region]').forEach(region => { let count = 0; region.querySelectorAll('[data-dojo]').forEach(dojo => { const match = !term || dojo.dataset.search.includes(term); dojo.hidden = !match; if (match) count++; }); region.hidden = count === 0; if (term &amp;&amp; count) region.open = true; total += count; }); this.hasMatches = total > 0; } }">
@@ -271,6 +279,7 @@ $faqs = [
 </div>
 </div>
 @endif
+<div class="pp-section-action"><a href="{{ route('public.dojos') }}" class="pp-btn pp-outline-dark">Jelajahi direktori dojo <span aria-hidden="true">↗</span></a><a href="{{ route('public.members') }}" class="pp-btn pp-red">Direktori anggota <span aria-hidden="true">↗</span></a></div>
 </div>
 </section>
 <section id="tentang" class="pp-section pp-about">
@@ -326,8 +335,9 @@ $faqs = [
 <nav class="pp-footer-links" aria-label="Navigasi footer">
 <a href="#tentang">Tentang KKI</a>
 <a href="#layanan">Layanan</a>
-<a href="#agenda">Agenda UKT</a>
-<a href="#dojo">Direktori dojo</a>
+<a href="{{ route('public.agenda') }}">Agenda UKT</a>
+<a href="{{ route('public.dojos') }}">Direktori dojo</a>
+<a href="{{ route('public.members') }}">Direktori anggota</a>
 <a href="#bantuan">Bantuan</a>
 </nav>
 </div>

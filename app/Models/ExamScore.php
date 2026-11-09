@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExamScore extends Model
 {
+    protected $casts = ['material_scores' => 'array'];
     // Gunakan fillable ATAU guarded, jangan keduanya. 
     // Di sini saya rapikan fillable-nya agar lebih aman.
     protected $fillable = [
@@ -20,6 +21,7 @@ class ExamScore extends Model
         'result',
         'notes', // Tambahkan ini jika ada kolom catatan di DB
         'new_belt_level_id',
+        'material_scores',
     ];
 
     /**

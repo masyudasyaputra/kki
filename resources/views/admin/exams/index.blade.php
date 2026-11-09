@@ -112,14 +112,14 @@
                                         <x-action-button href="{{ route('admin.exams.show', $exam->id) }}" icon="view" label="Kelola" />
 
                                         {{-- Input Nilai --}}
-                                        @if (auth()->user()->hasRole(['pb', 'pengprov', 'penguji']))
-                                            <x-action-button href="{{ route('admin.exams.scoring', $exam->id) }}" icon="score" label="Input nilai" />
+                                        @if (auth()->user()->hasRole(['pb', 'dewan_guru_pusat', 'verifikator_ujian_pb', 'pengelola_sertifikat_pb', 'pengprov', 'penguji', 'panitia_ujian']))
+                                            <x-action-button href="{{ route('admin.exams.scoring', $exam->id) }}" icon="score" label="Nilai ujian" />
                                         @endif
 
                                         {{-- PB / Pengprov specific actions --}}
                                         @if (auth()->user()->hasRole(['pb', 'pengprov']))
                                             {{-- Atur Penguji --}}
-                                            <x-action-button href="{{ route('admin.exams.examiners.edit', $exam->id) }}" icon="people" label="Atur penguji" />
+                                            <x-action-button href="{{ route('admin.exams.examiners.edit', $exam->id) }}" icon="people" label="Penguji & panitia" />
 
                                             {{-- Edit --}}
                                             <x-action-button type="button" onclick="openEditModal({{ json_encode($exam) }})" icon="edit" label="Edit" />
@@ -188,14 +188,14 @@
                             <div class="flex items-center gap-1.5 flex-1">
                                 <x-action-button href="{{ route('admin.exams.show', $exam->id) }}" icon="view" label="Kelola" />
 
-                                @if (auth()->user()->hasRole(['pb', 'pengprov', 'penguji']))
-                                    <x-action-button href="{{ route('admin.exams.scoring', $exam->id) }}" icon="score" label="Input nilai" />
+                                @if (auth()->user()->hasRole(['pb', 'dewan_guru_pusat', 'verifikator_ujian_pb', 'pengelola_sertifikat_pb', 'pengprov', 'penguji', 'panitia_ujian']))
+                                    <x-action-button href="{{ route('admin.exams.scoring', $exam->id) }}" icon="score" label="Nilai ujian" />
                                 @endif
                             </div>
 
                             @if (auth()->user()->hasRole(['pb', 'pengprov']))
                                 <div class="flex items-center gap-1">
-                                    <x-action-button href="{{ route('admin.exams.examiners.edit', $exam->id) }}" icon="people" label="Atur penguji" />
+                                    <x-action-button href="{{ route('admin.exams.examiners.edit', $exam->id) }}" icon="people" label="Penguji & panitia" />
 
                                     <x-action-button type="button" onclick="openEditModal({{ json_encode($exam) }})" icon="edit" label="Edit" />
                                 </div>

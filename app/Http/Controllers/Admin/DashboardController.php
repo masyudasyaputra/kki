@@ -21,7 +21,7 @@ class DashboardController extends Controller
         // 1. Gabungkan role utama dan roles tambahan (roles bisa array/json)
         $primaryRole = $user->role;
         $additionalRoles = is_array($user->roles) ? $user->roles : (json_decode($user->roles, true) ?? []);
-        $allRoles = array_unique(array_merge([$primaryRole], $additionalRoles));
+        $allRoles = $user->allRoles();
 
         // 2. Inisialisasi Query Dasar (Hanya mengambil user dengan role member)
         $memberQuery = User::query()->where('role', 'member');
@@ -31,9 +31,12 @@ class DashboardController extends Controller
          * IF-ELSEIF agar role level tertinggi (PB) didahulukan meskipun user punya banyak role.
          * (Scope ini HARUS tetap aman: filter request tidak boleh "melebar" melebihi scope role.)
          */
-        if (in_array('pb', $allRoles, true)) {
+        if (in_array('super_admin', $allRoles, true) && !in_array('pb', $allRoles, true)) {
+            $role = 'super_admin';
+            $title = 'Dashboard Super Admin';
+        } elseif (in_array('pb', $allRoles, true)) {
             $role = 'pb';
-            $title = 'Dashboard Pengurus Besar (Nasional)';
+            $title = in_array('super_admin', $allRoles, true) ? 'Dashboard Super Admin' : 'Dashboard Pengurus Besar (Nasional)';
             // Akses penuh (tanpa scope wilayah)
         } elseif (count(array_intersect(['pengprov', 'admin_pengprov'], $allRoles)) > 0) {
             $role = 'pengprov';
@@ -134,9 +137,9 @@ class DashboardController extends Controller
          * 6. Data Dropdown untuk Form Filter
          * Tetap mengikuti scope akses role.
          */
-        $beltLevels = BeltLevel::orderBy('order')->get();
+        $beltLevels = BeltLevel::active()->orderBy('order')->get();
 
-        $provinces = ($role === 'pb')
+        $provinces = (in_array($role, ['pb', 'super_admin'], true))
             ? Province::orderBy('name')->get()
             : Province::where('id', $user->province_id)->orderBy('name')->get();
 
@@ -144,10 +147,10 @@ class DashboardController extends Controller
             ->when($role === 'pengprov', function ($q) use ($user) {
                 return $q->where('province_id', $user->province_id);
             })
-            ->when($role === 'pb' && $request->filled('province_id'), function ($q) use ($request) {
+            ->when(in_array($role, ['pb', 'super_admin'], true) && $request->filled('province_id'), function ($q) use ($request) {
                 return $q->where('province_id', $request->province_id);
             })
-            ->when($role === 'pb' && !$request->filled('province_id'), function ($q) {
+            ->when(in_array($role, ['pb', 'super_admin'], true) && !$request->filled('province_id'), function ($q) {
                 // PB: opsional, bisa tampilkan semua kota, tapi biasanya berat.
                 // Jika mau semua kota untuk PB, hapus blok ini.
                 return $q->limit(0);
@@ -162,10 +165,10 @@ class DashboardController extends Controller
             ->when($role === 'pengcab', function ($q) use ($user) {
                 return $q->where('city_id', $user->city_id);
             })
-            ->when($role === 'pb' && $request->filled('city_id'), function ($q) use ($request) {
+            ->when(in_array($role, ['pb', 'super_admin'], true) && $request->filled('city_id'), function ($q) use ($request) {
                 return $q->where('city_id', $request->city_id);
             })
-            ->when($role === 'pb' && !$request->filled('city_id'), function ($q) {
+            ->when(in_array($role, ['pb', 'super_admin'], true) && !$request->filled('city_id'), function ($q) {
                 // PB: opsional, sama seperti cities, biar tidak berat kalau datanya besar.
                 return $q->limit(0);
             })
@@ -173,12 +176,11 @@ class DashboardController extends Controller
             ->get();
 
         // 7. Ambil Data Akhir
-        $members = \App\Support\TableSort::apply(
+        $memberQuery = \App\Support\TableSort::apply(
             $memberQuery->with(['province', 'city', 'dojo', 'beltLevel']), $request,
             ['name' => 'name', 'belt' => ['beltLevel', 'order'], 'dojo' => ['dojo', 'name'], 'status' => 'is_active']
-        )
-            ->paginate(10)
-            ->appends($request->query());
+        );
+        $members = \App\Support\PageSize::paginate($memberQuery, $request, 10);
 
         return view('admin.dashboard', compact(
             'stats',

@@ -1,4 +1,5 @@
 <x-app-layout>
+    <div class="mx-auto max-w-7xl px-6 pt-4"><a class="btn btn-secondary" href="{{ route('admin.exam-reviews.show', $exam) }}">Pengajuan & verifikasi pusat</a></div>
     <x-slot name="header">
         <div class="flex items-start sm:items-center justify-between gap-3">
             <div class="min-w-0">
@@ -58,18 +59,11 @@
         }
 
         $user = auth()->user();
-        $isStruktural = $user->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab']);
+        $isStruktural = $user->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'panitia_ujian', 'dewan_guru_pusat', 'pengelola_sertifikat_pb', 'verifikator_ujian_pb']);
 
-        $allParticipants = $exam
-            ->participants()
-            ->with(['user', 'currentBelt', 'targetBelt', 'dojo'])
-            ->get();
-        if ($user->hasRole(['pengcab', 'admin_pengcab']) && !$user->hasRole(['pb', 'pengprov', 'admin_pengprov'])) {
-            $allParticipants = $allParticipants->filter(fn ($person) => (int) $person->user->city_id === (int) $user->city_id);
-        }
-        $examScores = \App\Models\ExamScore::where('exam_id', $exam->id)->get()->keyBy('member_id');
-
-        $myParticipants = $isStruktural ? $allParticipants : $allParticipants->where('dojo_id', $user->dojo_id);
+        $allParticipants = app(\App\Services\ExamCertificates::class)->participants($user, $exam)->with('currentBelt')->get();
+        $examScores = \App\Models\ExamScore::where('exam_id', $exam->id)->whereIn('member_id', $allParticipants->pluck('user_id'))->get()->keyBy('member_id');
+        $myParticipants = $allParticipants;
         $registeredUserIds = $allParticipants->pluck('user_id')->toArray();
         $filteredMembers = $isStruktural ? $members : $members->where('dojo_id', $user->dojo_id);
 
@@ -129,6 +123,12 @@
     }">
 
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-6">
+            <div class="flex flex-wrap gap-2">
+                @if ($user->hasRole(['pb', 'dewan_guru_pusat', 'verifikator_ujian_pb', 'pengelola_sertifikat_pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo', 'penguji', 'panitia_ujian']))
+                    <a href="{{ route('admin.exams.roster', $exam) }}" class="btn btn-secondary">Rekap peserta UKT</a>
+                    <a href="{{ route('admin.exams.scoring', $exam) }}" class="btn btn-primary">Form penilaian per tingkatan</a>
+                @endif
+            </div>
 
             {{-- HEADER TABS --}}
             <div
@@ -176,7 +176,7 @@
 
                     {{-- Registration Form --}}
                     <div class="lg:col-span-9 bg-white p-5 rounded-xl shadow-sm border border-slate-200/80">
-                        <form action="{{ route('admin.exams.register-member', $exam->id) }}" method="POST">
+                        @if($canManageParticipants)<form action="{{ route('admin.exams.register-member', $exam->id) }}" method="POST">
                             @csrf
                             <label class="text-xs font-bold uppercase tracking-wider text-slate-900 block mb-2">
                                 Daftarkan Anggota Baru ke Sesi Ujian
@@ -191,7 +191,7 @@
                                                     @php $isAlreadyRegistered = in_array($m->id, $registeredUserIds); @endphp
                                                     <option value="{{ $m->id }}"
                                                         {{ $isAlreadyRegistered ? 'disabled' : '' }}>
-                                                        {{ $m->name }} ({{ $m->beltLevel->name ?? 'Putih' }})
+                                                        {{ $m->name }} ({{ $m->beltLevel?->display_name ?? 'Belum ditetapkan' }})
                                                         {{ $isAlreadyRegistered ? '[TERDAFTAR]' : '' }}
                                                     </option>
                                                 @endforeach
@@ -204,7 +204,7 @@
                                     Daftarkan
                                 </button>
                             </div>
-                        </form>
+                        </form>@endif
                     </div>
                 </div>
 
@@ -225,7 +225,7 @@
                                     Total untuk {{ $pendingCount }} Peserta
                                 </p>
                             </div>
-                            <form action="{{ route('admin.exams.bulk-payment', $exam->id) }}" method="POST">
+                            @if($canManageParticipants)<form action="{{ route('admin.exams.bulk-payment', $exam->id) }}" method="POST">
                                 @csrf
                                 <button type="submit"
                                     class="btn btn-secondary flex">
@@ -234,7 +234,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                     </svg>
                                 </button>
-                            </form>
+                            </form>@endif
                         </div>
                     </div>
                 @endif
@@ -265,7 +265,7 @@
                         <select x-model="filterSabuk"
                             class="w-full h-9 px-3 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all uppercase">
                             <option value="">Semua</option>
-                            @foreach ($myParticipants->pluck('currentBelt.name')->filter()->unique() as $beltName)
+                            @foreach ($myParticipants->pluck('currentBelt.display_name')->filter()->unique() as $beltName)
                                 <option value="{{ $beltName }}">{{ $beltName }}</option>
                             @endforeach
                         </select>
@@ -291,7 +291,7 @@
                             Terpilih: <span x-text="selectedIds.length"></span> Peserta
                         </span>
 
-                        <form action="{{ route('admin.exams.bulk-remove-member', $exam->id) }}" method="POST"
+                        @if($canManageParticipants)<form action="{{ route('admin.exams.bulk-remove-member', $exam->id) }}" method="POST"
                             onsubmit="return confirm('Hapus semua peserta yang dipilih?')">
                             @csrf @method('DELETE')
                             <template x-for="id in selectedIds" :key="id">
@@ -301,7 +301,7 @@
                                 class="btn btn-danger">
                                 Hapus Masal
                             </button>
-                        </form>
+                        </form>@endif
                     </div>
 
                     {{-- Desktop header --}}
@@ -320,15 +320,20 @@
                     </div>
 
                     @forelse($myParticipants as $p)
-                        @php $scoreData = $examScores->get($p->user_id); @endphp
+                        @php
+                            $scoreData = $examScores->get($p->user_id);
+                            $participantName = $p->user?->name ?? 'Peserta tidak ditemukan';
+                            $participantDojo = $p->dojo?->name ?? '';
+                            $participantBelt = $p->currentBelt?->display_name ?? 'Belum ditetapkan';
+                        @endphp
 
                         {{-- CARD STYLE MOBILE LIKE DOJO/PENGURUS --}}
                         <div class="participant-item relative bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden active:scale-[0.98] transition-transform md:rounded-2xl md:border-slate-100 md:shadow-sm md:p-0"
                             data-id="{{ $p->id }}"
                             @if ($scoreData) data-graded="true"
-                                @click="openDetail('{{ addslashes($p->user->name) }}', {{ $scoreData->toJson() }})"
+                                @click="openDetail(@js($participantName), {{ $scoreData->toJson() }})"
                                 style="cursor: pointer;" @endif
-                            x-show="isMatch('{{ addslashes($p->user->name) }}', '{{ $p->dojo->name ?? '' }}', '{{ $p->currentBelt->name ?? 'Putih' }}', '{{ $p->payment_status }}')">
+                            x-show="isMatch(@js($participantName), @js($participantDojo), @js($participantBelt), @js($p->payment_status))">
 
                             {{-- DESKTOP ROW (tetap pakai grid yang sudah ada) --}}
                             <div class="hidden md:grid md:grid-cols-12 md:gap-4 md:items-center p-3 px-8">
@@ -339,21 +344,21 @@
                                 </div>
 
                                 <div class="md:col-span-3">
-                                    <p class="font-black text-slate-700 uppercase text-sm">{{ $p->user->name }}</p>
+                                    <x-member-identity :member="$p->user"><p class="font-black text-slate-700 uppercase text-sm">{{ $participantName }}</p>
                                     <p class="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
-                                        {{ $p->dojo->name ?? 'N/A' }}</p>
+                                        {{ $p->dojo->name ?? 'N/A' }}</p></x-member-identity>
                                 </div>
 
                                 <div class="md:col-span-2 flex justify-center">
                                     <div class="flex items-center gap-1.5">
                                         <span
                                             class="px-2 py-0.5 rounded text-[8px] font-bold border {{ getBeltColor($p->currentBelt->name ?? 'Putih') }} uppercase opacity-70">
-                                            {{ $p->currentBelt->name ?? 'Putih' }}
+                                            {{ $p->currentBelt?->display_name ?? 'Belum ditetapkan' }}
                                         </span>
                                         <span class="text-slate-400 text-[10px]">→</span>
                                         <span
-                                            class="px-2.5 py-1 rounded text-[9px] font-black border {{ getBeltColor($p->targetBelt->name) }} uppercase shadow-sm">
-                                            {{ $p->targetBelt->name }}
+                                            class="px-2.5 py-1 rounded text-[9px] font-black border {{ getBeltColor($p->targetBelt?->name ?? 'Belum ditetapkan') }} uppercase shadow-sm">
+                                            {{ $p->targetBelt?->display_name ?? 'Belum ditetapkan' }}
                                         </span>
                                     </div>
                                 </div>
@@ -385,11 +390,11 @@
 
                                 <div class="md:col-span-1 text-center" @click.stop>
                                     @if (!$scoreData)
-                                        <form action="{{ route('admin.exams.remove-member', $p->id) }}"
+                                        @if($canManageParticipants)<form action="{{ route('admin.exams.remove-member', $p->id) }}"
                                             method="POST" onsubmit="return confirm('Hapus peserta ini?')">
                                             @csrf @method('DELETE')
                                             <x-action-button type="submit"  icon="delete" label="Hapus" />
-                                        </form>
+                                        </form>@endif
                                     @else
                                         <span title="Sudah dinilai tidak bisa dihapus"
                                             class="inline-flex items-center justify-center p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-300">
@@ -410,7 +415,7 @@
                                         <div class="flex-1 min-w-0">
                                             <h4
                                                 class="font-black text-slate-900 uppercase text-base leading-tight tracking-tight">
-                                                {{ $p->user->name }}
+                                                {{ $participantName }}
                                             </h4>
 
                                             <div class="flex items-center gap-2 mt-1">
@@ -470,8 +475,8 @@
                                                     Sabuk</p>
                                                 <p
                                                     class="text-[10px] font-black text-slate-700 truncate uppercase italic leading-tight">
-                                                    {{ $p->currentBelt->name ?? 'Putih' }} →
-                                                    {{ $p->targetBelt->name }}
+                                                    {{ $p->currentBelt?->display_name ?? 'Belum ditetapkan' }} →
+                                                    {{ $p->targetBelt?->display_name ?? 'Belum ditetapkan' }}
                                                 </p>
                                             </div>
                                         </div>
@@ -517,15 +522,15 @@
                                     <div class="flex gap-2" @click.stop>
                                         @if ($scoreData)
                                             <x-action-button type="button"
-                                                @click="openDetail('{{ addslashes($p->user->name) }}', {{ $scoreData->toJson() }})" icon="view" label="Detail" />
+                                                @click="openDetail(@js($participantName), {{ $scoreData->toJson() }})" icon="view" label="Detail" />
                                         @endif
 
                                         @if (!$scoreData)
-                                            <form action="{{ route('admin.exams.remove-member', $p->id) }}"
+                                            @if($canManageParticipants)<form action="{{ route('admin.exams.remove-member', $p->id) }}"
                                                 method="POST" onsubmit="return confirm('Hapus peserta ini?')">
                                                 @csrf @method('DELETE')
                                                 <x-action-button type="submit" icon="delete" label="Hapus" />
-                                            </form>
+                                            </form>@endif
                                         @else
                                             <x-action-button icon="lock" label="Terkunci" disabled />
                                         @endif
@@ -604,6 +609,10 @@
                                         'kuning' => ['bg' => 'bg-yellow-400', 'bar' => 'bg-yellow-400'],
                                         'hijau' => ['bg' => 'bg-emerald-500', 'bar' => 'bg-emerald-500'],
                                         'biru' => ['bg' => 'bg-blue-600', 'bar' => 'bg-blue-600'],
+                                        'biru strip' => ['bg' => 'bg-blue-500', 'bar' => 'bg-blue-500'],
+                                        'biru tua' => ['bg' => 'bg-blue-900', 'bar' => 'bg-blue-900'],
+                                        'coklat strip' => ['bg' => 'bg-amber-800', 'bar' => 'bg-amber-800'],
+                                        'coklat polos/tua' => ['bg' => 'bg-amber-900', 'bar' => 'bg-amber-900'],
                                         'cokelat' => ['bg' => 'bg-amber-800', 'bar' => 'bg-amber-800'],
                                         'hitam' => ['bg' => 'bg-slate-900', 'bar' => 'bg-slate-900'],
                                         default => ['bg' => 'bg-slate-900', 'bar' => 'bg-slate-900'],
@@ -728,10 +737,10 @@
                                         <div
                                             class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex justify-between items-center">
                                             <div>
-                                                <p class="text-[10px] font-black text-slate-700 uppercase">
-                                                    {{ $p->user->name }}</p>
+                                                <x-member-identity :member="$p->user"><p class="text-[10px] font-black text-slate-700 uppercase">
+                                                    {{ $p->user?->name ?? 'Peserta tidak ditemukan' }}</p>
                                                 <p class="text-[8px] text-slate-400 uppercase font-bold">
-                                                    {{ $p->targetBelt->name }}</p>
+                                                    {{ $p->targetBelt?->display_name ?? '-' }}</p></x-member-identity>
                                             </div>
                                             <div class="text-right">
                                                 <p class="text-[10px] font-black text-slate-700">
@@ -830,6 +839,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            if (!document.getElementById('user-select')) return;
             new TomSelect('#user-select', {
                 plugins: ['remove_button'],
                 maxItems: 50,

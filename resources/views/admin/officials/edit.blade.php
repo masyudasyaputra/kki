@@ -51,7 +51,7 @@
                     </span>
                 </div>
 
-                <form action="{{ route('admin.officials.update', $official->id) }}" method="POST" class="p-6 sm:p-8 space-y-8">
+                <form action="{{ route('admin.officials.update', $official->id) }}" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-8">
                     @csrf
                     @method('PUT')
 
@@ -184,6 +184,7 @@
                                 </select>
                             </div>
                         </div>
+                        <x-sk-document-upload entity="official" :record="$official" label="Unggah / ganti dokumen SK Pengurus" />
                     </div>
 
                     {{-- Section 3: Legalitas SK --}}

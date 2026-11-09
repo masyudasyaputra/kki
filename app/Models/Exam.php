@@ -16,6 +16,7 @@ class Exam extends Model
      */
     protected $fillable = [
         'name',
+        'review_status',
         'exam_type',
         'certificate_settings',
         'execution_date',
@@ -75,5 +76,10 @@ class Exam extends Model
     {
         return $this->belongsToMany(\App\Models\User::class, 'exam_examiners', 'exam_id', 'user_id')
             ->withTimestamps();
+    }
+
+    public function reviewers()
+    {
+        return $this->belongsToMany(User::class, 'exam_reviewers')->withTimestamps();
     }
 }

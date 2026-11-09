@@ -25,10 +25,18 @@
         </div>
     </x-slot>
 
+    @if($errors->any())<div role="alert" class="mx-6 mt-4 rounded-xl bg-red-50 p-4 text-red-700"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+    @if(in_array($exam->review_status, ['submitted', 'approved']))<p class="mx-6 mt-4">Hasil dikunci: {{ $exam->review_status === 'approved' ? 'disetujui pusat' : 'menunggu verifikasi pusat' }}. <a class="underline" href="{{ route('admin.exam-reviews.show', $exam) }}">Lihat pengajuan</a></p>@endif
+
     @php
         $beltColors = [
             'Hitam' => 'bg-slate-900 text-white',
             'Cokelat' => 'bg-amber-800 text-white',
+            'Coklat Strip' => 'bg-amber-800 text-white',
+            'Coklat Polos/Tua' => 'bg-amber-900 text-white',
+            'Biru Strip' => 'bg-blue-500 text-white',
+            'Biru Tua' => 'bg-blue-900 text-white',
+            'Kuning' => 'bg-yellow-400 text-yellow-900',
             'Ungu' => 'bg-purple-600 text-white',
             'Biru' => 'bg-blue-600 text-white',
             'Hijau' => 'bg-emerald-600 text-white',
@@ -38,9 +46,9 @@
             'Putih' => 'bg-slate-100 text-slate-600 border border-slate-200',
         ];
 
-        $allBeltLevels = \App\Models\BeltLevel::where('kyu_dan', 'like', '%' . ($exam->exam_type ?? 'kyu') . '%')->orderBy('order')->get();
+        $allBeltLevels = \App\Models\BeltLevel::active()->where('kyu_dan', 'like', '%' . ($exam->exam_type ?? 'kyu') . '%')->orderBy('order')->get();
         $currentUser = auth()->user();
-        $isStruktural = $currentUser->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab']);
+        $isStruktural = $currentUser->hasRole('panitia_ujian');
 
         $assignedExaminers = \DB::table('exam_examiners')
             ->join('users', 'exam_examiners.user_id', '=', 'users.id')
@@ -53,16 +61,21 @@
             ->where('user_id', $currentUser->id)
             ->exists();
 
-        $canScore = ($isStruktural || $isAuthorizedExaminer) && $exam->status !== 'completed';
+        $canScore = app(\App\Services\ExamCertificates::class)->canScore($currentUser, $exam) && $exam->status !== 'completed' && !in_array($exam->review_status, ['submitted', 'approved']);
 
-        $allScores = \App\Models\ExamScore::where('exam_id', $exam->id)
+        $allScores = \App\Models\ExamScore::where('exam_id', $exam->id)->whereIn('member_id', $participants->pluck('user_id'))
             ->leftJoin('users', 'exam_scores.examiner_id', '=', 'users.id')
             ->select('exam_scores.*', 'users.name as examiner_name')
             ->get()
             ->keyBy('member_id');
 
         $sortedParticipants = $participants->sortByDesc(fn($p) => $p->currentBelt->order ?? 0);
-        $availableBelts = $participants->map(fn($p) => $p->currentBelt->name ?? 'Putih')->unique();
+        $availableBelts = $participants->map(fn($p) => $p->currentBelt?->display_name ?? 'Belum ditetapkan')->unique();
+        $participantMaterials = $participants->mapWithKeys(function ($participant) use ($exam) {
+            preg_match('/kyu\\s*(\\d+)/i', $participant->targetBelt?->kyu_dan ?? '', $match);
+            $level = (int) ($match[1] ?? 0);
+            return [$participant->user_id => $exam->exam_type === 'kyu' && $level ? \App\Services\ExamCertificates::kyuMaterialGroups($level) : []];
+        });
     @endphp
 
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
@@ -103,6 +116,12 @@
 
             {{-- TOOLBAR (rapat + efisien) --}}
             <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-3 sm:p-4">
+                <div class="mb-3 flex flex-wrap items-center gap-2">
+                    <a href="{{ route('admin.exams.roster', $exam) }}" class="btn btn-secondary">Rekap peserta UKT</a>
+                    @if ($exam->exam_type === 'kyu')
+                        <span class="text-xs text-slate-500">Materi penilaian mengikuti blanko sesuai tingkat sabuk tujuan tiap peserta.</span>
+                    @endif
+                </div>
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
 
                     {{-- Filter sabuk --}}
@@ -202,7 +221,7 @@
 
                         <div data-id="{{ $p->id }}" data-user-id="{{ $targetUserId }}"
                             data-name="{{ $p->user->name }}" x-data="participantCard('{{ $targetUserId }}', '{{ $score->result ?? 'Lulus' }}', '{{ $score->examiner_name ?? '' }}')"
-                            x-show="selectedBelts.length === 0 || selectedBelts.includes('{{ $currentBelt->name ?? 'Putih' }}')"
+                            x-show="selectedBelts.length === 0 || selectedBelts.includes('{{ $currentBelt?->display_name ?? 'Belum ditetapkan' }}')"
                             class="participant-card relative bg-white rounded-[1rem] border border-slate-200 shadow-sm overflow-hidden group {{ $canScore ? 'cursor-move' : '' }}">
 
                             {{-- handle icon --}}
@@ -223,18 +242,26 @@
 
                             <input type="hidden" name="scores[{{ $targetUserId }}][examiner_id]"
                                 x-model="examinerIdInput">
+                            @if ($participantMaterials[$targetUserId] ?? false)
+                                @php
+                                    $participantLabels = collect($participantMaterials[$targetUserId])->flatMap(fn($items) => $items)->values();
+                                @endphp
+                                @foreach ($participantLabels as $materialLabel)
+                                    <input type="hidden" name="scores[{{ $targetUserId }}][material_labels][]" value="{{ $materialLabel }}">
+                                @endforeach
+                            @endif
 
                             <div class="p-4 sm:p-4">
                                 <div class="mb-3">
-                                    <h3
+                                    <x-member-identity :member="$p->user"><h3
                                         class="text-[12px] sm:text-[13px] font-black text-slate-900 uppercase truncate leading-tight">
                                         {{ $p->user->name }}
-                                    </h3>
+                                    </h3></x-member-identity>
 
                                     <div class="flex items-center gap-2 mt-2">
                                         <span
                                             class="px-2 py-1 rounded-xl text-[8px] font-black uppercase {{ $beltClass }}">
-                                            {{ $currentBelt->name ?? 'Putih' }}
+                                            {{ $currentBelt?->display_name ?? 'Belum ditetapkan' }}
                                         </span>
                                         <span class="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                                             ID: #{{ $p->id }}
@@ -244,7 +271,14 @@
 
                                 {{-- compact score blocks --}}
                                 <div class="space-y-2.5">
-                                    @foreach (\App\Services\ExamCertificates::materials($exam->exam_type ?? 'kyu') as $field => $label)
+                                    @php
+                                        $groups = $participantMaterials[$targetUserId] ?? [];
+                                        $fieldLabels = \App\Services\ExamCertificates::materials($exam->exam_type ?? 'kyu');
+                                        $materials = $groups ? collect($groups)->flatMap(fn($items, $group) => collect($items)->map(fn($item) => ['field' => $group, 'item' => $item])) : collect($fieldLabels)->map(fn($label, $field) => ['field' => $field, 'item' => $label]);
+                                    @endphp
+                                    @foreach ($materials as $materialIndex => $material)
+                                        @php $field = $material['field']; $label = $material['item']; $itemKey = (string) $materialIndex; $storedMaterial = collect($score?->material_scores ?? [])->firstWhere('label', $label); @endphp
+                                        @if (!$groups)
                                         <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
                                             <label class="block text-xs font-semibold" for="score-{{ $targetUserId }}-{{ $field }}">{{ $label }}</label>
                                             @if ($score && $score->$field !== null && !is_numeric($score->$field))
@@ -256,6 +290,15 @@
                                                 <button type="button" @click="scores.{{ $field }} = ''; markAsEdited()" class="text-xs text-red-600">Ganti dengan angka</button>
                                             @endif
                                         </div>
+                                        @else
+                                            <div class="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                                                <label class="block text-xs font-semibold" for="score-{{ $targetUserId }}-{{ $itemKey }}">{{ $label }}</label>
+                                                <div class="mt-2 grid grid-cols-2 gap-2">
+                                                    <input id="score-{{ $targetUserId }}-{{ $itemKey }}" type="number" min="0" max="100" step="0.01" name="scores[{{ $targetUserId }}][material_scores][{{ $itemKey }}][score]" value="{{ $storedMaterial['score'] ?? '' }}" @input="markAsEdited()" class="auto-save rounded-lg border-slate-200" placeholder="Nilai 0–100">
+                                                    <input type="text" name="scores[{{ $targetUserId }}][material_scores][{{ $itemKey }}][note]" value="{{ $storedMaterial['note'] ?? '' }}" @input="markAsEdited()" class="auto-save rounded-lg border-slate-200" placeholder="Keterangan">
+                                                </div>
+                                            </div>
+                                        @endif
                                     @endforeach
                                 </div>
 
@@ -348,12 +391,12 @@
                         Kembali
                     </button>
 
-                    @if ($canScore)
+                            @if ($canScore && $currentUser->hasRole('panitia_ujian'))
                         <form action="{{ route('admin.exams.scoring.finalize', $exam) }}" method="POST">
                             @csrf
-                            <button type="submit" onclick="return confirm('Finalisasi hasil ujian sekarang?')"
+                            <button type="submit" onclick="return confirm('Kirim data peserta dan nilai ke verifikator pusat?')"
                                 class="btn btn-primary">
-                                Finalisasi & Simpan
+                                Kirim Hasil ke Pusat
                             </button>
                         </form>
                     @endif

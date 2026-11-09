@@ -14,7 +14,8 @@ class Dojo extends Model
         'sensei_name',
         'phone_number',
         'sk_number',
-        'sk_expiry_date'
+        'sk_expiry_date',
+        'sk_document_path',
     ];
     // Logika otomatis: Aktif jika SK belum expired
     public function getIsActiveAttribute()

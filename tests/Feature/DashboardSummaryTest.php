@@ -20,15 +20,15 @@ class DashboardSummaryTest extends TestCase
             'driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '',
         ]]);
         foreach ([
-            'users' => ['name', 'role', 'province_id', 'city_id', 'dojo_id', 'belt_level_id', 'is_active', 'email', 'whatsapp', 'parent_name', 'created_at'],
+            'users' => ['name', 'role', 'province_id', 'city_id', 'dojo_id', 'belt_level_id', 'is_active', 'email', 'whatsapp', 'parent_name', 'created_at', 'photo'],
             'provinces' => ['name'],
             'cities' => ['name', 'province_id'],
             'dojos' => ['name', 'city_id', 'sk_expiry_date'],
             'officials' => ['name', 'province_id', 'city_id', 'sk_expiry_date'],
             'exams' => ['name', 'province_id', 'execution_date', 'status', 'location'],
-            'exam_participants' => ['exam_id', 'user_id', 'dojo_id', 'fee_amount', 'payment_status'],
-            'belt_levels' => ['name', 'order'],
-            'payments' => ['user_id', 'type', 'status', 'amount', 'paid_at', 'created_at', 'updated_at', 'expires_at'],
+            'exam_participants' => ['exam_id', 'user_id', 'dojo_id', 'fee_amount', 'payment_status', 'created_at', 'updated_at'],
+            'belt_levels' => ['name', 'order', 'is_active', 'kyu_dan'],
+            'payments' => ['user_id', 'type', 'status', 'amount', 'paid_at', 'created_at', 'updated_at', 'expires_at', 'invoice_number', 'reference', 'doku_transaction_id'],
         ] as $name => $columns) {
             Schema::create($name, function (Blueprint $table) use ($columns) {
                 $table->id();
@@ -51,7 +51,7 @@ class DashboardSummaryTest extends TestCase
         DB::table('cities')->insert([['id' => 1, 'name' => 'A', 'province_id' => 1], ['id' => 2, 'name' => 'B', 'province_id' => 2]]);
         DB::table('dojos')->insert([['id' => 1, 'name' => 'A', 'city_id' => 1, 'sk_expiry_date' => '2026-11-01'], ['id' => 2, 'name' => 'B', 'city_id' => 2, 'sk_expiry_date' => '2026-09-01']]);
         DB::table('officials')->insert(['name' => 'Pengurus A', 'province_id' => 1, 'city_id' => 1, 'sk_expiry_date' => '2026-10-20']);
-        DB::table('belt_levels')->insert(['id' => 1, 'name' => 'Putih', 'order' => 1]);
+        DB::table('belt_levels')->insert(['id' => 1, 'name' => 'Putih', 'order' => 1, 'is_active' => 1]);
         DB::table('exams')->insert([
             ['id' => 1, 'name' => 'Ujian A', 'province_id' => 1, 'execution_date' => '2026-10-30', 'status' => 'open', 'location' => 'A'],
             ['id' => 2, 'name' => 'Ujian B', 'province_id' => 2, 'execution_date' => '2026-10-30', 'status' => 'open', 'location' => 'B'],
@@ -183,6 +183,41 @@ class DashboardSummaryTest extends TestCase
     public function test_regular_members_cannot_access_the_management_list(): void
     {
         $this->actingAs(User::findOrFail(2))->get(route('admin.members.index'))->assertForbidden();
+    }
+
+    public function test_member_tables_show_the_correct_scoped_photos(): void
+    {
+        DB::table('users')->where('id', 2)->update(['photo' => 'member-photos/2/own.jpg']);
+        DB::table('users')->where('id', 3)->update(['photo' => 'member-photos/3/outside.jpg']);
+        $this->actingAs(User::findOrFail(1))->get(route('admin.members.index'))->assertOk()
+            ->assertSee(asset('storage/member-photos/2/own.jpg'))->assertDontSee('outside.jpg');
+        $this->get(route('admin.dashboard'))->assertOk()->assertSee(asset('storage/member-photos/2/own.jpg'))->assertDontSee('outside.jpg');
+    }
+
+    public function test_finance_union_keeps_member_photos_and_exam_names_in_the_right_columns(): void
+    {
+        DB::table('users')->where('id', 1)->update(['photo' => 'member-photos/1/payer.jpg']);
+        DB::table('users')->where('id', 2)->update(['photo' => 'member-photos/2/participant.jpg']);
+        DB::table('exam_participants')->where('user_id', 2)->update(['created_at' => '2026-10-20', 'updated_at' => '2026-10-20']);
+        $this->actingAs(User::findOrFail(1))->get(route('admin.finance.index'))->assertOk()
+            ->assertSee(asset('storage/member-photos/1/payer.jpg'))->assertSee(asset('storage/member-photos/2/participant.jpg'))
+            ->assertViewHas('transactions', function ($rows) {
+                $manual = $rows->firstWhere('channel', 'Verifikasi manual');
+                return $manual && $manual->exam_name === 'Ujian A' && $manual->member_photo === 'member-photos/2/participant.jpg';
+            });
+    }
+
+    public function test_belt_chart_keeps_dan_ranks_separate(): void
+    {
+        DB::table('belt_levels')->insert([
+            ['id' => 2, 'name' => 'Hitam', 'kyu_dan' => 'DAN I', 'order' => 8, 'is_active' => 1],
+            ['id' => 3, 'name' => 'Hitam', 'kyu_dan' => 'DAN II', 'order' => 9, 'is_active' => 1],
+        ]);
+        DB::table('users')->where('id', 2)->update(['belt_level_id' => 2]);
+        DB::table('users')->where('id', 4)->update(['belt_level_id' => 3]);
+        $summary = app(DashboardSummary::class)->build(User::findOrFail(1), 'pengprov', CarbonImmutable::parse('2026-10-01'));
+        $this->assertSame(1, $summary['beltCounts']['Hitam (DAN I)']);
+        $this->assertSame(1, $summary['beltCounts']['Hitam (DAN II)']);
     }
 
 }

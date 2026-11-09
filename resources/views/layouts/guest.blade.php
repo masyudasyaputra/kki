@@ -1,4 +1,7 @@
 @php($authEmbedded = request()->boolean('_auth_modal') || request()->header('Sec-Fetch-Dest') === 'iframe')
+@if(request()->header('X-Auth-Modal') === '1')
+    <div class="auth-card auth-modal-card">{{ $slot }}</div>
+@else
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
@@ -10,6 +13,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body data-authenticated="false" class="{{ $authEmbedded ? 'auth-embedded' : '' }} auth-page font-sans antialiased">
+    @unless ($authEmbedded)<x-page-loader />@endunless
     <main class="auth-shell {{ request()->routeIs('register') ? 'auth-shell-wide' : '' }}">
         @unless($authEmbedded)
         <a href="{{ url('/') }}" class="auth-brand" aria-label="Beranda PP KKI">
@@ -22,3 +26,4 @@
     </main>
 </body>
 </html>
+@endif

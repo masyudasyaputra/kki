@@ -47,11 +47,11 @@
                         <p class="text-xs text-slate-500 mt-0.5">Lengkapi identitas pengurus, jabatan, dan nomor SK organisasi</p>
                     </div>
                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
-                        {{ auth()->user()->role === 'pb' ? 'PB PUSAT' : 'PENGCAB' }}
+                        {{ auth()->user()->role === 'pb' ? 'PENGURUS PUSAT' : 'PENGCAB' }}
                     </span>
                 </div>
 
-                <form action="{{ route('admin.officials.store') }}" method="POST" class="p-6 sm:p-8 space-y-8">
+                <form action="{{ route('admin.officials.store') }}" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-8">
                     @csrf
 
                     {{-- Section 1: Profil Pengurus --}}
@@ -175,6 +175,7 @@
                                 </select>
                             </div>
                         </div>
+                        <x-sk-document-upload entity="official" label="Unggah dokumen SK Pengurus" />
                     </div>
 
                     {{-- Section 3: Legalitas SK --}}

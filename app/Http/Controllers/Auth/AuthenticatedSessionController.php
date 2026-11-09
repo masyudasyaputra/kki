@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -19,7 +20,7 @@ class AuthenticatedSessionController extends Controller
         return view('auth.login');
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
         $request->validate([
             'login' => 'required|string',
@@ -44,7 +45,7 @@ class AuthenticatedSessionController extends Controller
         if (Auth::attempt([$fieldType => $login, 'password' => $passwordInput], $request->boolean('remember'))) {
             $request->session()->regenerate();
             // Ganti '/dashboard' sesuai dengan rute setelah login Anda
-            return redirect()->intended('/dashboard'); 
+            return $this->authenticatedResponse($request);
         }
 
         // 4. Cek Password Default Dojo jika login standar gagal
@@ -56,7 +57,7 @@ class AuthenticatedSessionController extends Controller
             if ($defaultDojoPassword && $passwordInput === $defaultDojoPassword) {
                 Auth::login($user, $request->boolean('remember'));
                 $request->session()->regenerate();
-                return redirect()->intended('/dashboard');
+                return $this->authenticatedResponse($request);
             }
         }
 
@@ -72,5 +73,14 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/');
+    }
+
+    private function authenticatedResponse(Request $request): RedirectResponse|JsonResponse
+    {
+        $redirect = redirect()->intended('/dashboard');
+
+        return $request->expectsJson()
+            ? response()->json(['redirect' => $redirect->getTargetUrl()])
+            : $redirect;
     }
 }

@@ -23,7 +23,7 @@ async function startEditor() {
     const setStatus = (text, error = false) => { status.textContent = text; status.style.color = error ? '#b91c1c' : '#64748b'; };
     let dirty = false, saving = false, selected = -1, pageNumber = 1, renderTask = null, generation = 0;
     const layout = structuredClone(config.layout);
-    layout.forEach(row => { row.line_height ??= Math.min(144, row.font_size * 1.2); row.wrap ??= false; });
+    layout.forEach(row => { row.line_height ??= Math.min(144, row.font_size * 1.2); row.wrap ??= false; row.height ??= row.width; });
     const bytes = await fetchPdf(config.pdfUrl);
     const pdf = await pdfjs.getDocument({ data: bytes.slice(), isEvalSupported: false }).promise;
     if (!pdf.numPages || pdf.numPages > 10) throw new Error('PDF harus berisi 1 sampai 10 halaman.');
@@ -37,13 +37,17 @@ async function startEditor() {
     const metricsDoc = await PDFDocument.create();
     const fonts = {};
     for (const [family, names] of Object.entries(fontNames)) fonts[family] = await Promise.all(names.map(name => metricsDoc.embedFont(name)));
-    const properties = ['x', 'y', 'width', 'font_size', 'line_height', 'wrap', 'align', 'font', 'bold', 'color', 'text'];
+    const properties = ['x', 'y', 'width', 'height', 'font_size', 'line_height', 'wrap', 'align', 'font', 'bold', 'color', 'text'];
     let scale = 1;
     function changed() { dirty = true; setStatus('Ada perubahan belum disimpan.'); }
     function syncProperties() {
         const row = layout[selected];
         byId('field-properties').disabled = !row;
         byId('custom-text-label').hidden = !row || row.key !== 'custom';
+        const isQr = row?.key === 'verification_qr';
+        byId('prop-height').closest('label').hidden = !isQr;
+        byId('text-field-properties').hidden = isQr;
+        byId('qr-field-help').hidden = !isQr;
         if (row) for (const key of properties) {
             const input = byId('prop-' + key);
             if (key === 'bold' || key === 'wrap') input.checked = row[key];
@@ -57,6 +61,20 @@ async function startEditor() {
             if (Number(row.page) !== pageNumber) return;
             list.add(new Option(config.fields[row.key] + (row.key === 'custom' ? ': ' + row.text : ''), index, false, selected === index));
             const box = document.createElement('div');
+            const isQr = row.key === 'verification_qr';
+            if (isQr) {
+                const size = Number(row.height ?? row.width);
+                Object.assign(box.style, { position: 'absolute', left: row.x * PT_PER_MM * scale + 'px', top: row.y * PT_PER_MM * scale + 'px',
+                    width: row.width * PT_PER_MM * scale + 'px', height: size * PT_PER_MM * scale + 'px', outline: index === selected ? '2px solid #762137' : '1px dashed #64748b',
+                    background: index === selected ? '#fff4' : 'white', cursor: 'move', userSelect: 'none', touchAction: 'none' });
+                if (config.values.verification_qr_svg) {
+                    const image = document.createElement('img');
+                    image.alt = 'QR verifikasi sertifikat'; image.draggable = false;
+                    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(config.values.verification_qr_svg)}`;
+                    Object.assign(image.style, { width: '100%', height: '100%', display: 'block', pointerEvents: 'none' });
+                    box.append(image);
+                } else box.textContent = 'QR TTE';
+            } else {
             let text = fieldText(row, config.values) || config.fields[row.key];
             let size = Number(row.font_size);
             try {
@@ -70,6 +88,7 @@ async function startEditor() {
                 outline: index === selected ? '2px solid #dc2626' : '1px dashed #64748b', background: index === selected ? '#fff4' : 'transparent',
                 cursor: 'move', userSelect: 'none', touchAction: 'none' });
             box.textContent = text;
+            }
             box.addEventListener('pointerdown', event => {
                 if (saving) return;
                 event.preventDefault(); event.stopPropagation();
@@ -79,7 +98,8 @@ async function startEditor() {
                 const move = e => {
                     const bounds = pages[pageNumber - 1];
                     row.x = round(Math.max(0, Math.min(bounds.width - row.width, start.rowX + (e.clientX - start.x) / (PT_PER_MM * scale))));
-                    row.y = round(Math.max(0, Math.min(bounds.height - row.font_size / PT_PER_MM, start.rowY + (e.clientY - start.y) / (PT_PER_MM * scale))));
+                    const rowHeight = row.key === 'verification_qr' ? Number(row.height ?? row.width) : row.font_size / PT_PER_MM;
+                    row.y = round(Math.max(0, Math.min(bounds.height - rowHeight, start.rowY + (e.clientY - start.y) / (PT_PER_MM * scale))));
                     box.style.left = row.x * PT_PER_MM * scale + 'px'; box.style.top = row.y * PT_PER_MM * scale + 'px'; syncProperties(); changed();
                 };
                 const up = () => { document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up); drawOverlays(); };
@@ -109,12 +129,14 @@ async function startEditor() {
     byId('add-field').addEventListener('click', () => {
         if (saving) return;
         if (layout.length >= 150) return setStatus('Maksimal 150 isian per template.', true);
-        layout.push({ key: byId('field-key').value, page: pageNumber, x: 20, y: 30, width: Math.min(100, pages[pageNumber - 1].width - 20), font_size: 14, line_height: 17, wrap: false, align: 'left', font: 'serif', bold: false, color: '#000000', text: 'Teks tambahan' });
+        const key = byId('field-key').value;
+        const isQr = key === 'verification_qr';
+        layout.push({ key, page: pageNumber, x: 20, y: 30, width: isQr ? 22 : Math.min(100, pages[pageNumber - 1].width - 20), height: isQr ? 22 : 8, font_size: 14, line_height: 17, wrap: false, align: 'left', font: 'serif', bold: false, color: '#000000', text: 'Teks tambahan' });
         selected = layout.length - 1; changed(); drawOverlays();
     });
     for (const key of properties) byId('prop-' + key).addEventListener('input', event => {
         if (!layout[selected] || saving) return;
-        const numeric = ['x', 'y', 'width', 'font_size', 'line_height'].includes(key);
+        const numeric = ['x', 'y', 'width', 'height', 'font_size', 'line_height'].includes(key);
         layout[selected][key] = key === 'bold' || key === 'wrap' ? event.target.checked : numeric ? Number(event.target.value) : event.target.value;
         changed(); drawOverlays();
     });

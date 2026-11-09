@@ -14,7 +14,7 @@ class FeeStartingSeeder extends Seeder
      */
     public function run()
 {
-    $belts = \App\Models\BeltLevel::all();
+    $belts = \App\Models\BeltLevel::active()->get();
 
     foreach ($belts as $belt) {
         \App\Models\FeeConfiguration::updateOrCreate(

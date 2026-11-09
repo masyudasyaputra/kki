@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam;
 use App\Models\ExamScore;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class ExamScoreController extends Controller
 {
@@ -20,13 +19,52 @@ class ExamScoreController extends Controller
         $participants = app(\App\Services\ExamCertificates::class)->participants(auth()->user(), $exam)->with('currentBelt')->get();
 
         // Ambil skor yang sudah ada untuk ditampilkan awal, termasuk nama penguji
-        $existingScores = ExamScore::where('exam_id', $exam->id)
+        $existingScores = ExamScore::where('exam_id', $exam->id)->whereIn('member_id', app(\App\Services\ExamCertificates::class)->participants(auth()->user(), $exam)->pluck('user_id'))
             ->leftJoin('users', 'exam_scores.examiner_id', '=', 'users.id')
             ->select('exam_scores.*', 'users.name as examiner_name')
             ->get()
             ->keyBy('member_id');
 
         return view('admin.exams.scoring', compact('exam', 'participants', 'existingScores'));
+    }
+
+    /** Rekap peserta dan status UKT untuk dicetak/diekspor sebagai CSV Excel. */
+    public function roster(Request $request, Exam $exam)
+    {
+        app(\App\Services\ExamCertificates::class)->authorize($request->user(), $exam);
+        $participants = app(\App\Services\ExamCertificates::class)->participants($request->user(), $exam)
+            ->with(['user.province', 'user.city', 'dojo', 'currentBelt', 'targetBelt'])->get();
+        $scores = ExamScore::with('newBeltLevel')->where('exam_id', $exam->id)->whereIn('member_id', $participants->pluck('user_id'))->get()->keyBy('member_id');
+        if ($request->query('format') === 'csv') {
+            $filename = 'rekap-ukt-'.str($exam->name)->slug().'.csv';
+            return response()->streamDownload(function () use ($participants, $scores) {
+                $out = fopen('php://output', 'w');
+                fwrite($out, "\xEF\xBB\xBF");
+                fputcsv($out, ['No', 'No. Anggota', 'Nama', 'Tempat/Tanggal Lahir', 'Dojo', 'Cabang/Kota', 'Provinsi', 'Tingkat Saat Ini', 'Naik ke Tingkat', 'No. Ujian', 'Nilai', 'Hasil', 'Status UKT', 'Biaya']);
+                foreach ($participants as $i => $p) {
+                    $score = $scores[$p->user_id] ?? null;
+                    fputcsv($out, [$i + 1, $p->user->member_number, $p->user->name, trim(($p->certificate_identity['birth_place'] ?? '').' / '.($p->certificate_identity['birth_date'] ?? '')), $p->dojo?->name, $p->user->city?->name, $p->user->province?->name, $p->currentBelt?->kyu_dan, $score?->newBeltLevel?->kyu_dan ?? $p->targetBelt?->kyu_dan, $p->id, $score ? collect(['theory', 'kihon', 'ippon_kumite', 'kata', 'self_defense', 'kumite'])->map(fn($key) => $score->$key)->filter(fn($value) => $value !== null && $value !== '')->implode(' / ') : '', $score?->result ?? 'Belum dinilai', $p->payment_status === 'paid' ? 'Lunas' : 'Belum lunas', $p->fee_amount]);
+                }
+                fclose($out);
+            }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+        }
+
+        return view('admin.exams.roster', compact('exam', 'participants', 'scores'));
+    }
+
+    /** Blanko penilaian khusus tingkat peserta sesuai lembar Kyu di workbook. */
+    public function blanko(Request $request, Exam $exam, \App\Models\ExamParticipant $participant)
+    {
+        app(\App\Services\ExamCertificates::class)->authorize($request->user(), $exam);
+        abort_unless((int) $participant->exam_id === (int) $exam->id && app(\App\Services\ExamCertificates::class)->participants($request->user(), $exam)->whereKey($participant->id)->exists(), 404);
+        $participant->load(['user.province', 'user.city', 'dojo', 'currentBelt', 'targetBelt']);
+        $identity = $participant->certificate_identity ?? [];
+        $target = $participant->targetBelt;
+        preg_match('/kyu\\s*(\\d+)/i', $target?->kyu_dan ?? '', $matches);
+        $targetKyu = (int) ($matches[1] ?? 0);
+        $groups = $exam->exam_type === 'kyu' ? \App\Services\ExamCertificates::kyuMaterialGroups($targetKyu) : [];
+        $score = ExamScore::with(['examiner', 'newBeltLevel'])->where('exam_id', $exam->id)->where('member_id', $participant->user_id)->first();
+        return view('admin.exams.blanko', compact('exam', 'participant', 'groups', 'score', 'targetKyu', 'identity'));
     }
 
     /**
@@ -36,7 +74,7 @@ class ExamScoreController extends Controller
     public function show(Exam $exam)
     {
         app(\App\Services\ExamCertificates::class)->authorize(auth()->user(), $exam);
-        $scores = ExamScore::where('exam_id', $exam->id)
+        $scores = ExamScore::where('exam_id', $exam->id)->whereIn('member_id', app(\App\Services\ExamCertificates::class)->participants(auth()->user(), $exam)->pluck('user_id'))
             ->leftJoin('users', 'exam_scores.examiner_id', '=', 'users.id')
             ->select('exam_scores.*', 'users.name as examiner_name')
             ->get()
@@ -52,8 +90,9 @@ class ExamScoreController extends Controller
     public function store(Request $request, Exam $exam)
     {
         app(\App\Services\ExamCertificates::class)->authorize($request->user(), $exam);
-        abort_if($exam->status === 'completed', 422, 'Ujian sudah difinalisasi.');
-        $rules = ['scores' => ['required', 'array'], 'scores.*.result' => ['nullable', 'in:Lulus,Tidak Lulus,Percobaan'], 'scores.*.new_belt_level_id' => ['nullable', 'integer', 'exists:belt_levels,id']];
+        abort_unless(app(\App\Services\ExamCertificates::class)->canScore($request->user(), $exam), 403);
+        app(\App\Services\ExamReviewWorkflow::class)->assertEditable($exam);
+        $rules = ['scores' => ['required', 'array'], 'scores.*.result' => ['nullable', 'in:Lulus,Tidak Lulus,Percobaan'], 'scores.*.new_belt_level_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('belt_levels', 'id')->where('is_active', true)], 'scores.*.material_labels' => ['nullable', 'array'], 'scores.*.material_labels.*' => ['string', 'max:255'], 'scores.*.material_scores' => ['nullable', 'array'], 'scores.*.material_scores.*.score' => ['nullable', 'numeric', 'min:0', 'max:100'], 'scores.*.material_scores.*.note' => ['nullable', 'string', 'max:255'], 'scores.*.notes' => ['nullable', 'string', 'max:1000']];
         foreach (\App\Services\ExamCertificates::MATERIALS as $field => $label) {
             $rules["scores.*.$field"] = ['nullable', function ($attribute, $value, $fail) use ($field) {
                 if (in_array($field, ['kihon', 'kata', 'kumite']) && in_array($value, ['Kurang', 'Baik', 'Sangat Baik'], true)) return;
@@ -68,11 +107,16 @@ class ExamScoreController extends Controller
         foreach ($scores as $memberId => $data) {
             abort_unless(app(\App\Services\ExamCertificates::class)->participants($request->user(), $exam)->where('user_id', $memberId)->exists(), 403);
             if (!empty($data['new_belt_level_id'])) {
-                abort_unless(\App\Models\BeltLevel::whereKey($data['new_belt_level_id'])->where('kyu_dan', 'like', '%'.$exam->exam_type.'%')->exists(), 422, 'Tingkat sabuk harus sesuai jenis ujian DAN / KYU.');
+                abort_unless(\App\Models\BeltLevel::active()->whereKey($data['new_belt_level_id'])->where('kyu_dan', 'like', '%'.$exam->exam_type.'%')->exists(), 422, 'Tingkat sabuk harus sesuai jenis ujian DAN / KYU.');
             }
             // Validasi: Hanya simpan jika minimal salah satu field penilaian sudah berinteraksi (tidak null)
             // Ini untuk mengatasi error "Column 'kihon' cannot be null" saat auto-save pertama kali
-            if (collect($data)->only(array_keys(\App\Services\ExamCertificates::MATERIALS))->filter(fn ($value) => $value !== null && $value !== '')->isNotEmpty()) {
+            if (!empty($data['material_labels'])) {
+                foreach ($data['material_scores'] ?? [] as $index => $item) {
+                    $data['material_scores'][$index]['label'] = $data['material_labels'][$index] ?? '';
+                }
+            }
+            if (collect($data)->only(array_keys(\App\Services\ExamCertificates::MATERIALS))->filter(fn ($value) => $value !== null && $value !== '')->isNotEmpty() || !empty($data['material_scores']) || !empty($data['result'])) {
 
                 ExamScore::updateOrCreate(
                     [
@@ -86,6 +130,8 @@ class ExamScoreController extends Controller
                         'kata' => $data['kata'] ?? null,
                         'kumite' => $data['kumite'] ?? null,
                         'result' => $data['result'] ?? 'Lulus',
+                        'material_scores' => collect($data['material_scores'] ?? [])->map(fn ($item) => is_array($item) ? $item : [])->all() ?: null,
+                        'notes' => $data['notes'] ?? null,
                         'new_belt_level_id' => $data['new_belt_level_id'] ?? null,
                     ]
                 );
@@ -99,25 +145,12 @@ class ExamScoreController extends Controller
     }
 
     /**
-     * Finalisasi hasil. Sabuk dan riwayat diperbarui saat sertifikat dikirim.
+     * Kirim data dan nilai untuk diverifikasi pusat sebelum sesi diselesaikan.
      */
     public function finalize(Exam $exam)
     {
-        app(\App\Services\ExamCertificates::class)->authorizeSessionChange(auth()->user(), $exam);
-        DB::beginTransaction();
-        try {
-            // 3. Update Status Ujian
-            $exam->update(['status' => 'completed']);
-
-            DB::commit();
-
-            return redirect()->route('admin.exams.show', $exam)
-                ->with('success', 'Hasil ujian difinalisasi. Kirim sertifikat melalui tab Pendaftaran untuk memperbarui tingkat sabuk anggota.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return redirect()->back()
-                ->with('error', 'Terjadi kesalahan saat finalisasi: ' . $e->getMessage());
-        }
+        app(\App\Services\ExamReviewWorkflow::class)->submit(auth()->user(), $exam);
+        return redirect()->route('admin.exam-reviews.show', $exam)
+            ->with('success', 'Data peserta dan nilai dikirim ke verifikator pusat.');
     }
 }

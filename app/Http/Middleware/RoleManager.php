@@ -52,26 +52,7 @@ class RoleManager
      */
     protected function getOwnedRoles($user): array
     {
-        $extra = [];
-
-        if (is_array($user->roles)) {
-            $extra = $user->roles;
-        } elseif (is_string($user->roles) && trim($user->roles) !== '') {
-            $decoded = json_decode($user->roles, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $extra = $decoded;
-            } else {
-                // fallback kalau ternyata "a,b,c"
-                $extra = explode(',', $user->roles);
-            }
-        }
-
-        return collect(array_merge([(string) $user->role], $extra))
-            ->map(fn($r) => strtolower(trim((string) $r)))
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        return $user->allRoles();
     }
 
     /**
@@ -81,15 +62,19 @@ class RoleManager
     public static function highestRole(array $owned): string
     {
         $priority = [
+            'super_admin',
             'pb',
+            'dewan_guru_pusat',
             'pengprov',
             'admin_pengprov',
             'pengcab',
             'admin_pengcab',
             'admin_dojo',
             'penguji',
-            'verifikator_pb',
-            'verifikator_dewan_guru',
+            'panitia_ujian',
+            'verifikator_anggota_pb',
+            'verifikator_ujian_pb',
+            'pengelola_sertifikat_pb',
             'verifikator_pengprov',
             'verifikator_pengcab',
             'member',

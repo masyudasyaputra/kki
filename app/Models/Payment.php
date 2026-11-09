@@ -13,6 +13,7 @@ class Payment extends Model
         'user_id',
         'type',
         'reference',
+        'meta',
         'belt_level_id',
         'invoice_number',
         'amount',

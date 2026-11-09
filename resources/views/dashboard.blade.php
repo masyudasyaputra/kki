@@ -279,10 +279,7 @@
                                     <tr class="hover:bg-indigo-500/[0.03] transition-colors group">
                                         <td class="px-8 py-6">
                                             <div class="flex items-center gap-4">
-                                                <div
-                                                    class="h-12 w-12 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center font-black text-lg text-slate-400 group-hover:border-indigo-500/50 group-hover:text-indigo-400 transition-all shadow-inner uppercase">
-                                                    {{ substr($member->name, 0, 1) }}
-                                                </div>
+                                                <x-member-avatar :member="$member" />
                                                 <div>
                                                     <div
                                                         class="font-bold text-slate-200 text-base leading-none mb-1.5 group-hover:text-white transition-colors">
@@ -351,10 +348,7 @@
                             <div class="bg-slate-950/60 rounded-[2rem] p-6 border border-slate-800 shadow-lg">
                                 <div class="flex justify-between items-start mb-5">
                                     <div class="flex items-center gap-4">
-                                        <div
-                                            class="h-12 w-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-xl shadow-lg uppercase">
-                                            {{ substr($member->name, 0, 1) }}
-                                        </div>
+                                        <x-member-avatar :member="$member" />
                                         <div>
                                             <h4 class="font-black text-slate-100 text-base leading-none mb-1.5">
                                                 {{ $member->name }}</h4>
@@ -372,7 +366,7 @@
                                             class="text-[9px] font-black text-slate-600 uppercase tracking-widest mb-1.5">
                                             Tingkatan</p>
                                         <p class="text-xs font-bold text-indigo-300">
-                                            {{ $member->beltLevel->name ?? '-' }}</p>
+                                            {{ $member->beltLevel?->display_name ?? '-' }}</p>
                                     </div>
                                     <div class="text-right">
                                         <p
@@ -388,7 +382,7 @@
 
                     {{-- Pagination --}}
                     <div class="mt-10 pt-8 border-t border-slate-800/50">
-                        {{ $members->appends(request()->query())->links() }}
+                        <x-pagination :paginator="$members" label="anggota" />
                     </div>
                 </div>
             </div>

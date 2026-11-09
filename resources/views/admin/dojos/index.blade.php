@@ -239,7 +239,7 @@
             </div>
 
             <div class="mt-6">
-                {{ $dojos->links() }}
+                <x-pagination :paginator="$dojos" label="dojo" />
             </div>
         </div>
     </div>

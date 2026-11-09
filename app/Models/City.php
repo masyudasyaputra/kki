@@ -6,7 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 
 class City extends Model
 {
-    protected $fillable = ['province_id', 'name'];
+    protected $fillable = ['province_id', 'code', 'name'];
+
+    public function districts()
+    {
+        return $this->hasMany(District::class)->orderBy('name');
+    }
 
     // Ini yang kurang! Tambahkan ini agar tidak error
     public function province()

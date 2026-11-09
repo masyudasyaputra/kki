@@ -101,7 +101,7 @@
                                     @foreach ($belts as $belt)
                                         @php $prev = $belts->where('order', '<', $belt->order)->sortByDesc('order')->first(); @endphp
                                         <option value="{{ $belt->id }}">
-                                            {{ $prev ? $prev->name . ' → ' : '' }}{{ $belt->name }}
+                                            {{ $prev ? $prev->display_name . ' → ' : '' }}{{ $belt->name }}
                                             ({{ $belt->kyu_dan }})
                                         </option>
                                     @endforeach
@@ -167,7 +167,7 @@
                                         <div class="flex items-center gap-2">
                                             @if ($prevBelt)
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold border {{ getBeltColor($prevBelt->name) }}">
-                                                    {{ $prevBelt->name }}
+                                                    {{ $prevBelt->display_name }}
                                                 </span>
                                                 <span class="text-slate-400 text-xs">→</span>
                                             @endif

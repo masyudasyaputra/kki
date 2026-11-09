@@ -77,7 +77,7 @@
                     <div class="min-w-0">
                         <p class="text-[11px] text-slate-500 font-medium">Cakupan Wilayah Konfigurasi</p>
                         <p class="text-xs font-bold text-slate-800 uppercase tracking-tight truncate">
-                            {{ Auth::user()->province->name ?? 'Nasional (Pengurus Besar)' }}
+                            {{ Auth::user()->province->name ?? 'Nasional (Pengurus Pusat)' }}
                         </p>
                     </div>
                 </div>

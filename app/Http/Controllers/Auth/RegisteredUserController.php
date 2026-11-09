@@ -35,7 +35,7 @@ class RegisteredUserController extends Controller
             return redirect('/?auth=register');
         }
         $provinces = Province::orderBy('name')->get();
-        $beltLevels = BeltLevel::orderBy('order')->get();
+        $beltLevels = BeltLevel::active()->orderBy('order')->get();
         $googleIdentity = $this->googleIdentity($request);
 
         return view('auth.register', compact('provinces', 'beltLevels', 'googleIdentity'));
@@ -58,6 +58,7 @@ class RegisteredUserController extends Controller
             $request->merge(['whatsapp' => $phone]);
         }
         $data = $request->validate([
+            'first_coach' => ['nullable', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
             'parent_name' => ['nullable', 'string', 'max:255'],
             'whatsapp' => ['nullable', 'string', 'regex:/^[0-9]{8,16}$/', Rule::unique('users', 'whatsapp')],
@@ -66,8 +67,9 @@ class RegisteredUserController extends Controller
             'province_id' => ['nullable', 'required_with:city_id', 'integer', 'exists:provinces,id'],
             'city_id' => ['nullable', 'required_with:dojo_id,district', 'integer', Rule::exists('cities', 'id')->where('province_id', $request->input('province_id'))],
             'district' => ['nullable', 'string', 'max:150'],
+            'address' => ['nullable', 'string', 'max:2000'],
             'dojo_id' => ['nullable', 'integer', Rule::exists('dojos', 'id')->where('city_id', $request->input('city_id'))],
-            'belt_level_id' => ['nullable', 'integer', 'exists:belt_levels,id'],
+            'belt_level_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('belt_levels', 'id')->where('is_active', true)],
         ], [
             'province_id.required_with' => 'Pilih provinsi untuk cabang yang dipilih.',
             'city_id.required_with' => 'Pilih kabupaten / kota untuk dojo yang dipilih.',
@@ -80,8 +82,10 @@ class RegisteredUserController extends Controller
                 'whatsapp' => $data['whatsapp'] ?? null, 'password' => Hash::make($data['password'] ?? Str::random(64)),
                 'province_id' => $data['province_id'] ?? null, 'city_id' => $data['city_id'] ?? null,
                 'district' => $data['district'] ?? null,
+                'address' => $data['address'] ?? null,
+                'first_coach' => $data['first_coach'] ?? null,
                 'dojo_id' => $data['dojo_id'] ?? null, 'belt_level_id' => $data['belt_level_id'] ?? null,
-                'role' => 'member', 'is_active' => false, 'google_id' => $identity['id'] ?? null,
+                'role' => 'member', 'positions' => ['member'], 'roles' => [], 'is_active' => false, 'google_id' => $identity['id'] ?? null,
             ]);
             if ($identity) {
                 $user->forceFill(['email_verified_at' => now()])->save();
@@ -94,6 +98,8 @@ class RegisteredUserController extends Controller
         Auth::login($user);
         $request->session()->regenerate();
 
-        return redirect()->route('dashboard');
+        return $request->expectsJson()
+            ? response()->json(['redirect' => route('member.dashboard')], 201)
+            : redirect()->route('member.dashboard');
     }
 }

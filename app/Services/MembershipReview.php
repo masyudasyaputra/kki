@@ -8,18 +8,19 @@ use Illuminate\Database\Eloquent\Builder;
 class MembershipReview
 {
     public const ROLES = [
-        'verifikator_pb' => 'Tim Verifikasi PB',
-        'verifikator_dewan_guru' => 'Tim Verifikasi Dewan Guru',
-        'verifikator_pengprov' => 'Tim Verifikasi Pengprov',
-        'verifikator_pengcab' => 'Tim Verifikasi Pengcab',
+        'verifikator_anggota_pb' => 'Verifikator Keanggotaan Pusat',
+        'verifikator_pengprov' => 'Verifikator Keanggotaan Provinsi',
+        'verifikator_pengcab' => 'Verifikator Keanggotaan Kabupaten / Kota',
     ];
 
-    public const FIELDS = ['name', 'parent_name', 'email', 'whatsapp', 'province_id', 'city_id', 'district', 'dojo_id', 'belt_level_id'];
+    public const FIELDS = ['name', 'parent_name', 'email', 'whatsapp', 'province_id', 'city_id', 'district', 'address', 'dojo_id', 'belt_level_id', 'first_coach'];
+    public const REQUIRES_VERIFICATION = ['belt_level_id', 'province_id', 'city_id', 'district', 'dojo_id'];
 
     public function level(User $actor): string
     {
+        if ($actor->hasRole('super_admin')) return 'pb';
         foreach (array_keys(self::ROLES) as $role) {
-            if ($actor->hasRole($role)) return str_replace('verifikator_', '', $role);
+            if ($actor->hasRole($role)) return $role === 'verifikator_anggota_pb' ? 'pb' : str_replace('verifikator_', '', $role);
         }
         abort(403);
     }
@@ -28,7 +29,7 @@ class MembershipReview
     {
         $query = User::where('role', 'member');
         return match ($this->level($actor)) {
-            'pb', 'dewan_guru' => $query,
+            'pb' => $query,
             'pengprov' => $actor->province_id ? $query->where('province_id', $actor->province_id) : $query->whereRaw('1 = 0'),
             'pengcab' => $actor->province_id && $actor->city_id
                 ? $query->where('province_id', $actor->province_id)->where('city_id', $actor->city_id)
@@ -46,8 +47,10 @@ class MembershipReview
             'province_id' => ['Provinsi', $member->province?->name],
             'city_id' => ['Kabupaten / Kota', $member->city?->name],
             'district' => ['Kecamatan', $member->district],
+            'address' => ['Alamat', $member->address],
             'dojo_id' => ['Dojo', $member->dojo?->name],
-            'belt_level_id' => ['Tingkat sabuk', $member->beltLevel?->name],
+            'first_coach' => ['Pelatih awal', $member->first_coach],
+            'belt_level_id' => ['Tingkat sabuk', $member->beltLevel?->display_name],
         ];
     }
 

@@ -13,7 +13,7 @@ class User extends Authenticatable
     protected static function booted(): void
     {
         static::updating(function (User $user) {
-            if (array_key_exists('verification_status', $user->getAttributes()) && $user->isDirty(\App\Services\MembershipReview::FIELDS)) {
+            if (array_key_exists('verification_status', $user->getAttributes()) && $user->isDirty(\App\Services\MembershipReview::REQUIRES_VERIFICATION)) {
                 $user->verification_status = 'pending';
             }
         });
@@ -35,11 +35,14 @@ class User extends Authenticatable
 
         // Multi-role tambahan (JSON)
         'roles',
+        'positions',
 
         'is_active',
         'province_id',
         'city_id',
         'district',
+        'address',
+        'first_coach',
         'dojo_id',
         'belt_level_id',
         'whatsapp',
@@ -57,6 +60,7 @@ class User extends Authenticatable
             'is_active' => 'boolean',
             'expired_at' => 'datetime',
             'roles' => 'array',
+            'positions' => 'array',
         ];
     }
 
@@ -88,6 +92,7 @@ class User extends Authenticatable
     public function allRoles(): array
     {
         $roles = is_array($this->roles) ? $this->roles : [];
+        $roles = array_merge($roles, is_array($this->positions) ? $this->positions : []);
         $roles[] = $this->role;
 
         return array_values(array_unique(array_filter($roles)));
@@ -133,21 +138,27 @@ class User extends Authenticatable
 
     public function getMemberNumberAttribute(): string
     {
-        return ($this->province?->member_prefix ?? 'UNK') . '-' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+        $belt = $this->relationLoaded('beltLevel') || $this->belt_level_id ? $this->beltLevel : null;
+        $prefix = str_contains(mb_strtolower($belt?->name ?? ''), 'hitam') ? 'MSH-' : '';
+
+        return $prefix . ($this->province?->member_prefix ?? 'UNK') . '-' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
     }
 
     public function scopeWhereMemberNumber($query, string $number)
     {
-        if (!preg_match('/^([A-Z]{3})-(\d{6,})$/', strtoupper(trim($number)), $matches)) {
+        if (!preg_match('/^(MSH-)?([A-Z]{3})-(\d{5,})$/', strtoupper(trim($number)), $matches)) {
             return $query->whereRaw('1 = 0');
         }
 
-        $query->where('id', (int) $matches[2]);
-        if ($matches[1] === 'UNK') {
+        $query->where('id', (int) $matches[3]);
+        if ($matches[1] !== '') {
+            $query->whereHas('beltLevel', fn ($belt) => $belt->whereRaw('LOWER(name) LIKE ?', ['%hitam%']));
+        }
+        if ($matches[2] === 'UNK') {
             return $query->whereDoesntHave('province');
         }
 
-        $provinceIds = Province::all()->filter(fn ($province) => $province->member_prefix === $matches[1])->modelKeys();
+        $provinceIds = Province::all()->filter(fn ($province) => $province->member_prefix === $matches[2])->modelKeys();
 
         return $query->whereIn('province_id', $provinceIds);
     }

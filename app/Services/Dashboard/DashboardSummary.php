@@ -17,7 +17,7 @@ class DashboardSummary
     public function users(User $actor, string $role): Builder
     {
         $query = User::query();
-        if ($role === 'pb') {
+        if (in_array($role, ['pb', 'super_admin'], true)) {
             return $query;
         }
         $column = ['pengprov' => 'province_id', 'pengcab' => 'city_id', 'admin_dojo' => 'dojo_id'][$role] ?? null;
@@ -39,7 +39,9 @@ class DashboardSummary
         $officials = Official::query();
         $exams = Exam::query();
 
-        if ($role === 'pengprov' && $actor->province_id) {
+        if (in_array($role, ['pb', 'super_admin'], true)) {
+            // Both roles have national scope.
+        } elseif ($role === 'pengprov' && $actor->province_id) {
             $dojos->whereHas('city', fn ($q) => $q->where('province_id', $actor->province_id));
             $officials->where('province_id', $actor->province_id);
             $exams->where('province_id', $actor->province_id);
@@ -51,7 +53,7 @@ class DashboardSummary
             $dojos->whereKey($actor->dojo_id);
             $officials->where('city_id', $actor->dojo?->city_id ?? -1);
             $exams->whereHas('participants', fn ($q) => $q->where('dojo_id', $actor->dojo_id));
-        } elseif ($role !== 'pb') {
+        } elseif (!in_array($role, ['pb', 'super_admin'], true)) {
             $dojos->whereRaw('1 = 0');
             $officials->whereRaw('1 = 0');
             $exams->whereRaw('1 = 0');
@@ -115,9 +117,9 @@ class DashboardSummary
             ->whereIn('status', ['open', 'ongoing'])->orderBy('execution_date')->limit(4)->get();
         $counts = (clone $members)->selectRaw('belt_level_id, COUNT(*) as total')->groupBy('belt_level_id')->pluck('total', 'belt_level_id');
         $beltCounts = [];
-        foreach (BeltLevel::orderBy('order')->get() as $belt) {
+        foreach (BeltLevel::active()->orderBy('order')->get() as $belt) {
             if (isset($counts[$belt->id])) {
-                $beltCounts[$belt->name] = (int) $counts[$belt->id];
+                $beltCounts[$belt->display_name] = (int) $counts[$belt->id];
             }
         }
         if (isset($counts[''])) {

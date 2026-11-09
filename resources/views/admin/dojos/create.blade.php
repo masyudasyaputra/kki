@@ -47,7 +47,7 @@
                     </span>
                 </div>
 
-                <form action="{{ route('admin.dojos.store') }}" method="POST" class="p-6 sm:p-8 space-y-8">
+                <form action="{{ route('admin.dojos.store') }}" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-8">
                     @csrf
 
                     {{-- Section 1: Informasi Dasar --}}
@@ -116,6 +116,7 @@
                                 </p>
                             </div>
                         </div>
+                        <x-sk-document-upload entity="dojo" label="Unggah dokumen SK Dojo" />
                     </div>
 
                     {{-- Section 3: Wilayah & Lokasi --}}

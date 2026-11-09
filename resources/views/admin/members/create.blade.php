@@ -92,7 +92,7 @@
                 whatsapp: '',
                 email: '',
                 city_id: this.city_id,
-                district: '',
+                district: '', address: '', first_coach: '', dojo_id: '',
                 belt_level_id: '',
                 errorWa: ''
             });
@@ -114,7 +114,7 @@
             }
 
             if (this.members.length === 0) this.addMember();
-            this.members.forEach(member => { member.city_id ??= this.city_id; member.district ??= ''; });
+            this.members.forEach(member => { member.city_id ??= this.city_id; member.district ??= ''; member.address ??= ''; });
             this.loadMemberCities();
             this.$watch('province_id', () => this.loadMemberCities(true));
 
@@ -139,7 +139,7 @@
                     class="btn btn-primary w-full flex"
                     @click="showPass = !showPass">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-red-400 shrink-0">
+                        <div class="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-[#e1b9bc] shrink-0">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -156,7 +156,7 @@
                     </div>
 
                     <span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-semibold bg-white/10 text-white border border-white/10">
-                        <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>
+                        <span class="w-1.5 h-1.5 rounded-full bg-[#a85863]"></span>
                         <span x-text="showPass ? 'Tutup Detail' : 'Lihat Detail'"></span>
                     </span>
                 </button>
@@ -214,9 +214,6 @@
                                             <option value="{{ $p->id }}">{{ strtoupper($p->name) }}</option>
                                         @endforeach
                                     </select>
-                                    <p class="mt-1 text-[11px] text-slate-500">
-                                        * Super Admin PB dapat menentukan provinsi untuk penetapan tarif fee.
-                                    </p>
                                 @else
                                     <input type="hidden" name="province_id" x-bind:value="province_id">
                                     <div class="bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5">
@@ -260,7 +257,7 @@
                 </div>
 
                 {{-- Toolbar Input Kolektif --}}
-                <div class="table-toolbar">
+                <div class="table-toolbar member-form-toolbar flex-col items-stretch sm:flex-row sm:items-center">
                     <div class="flex items-center gap-3">
                         <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">2</span>
                         <div>
@@ -274,7 +271,7 @@
                     </div>
 
                     <button type="button" @click="addMember()"
-                        class="btn btn-primary ml-auto shrink-0">
+                        class="btn btn-primary ml-0 w-full min-h-11 justify-center shrink-0 sm:ml-auto sm:w-auto">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
@@ -290,7 +287,7 @@
                             <input type="hidden" :name="'members[' + index + '][password]'" :value="defaultPass">
 
                             {{-- Card Header --}}
-                            <div class="px-3 sm:px-4 py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between gap-4">
+                            <div class="px-4 sm:px-5 py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-3 min-w-0">
                                     <span class="w-7 h-7 rounded-md bg-white border border-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center shadow-xs shrink-0"
                                         x-text="index + 1"></span>
@@ -313,7 +310,7 @@
                                 </div>
                             </div>
 
-                            <div class="p-3 sm:p-4 space-y-4">
+                            <div class="p-4 sm:p-5 lg:p-6 space-y-5">
                                 {{-- WA Error Alert --}}
                                 <div x-show="member.errorWa" x-cloak
                                     class="p-3 bg-rose-50 border border-rose-200 rounded-lg flex items-center gap-3">
@@ -323,39 +320,39 @@
                                     <p class="text-xs font-semibold text-rose-700" x-text="member.errorWa"></p>
                                 </div>
 
-                                <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-x-4 gap-y-5">
                                     {{-- Nama Murid --}}
-                                    <div class="md:col-span-3">
+                                    <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                                             Nama Murid <span class="text-red-500">*</span>
                                         </label>
                                         <input type="text" x-model="member.name"
                                             :name="'members[' + index + '][name]'"
-                                            class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 uppercase focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                            class="member-form-control w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 uppercase focus:ring-2 focus:ring-[#762137]/15 focus:border-[#762137] shadow-sm transition-all"
                                             required placeholder="Nama Lengkap">
                                     </div>
 
                                     {{-- Nama Ortu --}}
-                                    <div class="md:col-span-3">
+                                    <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                                             Nama Orang Tua <span class="text-red-500">*</span>
                                         </label>
                                         <input type="text" x-model="member.parent_name"
                                             :name="'members[' + index + '][parent_name]'"
-                                            class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 uppercase focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                            class="member-form-control w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 uppercase focus:ring-2 focus:ring-[#762137]/15 focus:border-[#762137] shadow-sm transition-all"
                                             required placeholder="Ayah / Ibu">
                                     </div>
 
                                     {{-- WhatsApp --}}
-                                    <div class="md:col-span-3">
+                                    <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                                             WhatsApp (ID Login) <span class="text-red-500">*</span>
                                         </label>
                                         <input type="tel" inputmode="numeric" x-model="member.whatsapp"
                                             @input.debounce.500ms="checkWa(index)"
                                             :name="'members[' + index + '][whatsapp]'"
-                                            class="w-full h-10 px-3.5 rounded-lg text-xs font-medium focus:ring-2 shadow-sm transition-all"
-                                            :class="member.errorWa ? 'border-rose-400 bg-rose-50/20 text-rose-900 focus:border-rose-500 focus:ring-rose-500/20' : 'border-slate-200 bg-white text-slate-800 focus:border-red-500 focus:ring-red-500/20'"
+                                            class="member-form-control w-full h-11 px-3.5 rounded-xl text-sm font-medium focus:ring-2 shadow-sm transition-all"
+                                            :class="member.errorWa ? 'border-rose-400 bg-rose-50/20 text-rose-900 focus:border-rose-500 focus:ring-rose-500/20' : 'border-slate-200 bg-white text-slate-800 focus:border-[#762137] focus:ring-[#762137]/15'"
                                             required placeholder="0812...">
                                         <p class="mt-1 text-[11px] text-slate-500">
                                             Digunakan sebagai nomor login murid.
@@ -363,31 +360,34 @@
                                     </div>
 
                                     {{-- Email --}}
-                                    <div class="md:col-span-3">
+                                    <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                                             Email <span class="text-slate-400 font-normal">(Opsional)</span>
                                         </label>
                                         <input type="email" x-model="member.email"
                                             :name="'members[' + index + '][email]'"
-                                            class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all"
+                                            class="member-form-control w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 focus:ring-2 focus:ring-[#762137]/15 focus:border-[#762137] shadow-sm transition-all"
                                             placeholder="alamat@email.com">
                                     </div>
 
-                                    <div class="md:col-span-6">
+                                    <div class="sm:col-span-1 xl:col-span-2">
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5" :for="'member-city-' + member.id">Kabupaten / Kota *</label>
-                                        <select :id="'member-city-' + member.id" :name="'members[' + index + '][city_id]'" x-model="member.city_id" @change="member.district = ''" required class="w-full rounded-lg border-slate-200">
+                                        <select :id="'member-city-' + member.id" :name="'members[' + index + '][city_id]'" x-model="member.city_id" @change="member.district = ''; member.dojo_id = ''" required class="member-form-control w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15">
                                             <option value="">Pilih Kabupaten / Kota</option>
                                             <template x-for="city in memberCities" :key="city.id"><option :value="String(city.id)" :selected="String(city.id) === String(member.city_id)" x-text="city.name"></option></template>
                                         </select>
                                         <p x-show="regionError" x-text="regionError" class="text-xs text-red-600" role="alert"></p>
                                     </div>
-                                    <div class="md:col-span-6">
+                                    <div class="sm:col-span-1 xl:col-span-2">
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5" :for="'member-district-' + member.id">Kecamatan</label>
-                                        <input :id="'member-district-' + member.id" type="text" :name="'members[' + index + '][district]'" x-model="member.district" maxlength="150" placeholder="Nama Kecamatan" class="w-full rounded-lg border-slate-200">
+                                        <datalist :id="'district-options-' + member.id"><template x-for="district in @js(\App\Models\District::orderBy('name')->get(['id', 'name', 'city_id'])).filter(d => String(d.city_id) === String(member.city_id))" :key="district.id"><option :value="district.name"></option></template></datalist><input :list="'district-options-' + member.id" :id="'member-district-' + member.id" type="text" :name="'members[' + index + '][district]'" x-model="member.district" maxlength="150" placeholder="Nama Kecamatan" class="member-form-control w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15">
                                     </div>
 
+                                    <div class="sm:col-span-1 xl:col-span-2"><label class="member-form-label">Pelatih awal<input type="text" :name="'members[' + index + '][first_coach]'" x-model="member.first_coach" maxlength="255" placeholder="Nama pelatih" class="member-form-control mt-1.5 w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15"></label></div>
+                                    <div class="sm:col-span-2 xl:col-span-4"><label class="member-form-label">Alamat (opsional)<textarea :name="'members[' + index + '][address]'" x-model="member.address" maxlength="2000" rows="3" autocomplete="street-address" placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan" class="member-form-control mt-1.5 w-full rounded-xl border-slate-200 px-3.5 py-3 text-sm focus:border-[#762137] focus:ring-[#762137]/15"></textarea></label></div>
+                                    <div class="sm:col-span-1 xl:col-span-2"><label class="member-form-label">Nama dojo<select :name="'members[' + index + '][dojo_id]'" x-model="member.dojo_id" class="member-form-control mt-1.5 w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15"><option value="">Pilih dojo</option><template x-for="dojo in @js(\App\Models\Dojo::orderBy('name')->get(['id', 'name', 'city_id'])).filter(d => String(d.city_id) === String(member.city_id))" :key="dojo.id"><option :value="String(dojo.id)" x-text="dojo.name"></option></template></select></label></div>
                                     {{-- Sabuk Saat Ini --}}
-                                    <div class="md:col-span-4">
+                                    <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                                             Tingkatan Sabuk <span class="text-red-500">*</span>
                                         </label>
@@ -407,7 +407,7 @@
                                     </div>
 
                                     {{-- Password Default Info --}}
-                                    <div class="md:col-span-8">
+                                    <div class="sm:col-span-2 xl:col-span-3">
                                         <div class="bg-slate-50 border border-slate-200 rounded-lg p-3.5 flex items-center justify-between gap-3 h-full">
                                             <div class="min-w-0">
                                                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -433,7 +433,7 @@
                 </div>
 
                 {{-- Action Bar Summary --}}
-                <div class="mt-8 mb-20 md:mb-10">
+                <div class="member-form-actions mt-8 mb-4 md:mb-10">
                     <div class="bg-slate-900 text-white rounded-xl p-3 sm:p-4 shadow-md border border-slate-800">
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div class="min-w-0">
@@ -446,7 +446,7 @@
                                 </p>
                             </div>
 
-                            <div class="flex flex-col sm:flex-row gap-2.5 shrink-0">
+                            <div class="member-form-buttons flex flex-col sm:flex-row gap-2.5 shrink-0">
                                 <button type="button"
                                     @click="if(confirm('Kosongkan semua data yang telah diinput?')){ members = []; addMember(); localStorage.removeItem('dojo_collective_2026'); }"
                                     class="btn btn-secondary inline-flex">
@@ -475,9 +475,9 @@
         }
 
         .select2-container--default .select2-selection--single {
-            border-radius: 0.5rem !important;
+            border-radius: 0.75rem !important;
             border: 1px solid #e2e8f0 !important;
-            height: 40px !important;
+            height: 44px !important;
             background-color: #ffffff !important;
             display: flex !important;
             align-items: center !important;
@@ -486,9 +486,10 @@
 
         .select2-container--default .select2-selection--single .select2-selection__rendered {
             font-weight: 600 !important;
-            font-size: 12px !important;
+            font-size: 14px !important;
             color: #1e293b !important;
-            text-transform: uppercase !important;
+            text-transform: none !important;
+            line-height: 42px !important;
             padding-left: 14px !important;
         }
 
@@ -498,12 +499,12 @@
         }
 
         .select2-container--default .select2-selection--single .select2-selection__arrow {
-            height: 38px !important;
+            height: 42px !important;
             right: 10px !important;
         }
 
         .custom-dropdown.select2-dropdown {
-            border-radius: 0.5rem !important;
+            border-radius: 0.75rem !important;
             border: 1px solid #e2e8f0 !important;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
             overflow: hidden !important;
@@ -517,7 +518,7 @@
         }
 
         .select2-container--default .select2-results__option--highlighted[aria-selected] {
-            background-color: #dc2626 !important;
+            background-color: #762137 !important;
             color: #ffffff !important;
         }
 
@@ -530,6 +531,18 @@
         input[type=number]::-webkit-outer-spin-button {
             -webkit-appearance: none;
             margin: 0;
+        }
+
+        .member-form-label { display: block; color: #334155; font-size: 0.75rem; font-weight: 600; }
+        .member-form-control:focus { --tw-ring-color: rgb(118 33 55 / 0.15); }
+        @media (max-width: 639px) {
+            .member-registration { padding-top: 0.75rem; }
+            .member-registration .table-toolbar { gap: 0.875rem; }
+            .member-registration .member-form-actions { position: sticky; bottom: 0; z-index: 20; margin: 1rem -1rem 0; padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom)); background: rgb(248 250 252 / 0.96); backdrop-filter: blur(12px); }
+            .member-registration .member-form-actions > div { padding: 1rem; }
+            .member-registration .member-form-buttons { flex-direction: column-reverse; }
+            .member-registration .member-form-actions button { width: 100%; justify-content: center; min-height: 44px; }
+            .member-registration .member-form-actions h3 { font-size: 1.125rem; }
         }
     </style>
 

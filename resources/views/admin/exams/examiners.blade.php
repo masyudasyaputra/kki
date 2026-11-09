@@ -3,7 +3,7 @@
         <div class="flex items-center justify-between gap-3">
             <div class="min-w-0">
                 <h1 class="page-title">
-                    Penugasan <span class="text-red-600">Penguji Ujian</span>
+                    Penugasan <span class="text-red-600">Penguji & Panitia Ujian</span>
                 </h1>
                 <p class="page-subtitle">
                     {{ $exam->name }} • {{ \Carbon\Carbon::parse($exam->execution_date)->format('d M Y') }}
@@ -87,9 +87,9 @@
                             <span class="w-6 h-6 rounded-md bg-slate-100 text-slate-700 text-xs font-bold flex items-center justify-center">2</span>
                             <div>
                                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">
-                                    Daftar Master Penguji
+                                    Daftar Penguji & Panitia
                                 </h3>
-                                <p class="text-[11px] text-slate-500 font-medium">Centang penguji yang akan ditugaskan ke sesi ini</p>
+                                <p class="text-[11px] text-slate-500 font-medium">Centang penguji dan panitia yang ditugaskan ke sesi ini</p>
                             </div>
                         </div>
 
@@ -118,6 +118,7 @@
                                     <div class="ml-3.5 flex-1 min-w-0">
                                         <p class="nama-penguji font-semibold text-slate-800 uppercase text-xs truncate group-hover:text-red-600 transition-colors">
                                             {{ $u->name }}
+                                            <span class="block text-[10px] text-slate-500">{{ $u->hasRole('panitia_ujian') ? 'Panitia Ujian' : 'Penguji' }}</span>
                                         </p>
 
                                         <div class="flex items-center gap-2 mt-1">

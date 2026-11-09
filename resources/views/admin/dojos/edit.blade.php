@@ -47,7 +47,7 @@
                     </span>
                 </div>
 
-                <form action="{{ route('admin.dojos.update', $dojo->id) }}" method="POST" class="p-6 sm:p-8 space-y-8">
+                <form action="{{ route('admin.dojos.update', $dojo->id) }}" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-8">
                     @csrf
                     @method('PUT')
 
@@ -106,6 +106,7 @@
                                 </p>
                             </div>
                         </div>
+                        <x-sk-document-upload entity="dojo" :record="$dojo" label="Unggah / ganti dokumen SK Dojo" />
                     </div>
 
                     {{-- Section 3: Wilayah --}}

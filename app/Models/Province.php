@@ -9,6 +9,7 @@ class Province extends Model
     public function getMemberPrefixAttribute(): string
     {
         $name = strtoupper(trim($this->name ?? ''));
+        $name = preg_replace('/\s*\([^)]*\)$/u', '', $name);
         $name = preg_replace('/^(PROVINSI|PROV\.)\s+/', '', $name);
 
         return [
@@ -33,10 +34,12 @@ class Province extends Model
     }
 
     protected $fillable = [
+        'code',
         'name',
         'leader_name',
         'sk_number',
-        'sk_expiry_date'
+        'sk_expiry_date',
+        'sk_document_path',
     ];
     // app/Models/Province.php
     public function cities()

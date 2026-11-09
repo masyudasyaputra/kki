@@ -22,7 +22,7 @@ class ExamCertificateTest extends TestCase
         });
         foreach (['provinces', 'cities', 'dojos', 'belt_levels'] as $name) {
             Schema::create($name, function (Blueprint $t) {
-                $t->id(); $t->string('name'); $t->integer('province_id')->nullable(); $t->integer('city_id')->nullable();
+                $t->boolean('is_active')->default(true); $t->id(); $t->string('name'); $t->integer('province_id')->nullable(); $t->integer('city_id')->nullable();
                 $t->string('kyu_dan')->nullable(); $t->integer('order')->default(1); $t->timestamps();
             });
         }
@@ -41,6 +41,8 @@ class ExamCertificateTest extends TestCase
         Schema::create('belt_histories', function (Blueprint $t) { $t->id(); $t->integer('user_id'); $t->integer('exam_id'); $t->integer('belt_level_id'); $t->date('achieved_at'); $t->text('description')->nullable(); $t->timestamps(); });
         (require database_path('migrations/2026_11_01_000003_add_exam_certificates.php'))->up();
         (require database_path('migrations/2026_11_01_000004_add_certificate_delivery.php'))->up();
+        (require database_path('migrations/2026_11_09_000001_add_regions_and_exam_review.php'))->up();
+        (require database_path('migrations/2026_11_09_000002_restructure_roles_and_exam_assignments.php'))->up();
         DB::table('provinces')->insert([['id' => 1, 'name' => 'SUMATERA UTARA'], ['id' => 2, 'name' => 'JAWA BARAT']]);
         DB::table('cities')->insert(['id' => 1, 'name' => 'MEDAN', 'province_id' => 1]);
         DB::table('belt_levels')->insert([['id' => 1, 'name' => 'Cokelat', 'kyu_dan' => 'Kyu 2'], ['id' => 2, 'name' => 'Hitam', 'kyu_dan' => 'DAN I']]);
@@ -48,7 +50,7 @@ class ExamCertificateTest extends TestCase
 
     private function actor(string $role = 'pb', int $province = 1): User
     {
-        $actor = User::create(['name' => 'Penguji Admin', 'email' => uniqid().'@example.com', 'role' => $role, 'province_id' => $province, 'city_id' => 1]);
+        $actor = User::create(['name' => 'Penguji Admin', 'email' => uniqid().'@example.com', 'role' => $role, 'is_active' => true, 'roles' => $role === 'pb' ? ['pengelola_sertifikat_pb', 'panitia_ujian'] : [], 'province_id' => $province, 'city_id' => 1]);
         $actor->forceFill(['email_verified_at' => now()])->save();
         return $actor;
     }
@@ -57,6 +59,7 @@ class ExamCertificateTest extends TestCase
     {
         $actor = $this->actor(); $this->actingAs($actor);
         $exam = Exam::create(['name' => 'Ujian '.$type, 'exam_type' => $type, 'execution_date' => '2026-10-25', 'location' => 'Medan', 'province_id' => 1, 'status' => $status]);
+        $exam->examiners()->attach($actor);
         $member = $this->actor('member');
         $participant = ExamParticipant::create(['exam_id' => $exam->id, 'user_id' => $member->id, 'target_belt_id' => $type === 'dan' ? 2 : 1]);
         $values = array_fill_keys(array_keys(ExamCertificates::materials($type)), 75);
@@ -161,7 +164,14 @@ class ExamCertificateTest extends TestCase
     public function test_admin_finalization_waits_for_certificate_delivery_before_updating_belt(): void
     {
         [$exam, $participant] = $this->fixture('kyu', 'open');
-        $this->post(route('admin.exams.scoring.finalize', $exam))->assertRedirect(route('admin.exams.show', $exam));
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertRedirect(route('admin.exam-reviews.show', $exam));
+        $this->assertSame('submitted', $exam->fresh()->review_status);
+        $this->assertSame('open', $exam->fresh()->status);
+        $reviewer = $this->actor('verifikator_ujian_pb');
+        $exam->reviewers()->attach($reviewer);
+        $this->actingAs($reviewer);
+        $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertSessionHasNoErrors();
+        $this->actingAs($this->actor());
         $this->assertSame('completed', $exam->fresh()->status);
         $this->assertNull($participant->user->fresh()->belt_level_id);
         $this->assertDatabaseCount('belt_histories', 0);
@@ -170,6 +180,193 @@ class ExamCertificateTest extends TestCase
         $this->post(route('admin.exams.certificates.send', [$exam, $participant]))->assertSessionHasNoErrors();
         $this->assertSame(1, $participant->user->fresh()->belt_level_id);
         $this->assertDatabaseHas('belt_histories', ['user_id' => $participant->user_id, 'exam_id' => $exam->id]);
+    }
+
+    public function test_committee_submission_is_locked_and_can_be_revised_and_resubmitted(): void
+    {
+        [$exam, $participant, $score] = $this->fixture('kyu', 'open');
+        $committee = $this->actor('panitia_ujian');
+        $exam->examiners()->attach($committee);
+        $this->actingAs($committee);
+        $this->get(route('admin.exams.show', $exam))->assertOk();
+        $this->get(route('admin.exams.scoring', $exam))->assertOk()->assertSee('Kirim Hasil ke Pusat');
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertSessionHasNoErrors();
+        $this->get(route('admin.exam-reviews.show', $exam))->assertOk()->assertSee($participant->user->name);
+        $this->postJson(route('admin.exams.scoring.store', $exam), ['scores' => [$participant->user_id => ['kihon' => 90]]])->assertUnprocessable();
+        $this->delete(route('admin.exams.remove-member', $participant))->assertUnprocessable();
+        $this->delete(route('admin.exams.bulk-remove-member', $exam), ['participant_ids' => [$participant->id]])->assertUnprocessable();
+        $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertForbidden();
+        $reviewer = $this->actor('verifikator_ujian_pb');
+        $exam->reviewers()->attach($reviewer);
+        $this->actingAs($reviewer);
+        $this->get(route('admin.exam-reviews.index'))->assertOk()->assertSee($exam->name);
+        $this->get(route('admin.exam-reviews.show', $exam))->assertOk()->assertSee('75');
+        $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'revision'])->assertSessionHasErrors('notes');
+        $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'revision', 'notes' => 'Periksa nilai kihon'])->assertSessionHasNoErrors();
+        $this->actingAs($committee);
+        $values = array_fill_keys(array_keys(ExamCertificates::materials('kyu')), 85);
+        $this->postJson(route('admin.exams.scoring.store', $exam), ['scores' => [$participant->user_id => $values + ['result' => 'Lulus']]])->assertOk();
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertSessionHasNoErrors();
+        $this->actingAs($reviewer);
+        $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertSessionHasNoErrors();
+        $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'revision', 'notes' => 'Ulang'])->assertUnprocessable();
+        $this->assertSame('approved', $exam->fresh()->review_status);
+        $this->assertSame('completed', $exam->fresh()->status);
+        $this->assertDatabaseCount('exam_reviews', 4);
+        $this->assertSame('75', (string)\App\Models\ExamReview::oldest('id')->first()->snapshot['participants'][0]['score']['kihon']);
+        $this->assertSame('85', (string)$score->fresh()->kihon);
+    }
+
+    public function test_submission_requires_complete_scores_and_assigned_committee(): void
+    {
+        [$exam, $participant, $score] = $this->fixture('dan', 'open');
+        $committee = auth()->user();
+        $this->actingAs($this->actor('panitia_ujian'));
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertForbidden();
+        $this->get(route('admin.exams.show', $exam))->assertForbidden();
+        $this->actingAs($committee);
+        $score->update(['paper' => null]);
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertSessionHasErrors('submission');
+        $this->assertSame('draft', $exam->fresh()->review_status);
+        $this->assertDatabaseCount('exam_reviews', 0);
+    }
+
+    public function test_submitter_cannot_verify_their_own_exam(): void
+    {
+        [$exam] = $this->fixture('kyu', 'open');
+        $actor = auth()->user();
+        $actor->update(['roles' => ['verifikator_ujian_pb', 'panitia_ujian']]);
+        $exam->reviewers()->attach($actor);
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertSessionHasNoErrors();
+        $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertForbidden();
+    }
+
+    public function test_regions_are_scoped_and_profile_saves_dojo_and_first_coach(): void
+    {
+        $actor = $this->actor('pengprov');
+        $this->actingAs($actor);
+        $this->get(route('admin.members.create'))->assertOk()->assertSee('Pelatih awal')->assertSee('Nama dojo');
+        $this->get(route('admin.regions.index'))->assertOk();
+        $this->post(route('admin.regions.store'), ['type' => 'city', 'province_id' => 2, 'name' => 'Kota Lain'])->assertForbidden();
+        $this->post(route('admin.regions.store'), ['type' => 'district', 'city_id' => 1, 'name' => 'Medan Johor'])->assertSessionHasNoErrors();
+        $this->post(route('admin.regions.store'), ['type' => 'district', 'city_id' => 1, 'name' => 'Medan Johor'])->assertSessionHasErrors('name');
+        $this->get('/api/districts/1')->assertOk()->assertJsonFragment(['name' => 'Medan Johor']);
+        $dojo = \App\Models\Dojo::create(['name' => 'Dojo Medan', 'city_id' => 1]);
+        $member = $this->actor('member');
+        $this->actingAs($member);
+        $this->get(route('profile.edit'))->assertOk()->assertSee('Pelatih awal')->assertSee('Dojo Medan');
+        $this->patch(route('profile.update'), ['name' => $member->name, 'email' => $member->email, 'dojo_id' => $dojo->id, 'first_coach' => 'Sensei Awal'])->assertSessionHasNoErrors();
+        $this->assertSame('Sensei Awal', $member->fresh()->first_coach);
+        $this->assertSame($dojo->id, $member->fresh()->dojo_id);
+    }
+
+    public function test_certificate_actions_require_explicit_pb_permission_for_every_region(): void
+    {
+        [$exam, $participant, , $template] = $this->fixture('kyu');
+        foreach (['pb', 'super_admin', 'dewan_guru_pusat', 'pengprov', 'pengcab', 'verifikator_anggota_pb', 'verifikator_ujian_pb'] as $role) {
+            $user = $this->actor($role);
+            $user->update(['roles' => []]);
+            $this->actingAs($user);
+            $this->get(route('admin.certificate-templates.index'))->assertForbidden();
+            $this->post(route('admin.exams.certificates.issue', [$exam, $participant]), ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertForbidden();
+            $this->post(route('admin.exams.certificates.send-all', $exam))->assertForbidden();
+            $this->post(route('admin.exams.certificates.settings', $exam), [])->assertForbidden();
+            $this->post(route('admin.exams.certificates.identity', [$exam, $participant]), [])->assertForbidden();
+            $this->delete(route('admin.certificate-templates.destroy', $template))->assertForbidden();
+        }
+        $manager = $this->actor('member', 2);
+        $manager->update(['roles' => ['pengelola_sertifikat_pb']]);
+        $this->actingAs($manager);
+        $this->get('/dashboard')->assertRedirect(route('admin.exam-reviews.index'));
+        $this->get(route('admin.certificate-templates.index'))->assertOk()->assertSee('Template Sertifikat');
+        $this->get(route('admin.exams.show', $exam))->assertOk()->assertSee('Kirim semua sertifikat')->assertDontSee('Daftarkan Anggota Baru ke Sesi Ujian');
+        $this->get(route('admin.exams.scoring', $exam))->assertOk()->assertDontSee('Kirim Hasil ke Pusat');
+        $this->post(route('admin.exams.register-member', $exam), ['user_ids' => [$participant->user_id]])->assertForbidden();
+        $this->post(route('admin.exams.certificates.issue', [$exam, $participant]), ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertSessionHasNoErrors();
+        $this->post(route('admin.exams.certificates.send', [$exam, $participant]))->assertSessionHasNoErrors();
+        $this->assertDatabaseCount('exam_certificates', 1);
+        $this->assertSame('PENGURUS PUSAT', \App\Models\ExamCertificate::first()->snapshot['template']['heading']);
+    }
+
+    public function test_delivering_legacy_certificate_keeps_snapshot_and_uses_active_member_rank(): void
+    {
+        [$exam, $participant] = $this->fixture('kyu');
+        $this->post(route('admin.exams.certificates.issue', [$exam, $participant]), ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertSessionHasNoErrors();
+        $certificate = ExamCertificate::firstOrFail();
+        $snapshot = $certificate->snapshot;
+        $oldBelt = $participant->targetBelt;
+        $oldBelt->update(['is_active' => false]);
+        $newBelt = \App\Models\BeltLevel::create(['name' => 'Coklat Strip', 'kyu_dan' => 'Kyu 2', 'order' => 6, 'is_active' => true]);
+        $this->post(route('admin.exams.certificates.send', [$exam, $participant]))->assertSessionHasNoErrors();
+        $this->assertSame($newBelt->id, $participant->user->fresh()->belt_level_id);
+        $this->assertSame($snapshot, $certificate->fresh()->snapshot);
+        $this->assertDatabaseHas('belt_histories', ['user_id' => $participant->user_id, 'belt_level_id' => $oldBelt->id]);
+    }
+
+    public function test_exam_verifier_can_be_dewan_guru_or_other_user_but_requires_assignment(): void
+    {
+        [$exam] = $this->fixture('kyu', 'open');
+        $operator = auth()->user();
+        $guru = $this->actor('dewan_guru_pusat');
+        $guru->update(['positions' => ['dewan_guru_pusat'], 'roles' => ['verifikator_ujian_pb']]);
+        $other = $this->actor('member', 2);
+        $other->update(['positions' => ['member'], 'roles' => ['verifikator_ujian_pb']]);
+        $this->actingAs($operator)->post(route('admin.exams.scoring.finalize', $exam))->assertSessionHasNoErrors();
+        $this->actingAs($other)->get(route('admin.exam-reviews.show', $exam))->assertForbidden();
+        $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertForbidden();
+        $this->actingAs($guru)->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertForbidden();
+        $this->get(route('admin.oversight'))->assertOk()->assertSee($exam->name);
+        $this->actingAs($operator)->put(route('admin.exam-reviews.assign', $exam), ['reviewer_ids' => [$guru->id, $other->id]])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('access_audits', ['event' => 'exam.reviewers.assigned', 'exam_id' => $exam->id]);
+        $this->actingAs($other)->get(route('admin.exam-reviews.show', $exam))->assertOk()->assertSee('Simpan verifikasi');
+        $other->update(['roles' => []]);
+        $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertForbidden();
+        $this->actingAs($guru)->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertSessionHasNoErrors();
+        $this->assertSame('approved', $exam->fresh()->review_status);
+    }
+
+    public function test_dewan_guru_position_does_not_grant_verification_or_certificate_rights(): void
+    {
+        [$exam] = $this->fixture('kyu', 'open');
+        $guru = $this->actor('dewan_guru_pusat');
+        $this->actingAs($guru);
+        $this->get('/dashboard')->assertRedirect(route('admin.oversight'));
+        $this->get(route('admin.exams.show', $exam))->assertOk()->assertDontSee('Daftarkan Anggota Baru ke Sesi Ujian');
+        $this->get(route('admin.verifications.index'))->assertForbidden();
+        $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertForbidden();
+        $this->postJson(route('admin.exams.scoring.store', $exam), ['scores' => []])->assertForbidden();
+        $this->actingAs($this->actor('pengprov'))->put(route('admin.exam-reviews.assign', $exam), ['reviewer_ids' => [$guru->id]])->assertForbidden();
+    }
+
+    public function test_committee_cannot_be_assigned_to_verify_same_session(): void
+    {
+        [$exam] = $this->fixture('kyu', 'open');
+        $committee = $this->actor('panitia_ujian');
+        $committee->update(['roles' => ['verifikator_ujian_pb']]);
+        $exam->examiners()->attach($committee);
+        $this->put(route('admin.exam-reviews.assign', $exam), ['reviewer_ids' => [$committee->id]])->assertSessionHasErrors('reviewer_ids.0');
+        $reviewer = $this->actor('member'); $reviewer->update(['roles' => ['verifikator_ujian_pb', 'penguji']]);
+        $this->put(route('admin.exam-reviews.assign', $exam), ['reviewer_ids' => [$reviewer->id]])->assertSessionHasNoErrors();
+        $this->put(route('admin.exams.examiners.update', $exam), ['examiner_ids' => [$reviewer->id]])->assertUnprocessable();
+    }
+
+    public function test_user_positions_and_permissions_are_stored_separately_and_audited(): void
+    {
+        $this->actingAs($this->actor('super_admin'));
+        $payload = ['name' => 'Dewan Guru Nasional', 'email' => 'guru-baru@example.com', 'password' => 'Password123!',
+            'positions' => ['dewan_guru_pusat'], 'roles' => ['verifikator_ujian_pb']];
+        $this->post(route('admin.users.store'), $payload)->assertSessionHasNoErrors();
+        $guru = User::where('email', 'guru-baru@example.com')->firstOrFail();
+        $this->assertSame(['dewan_guru_pusat'], $guru->positions);
+        $this->assertSame(['verifikator_ujian_pb'], $guru->roles);
+        $this->assertSame('dewan_guru_pusat', $guru->role);
+        $this->get(route('admin.users.edit', $guru))->assertOk()->assertSee('Jabatan & pengelola sistem', false)->assertSee('Hak akses tambahan');
+        $this->get(route('admin.access-audits.index'))->assertOk()->assertSee('user.created');
+        $this->actingAs($this->actor('pengprov'));
+        $payload['email'] = 'forged@example.com';
+        $payload['province_id'] = 1;
+        $this->post(route('admin.users.store'), $payload)->assertSessionHasErrors('roles.0');
+        $this->put(route('admin.users.update', $guru), $payload + ['is_active' => 1])->assertForbidden();
     }
 
     public function test_pdf_layout_is_validated_saved_and_frozen_in_issued_certificate(): void
@@ -251,16 +448,16 @@ class ExamCertificateTest extends TestCase
         $this->get(route('admin.exams.certificates.print', [$exam, $participant]))->assertOk()->assertSee('Tujuh Puluh Lima');
     }
 
-    public function test_provincial_admin_can_delete_own_template_but_not_shared_or_other_region(): void
+    public function test_provincial_admin_cannot_manage_any_certificate_template(): void
     {
         [$exam, , , $template] = $this->fixture();
         $this->actingAs($this->actor('pengprov'));
         $this->delete(route('admin.certificate-templates.destroy', $template))->assertForbidden();
         $own = CertificateTemplate::create(['name' => 'Template Provinsi', 'exam_type' => 'dan', 'province_id' => 1, 'settings' => []]);
         $other = CertificateTemplate::create(['name' => 'Template Provinsi Lain', 'exam_type' => 'dan', 'province_id' => 2, 'settings' => []]);
-        $this->delete(route('admin.certificate-templates.destroy', $other))->assertNotFound();
-        $this->delete(route('admin.certificate-templates.destroy', $own))->assertRedirect();
-        $this->assertDatabaseMissing('certificate_templates', ['id' => $own->id]);
+        $this->delete(route('admin.certificate-templates.destroy', $other))->assertForbidden();
+        $this->delete(route('admin.certificate-templates.destroy', $own))->assertForbidden();
+        $this->assertDatabaseHas('certificate_templates', ['id' => $own->id]);
     }
 
     public function test_master_templates_are_managed_without_exam_and_selected_independently_per_session(): void

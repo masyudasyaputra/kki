@@ -55,6 +55,19 @@ export function textGeometry(row, text, font, pageWidth, pageHeight) {
     return { x: x + offset, y: pageHeight - top - ascent, size, width };
 }
 
+async function svgPngBytes(svg) {
+    const image = new Image();
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+    await image.decode();
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth || 240;
+    canvas.height = image.naturalHeight || 240;
+    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    if (!blob) throw new Error('QR verifikasi tidak dapat disiapkan untuk PDF.');
+    return new Uint8Array(await blob.arrayBuffer());
+}
+
 export async function buildCertificatePdf(bytes, layout, values, draft = false) {
     const source = await PDFDocument.load(bytes);
     if (!source.getPageCount() || source.getPageCount() > 10) throw new Error('PDF harus berisi 1 sampai 10 halaman.');
@@ -76,6 +89,19 @@ export async function buildCertificatePdf(bytes, layout, values, draft = false) 
     for (const row of layout) {
         const page = pages[Number(row.page) - 1];
         if (!page) throw new Error('Nomor halaman pada koordinat tidak ada dalam PDF.');
+        if (row.key === 'verification_qr') {
+            if (!values.verification_qr_svg) continue;
+            const width = Number(row.width) * PT_PER_MM;
+            const height = Number(row.height ?? row.width) * PT_PER_MM;
+            const x = Number(row.x) * PT_PER_MM;
+            const top = Number(row.y) * PT_PER_MM;
+            if (![x, top, width, height].every(Number.isFinite) || x < 0 || top < 0 || width <= 0 || height <= 0 || x + width > page.getWidth() + .3 || top + height > page.getHeight() + .3) {
+                throw new Error('Koordinat QR berada di luar halaman PDF.');
+            }
+            const image = await output.embedPng(await svgPngBytes(values.verification_qr_svg));
+            page.drawImage(image, { x, y: page.getHeight() - top - height, width, height });
+            continue;
+        }
         const text = fieldText(row, values);
         if (!text) continue;
         const font = fonts[row.font]?.[row.bold ? 1 : 0];

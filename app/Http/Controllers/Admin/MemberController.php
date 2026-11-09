@@ -46,16 +46,70 @@ class MemberController extends Controller
             if (!empty($filters[$column])) $query->where($column, $filters[$column]);
         }
         if (isset($filters['status'])) $query->where('is_active', $filters['status']);
-        $members = \App\Support\TableSort::apply($query, $request, [
+        $memberQuery = \App\Support\TableSort::apply($query, $request, [
             'name' => 'name', 'belt' => ['beltLevel', 'order'], 'dojo' => ['dojo', 'name'],
             'city' => ['city', 'name'], 'status' => 'is_active',
-        ])->paginate(10)->withQueryString();
+        ]);
+        $members = \App\Support\PageSize::paginate($memberQuery, $request, 10);
         $provinces = Province::whereIn('id', (clone $base)->select('province_id'))->orderBy('name')->get();
         $cities = City::whereIn('id', (clone $base)->select('city_id'))->orderBy('name')->get();
         $dojos = \App\Models\Dojo::whereIn('id', (clone $base)->select('dojo_id'))->orderBy('name')->get();
-        $beltLevels = BeltLevel::orderBy('order')->get();
+        $beltLevels = BeltLevel::active()->orderBy('order')->get();
 
         return view('admin.members.index', compact('members', 'provinces', 'cities', 'dojos', 'beltLevels'));
+    }
+
+    public function export(Request $request)
+    {
+        $actor = $request->user();
+        $role = collect(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo'])
+            ->first(fn ($candidate) => $actor->hasRole($candidate));
+        abort_unless($role, 403);
+        $role = ['admin_pengprov' => 'pengprov', 'admin_pengcab' => 'pengcab'][$role] ?? $role;
+        $filters = $request->validate([
+            'search' => ['nullable', 'string', 'max:255'],
+            'status' => ['nullable', 'in:0,1'],
+            'province_id' => ['nullable', 'integer'], 'city_id' => ['nullable', 'integer'],
+            'dojo_id' => ['nullable', 'integer'], 'belt_level_id' => ['nullable', 'integer'],
+        ]);
+
+        $query = app(\App\Services\Dashboard\DashboardSummary::class)
+            ->users($actor, $role)->where('role', 'member')
+            ->with(['province', 'city', 'dojo', 'beltLevel']);
+        if (!empty($filters['search'])) {
+            $term = '%' . trim($filters['search']) . '%';
+            $query->where(fn ($q) => $q->where('name', 'like', $term)->orWhere('email', 'like', $term)
+                ->orWhere('whatsapp', 'like', $term)->orWhere('id', 'like', $term)
+                ->orWhere(fn ($numberQuery) => $numberQuery->whereMemberNumber($filters['search'])));
+        }
+        foreach (['province_id', 'city_id', 'dojo_id', 'belt_level_id'] as $column) {
+            if (!empty($filters[$column])) $query->where($column, $filters[$column]);
+        }
+        if (isset($filters['status'])) $query->where('is_active', $filters['status']);
+        $query = \App\Support\TableSort::apply($query, $request, [
+            'name' => 'name', 'belt' => ['beltLevel', 'order'], 'dojo' => ['dojo', 'name'],
+            'city' => ['city', 'name'], 'status' => 'is_active',
+        ]);
+
+        return response()->streamDownload(function () use ($query) {
+            $output = fopen('php://output', 'w');
+            fwrite($output, "\xEF\xBB\xBF");
+            fputcsv($output, ['No. Anggota', 'Nama', 'WhatsApp', 'Email', 'Status', 'Sabuk', 'Dojo', 'Kabupaten / Kota', 'Kecamatan', 'Provinsi']);
+            foreach ($query->get() as $member) {
+                $row = [
+                    $member->member_number, $member->name, $member->whatsapp, $member->email,
+                    $member->is_active ? 'Aktif' : 'Nonaktif', $member->beltLevel?->display_name,
+                    $member->dojo?->name, $member->city?->name, $member->district,
+                    $member->province?->name,
+                ];
+                // Keep spreadsheet cells as text to avoid interpreting user data as formulas.
+                $row = array_map(fn ($value) => preg_match('/^[=+@\\-\\t\\r]/u', (string) $value) ? "'" . $value : $value, $row);
+                fputcsv($output, $row);
+            }
+            fclose($output);
+        }, 'data-anggota-' . now()->format('Ymd-His') . '.csv', [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     /**
@@ -66,7 +120,7 @@ class MemberController extends Controller
         $user = auth()->user();
         $role = strtolower((string) $user->role);
 
-        $beltLevels = BeltLevel::orderBy('order')->get();
+        $beltLevels = BeltLevel::active()->orderBy('order')->get();
 
         $provinces = Province::query()
             ->when($role !== 'pb', function ($q) use ($user) {
@@ -107,10 +161,13 @@ class MemberController extends Controller
             'members.*.name' => ['required', 'string', 'max:255'],
             'members.*.parent_name' => ['nullable', 'string', 'max:255'],
             'members.*.whatsapp' => ['required', 'string', 'max:30', 'regex:/^[0-9+\s()-]{8,30}$/'],
-            'members.*.belt_level_id' => ['required', 'integer', 'exists:belt_levels,id'],
+            'members.*.belt_level_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('belt_levels', 'id')->where('is_active', true)],
             'members.*.email' => ['nullable', 'email', 'max:255'],
             'members.*.city_id' => ['required', 'integer', 'exists:cities,id'],
             'members.*.district' => ['nullable', 'string', 'max:150'],
+            'members.*.address' => ['nullable', 'string', 'max:2000'],
+            'members.*.first_coach' => ['nullable', 'string', 'max:255'],
+            'members.*.dojo_id' => ['nullable', 'integer', 'exists:dojos,id'],
             'province_id' => ['nullable', 'integer', 'exists:provinces,id'],
         ], [
             'members.*.whatsapp.regex' => 'Format WhatsApp tidak valid.',
@@ -157,6 +214,7 @@ class MemberController extends Controller
             // pastikan field opsional ada biar gampang dibuat hidden input di review blade
             $member_data[$i]['email'] = $item['email'] ?? '';
             $member_data[$i]['parent_name'] = $item['parent_name'] ?? '';
+            $member_data[$i]['address'] = $item['address'] ?? '';
         }
 
         $admin_fee = (int) config('services.membership.admin_fee', 0);
@@ -187,10 +245,13 @@ class MemberController extends Controller
             'members.*.name' => ['required', 'string', 'max:255'],
             'members.*.parent_name' => ['nullable', 'string', 'max:255'],
             'members.*.whatsapp' => ['required', 'string', 'max:30', 'regex:/^[0-9+\s()-]{8,30}$/'],
-            'members.*.belt_level_id' => ['required', 'integer', 'exists:belt_levels,id'],
+            'members.*.belt_level_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('belt_levels', 'id')->where('is_active', true)],
             'members.*.email' => ['nullable', 'email', 'max:255'],
             'members.*.city_id' => ['required', 'integer', 'exists:cities,id'],
             'members.*.district' => ['nullable', 'string', 'max:150'],
+            'members.*.address' => ['nullable', 'string', 'max:2000'],
+            'members.*.first_coach' => ['nullable', 'string', 'max:255'],
+            'members.*.dojo_id' => ['nullable', 'integer', 'exists:dojos,id'],
             'province_id' => ['nullable', 'integer', 'exists:provinces,id'],
         ], [
             'members.*.whatsapp.regex' => 'Format WhatsApp tidak valid.',
@@ -247,11 +308,14 @@ class MemberController extends Controller
                         'whatsapp' => $data['whatsapp'],
                         'password' => Hash::make($defaultPass),
                         'role' => 'member',
+                        'positions' => ['member'], 'roles' => [],
                         'is_active' => false,
                         'province_id' => $provinceId,
                         'city_id' => $data['city_id'],
                         'district' => $data['district'] ?? null,
-                        'dojo_id' => $admin->dojo_id,
+                        'address' => $data['address'] ?? null,
+                        'dojo_id' => $data['dojo_id'] ?? $admin->dojo_id,
+                        'first_coach' => $data['first_coach'] ?? null,
                         'belt_level_id' => $beltLevelId,
                     ]);
 
@@ -328,6 +392,11 @@ class MemberController extends Controller
     {
         $cityIds = City::where('province_id', $provinceId)->pluck('id')->all();
         foreach ($members as $index => $member) {
+            if (!empty($member['dojo_id']) && !\App\Models\Dojo::whereKey($member['dojo_id'])->where('city_id', $member['city_id'])->exists()) {
+                throw \Illuminate\Validation\ValidationException::withMessages(["members.$index.dojo_id" => 'Dojo harus sesuai kabupaten / kota anggota.']);
+            }
+            if (auth()->user()->hasRole('admin_dojo') && !auth()->user()->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab'])
+                && !empty($member['dojo_id']) && (int) $member['dojo_id'] !== (int) auth()->user()->dojo_id) abort(403);
             if (!in_array((int) $member['city_id'], $cityIds, true)) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
                     "members.$index.city_id" => 'Kabupaten / Kota harus sesuai dengan provinsi anggota.',

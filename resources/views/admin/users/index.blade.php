@@ -48,20 +48,9 @@
                             <select id="roleSelect" name="role"
                                 class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-3 px-4 text-sm font-bold text-slate-700 focus:ring-0 focus:border-slate-900 transition-all uppercase">
                                 <option value="">Semua</option>
-                                <option value="pb" {{ request('role') == 'pb' ? 'selected' : '' }}>PB (Pusat)
-                                </option>
-                                <option value="pengprov" {{ request('role') == 'pengprov' ? 'selected' : '' }}>Pengprov
-                                </option>
-                                <option value="pengcab" {{ request('role') == 'pengcab' ? 'selected' : '' }}>Pengcab
-                                </option>
-                                <option value="admin_dojo" {{ request('role') == 'admin_dojo' ? 'selected' : '' }}>Admin
-                                    Dojo</option>
-                                @foreach (\App\Services\MembershipReview::ROLES as $roleKey => $roleName)<option value="{{ $roleKey }}" @selected(request('role') === $roleKey)>{{ $roleName }}</option>@endforeach
-                                <option value="penguji" {{ request('role') == 'penguji' ? 'selected' : '' }}>Penguji
-                                </option>
-                                <option value="member" {{ request('role') == 'member' ? 'selected' : '' }}>Member
-                                </option>
-                            </select>
+                                @foreach(\App\Services\RoleAccess::POSITIONS + \App\Services\RoleAccess::PERMISSIONS as $roleKey => $roleName)
+                                    <option value="{{ $roleKey }}" @selected(request('role') === $roleKey)>{{ $roleName }}</option>
+                                @endforeach                            </select>
                         </div>
 
                         {{-- Province --}}
@@ -136,7 +125,7 @@
                                     'member' => 'bg-slate-100 text-slate-700 border-slate-200',
                                 ];
 
-                                $allRoles = collect($user->roles ?? [])
+                                $allRoles = collect($user->allRoles())
                                     ->push($user->role)
                                     ->filter()
                                     ->unique()
@@ -146,10 +135,7 @@
                             <tr class="hover:bg-slate-50 transition-all group">
                                 <td class="px-8 py-6">
                                     <div class="flex items-center gap-4">
-                                        <div
-                                            class="h-11 w-11 shrink-0 rounded-2xl bg-slate-900 text-white flex items-center justify-center text-sm font-black shadow-sm">
-                                            {{ mb_substr($user->name, 0, 1) }}
-                                        </div>
+                                        <x-member-avatar :member="$user" />
                                         <div class="min-w-0">
                                             <div
                                                 class="text-sm font-black text-slate-900 uppercase tracking-tight truncate">
@@ -167,7 +153,7 @@
                                         @foreach ($allRoles as $r)
                                             <span
                                                 class="inline-flex items-center px-2 py-1 rounded-xl border text-[9px] font-black uppercase tracking-widest {{ $roleColors[$r] ?? 'bg-slate-100 text-slate-700 border-slate-200' }}">
-                                                {{ \App\Services\MembershipReview::ROLES[$r] ?? str_replace('_', ' ', $r) }}
+                                                {{ \App\Services\RoleAccess::POSITIONS[$r] ?? \App\Services\RoleAccess::PERMISSIONS[$r] ?? str_replace('_', ' ', $r) }}
                                             </span>
                                         @endforeach
                                     </div>
@@ -227,7 +213,7 @@
             <div class="md:hidden space-y-5">
                 @forelse ($users as $user)
                     @php
-                        $allRoles = collect($user->roles ?? [])
+                        $allRoles = collect($user->allRoles())
                             ->push($user->role)
                             ->filter()
                             ->unique()
@@ -239,10 +225,10 @@
                         <div class="p-5 pb-4">
                             <div class="flex justify-between items-start gap-4 mb-3">
                                 <div class="flex-1 min-w-0">
-                                    <h4
+                                    <x-member-identity :member="$user"><h4
                                         class="font-black text-slate-900 uppercase text-base leading-tight tracking-tight">
                                         {{ $user->name }}
-                                    </h4>
+                                    </h4></x-member-identity>
                                     <div class="flex items-center gap-2 mt-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
                                         <span
@@ -333,7 +319,7 @@
             </div>
 
             <div class="pb-20 md:pb-0">
-                {{ $users->links() }}
+                <x-pagination :paginator="$users" label="user" />
             </div>
         </div>
     </div>

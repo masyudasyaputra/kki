@@ -2,80 +2,228 @@
 
 namespace Database\Seeders;
 
-use App\Models\Province;
 use App\Models\City;
+use App\Models\District;
+use App\Models\Province;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use RuntimeException;
+use SplFileObject;
 
 class IndonesiaRegionSeeder extends Seeder
 {
+    private const DATA_DIRECTORY = 'data/regions';
+    private const BATCH_SIZE = 500;
+
     public function run(): void
     {
-        $regions = [
-            // --- SUMATERA ---
-            'ACEH' => ['Kota Banda Aceh', 'Kota Sabang', 'Kab. Aceh Besar'],
-            'SUMATERA UTARA' => ['Kota Medan', 'Kota Binjai', 'Kab. Deli Serdang', 'Kab. Karo'],
-            'SUMATERA BARAT' => ['Kota Padang', 'Kota Bukittinggi', 'Kota Payakumbuh'],
-            'RIAU' => ['Kota Pekanbaru', 'Kota Dumai', 'Kab. Bengkalis'],
-            'JAMBI' => ['Kota Jambi', 'Kota Sungai Penuh', 'Kab. Muaro Jambi'],
-            'SUMATERA SELATAN' => ['Kota Palembang', 'Kota Prabumulih', 'Kota Lubuklinggau'],
-            'BENGKULU' => ['Kota Bengkulu', 'Kab. Rejang Lebong', 'Kab. Muko Muko'],
-            'LAMPUNG' => ['Kota Bandar Lampung', 'Kota Metro', 'Kab. Lampung Selatan'],
-            'KEPULAUAN BANGKA BELITUNG' => ['Kota Pangkal Pinang', 'Kab. Bangka', 'Kab. Belitung'],
-            'KEPULAUAN RIAU' => ['Kota Tanjung Pinang', 'Kota Batam', 'Kab. Bintan'],
+        $provinceByCode = [];
+        $provinceByName = [];
+        foreach (Province::query()->get() as $province) {
+            if ($province->code) $provinceByCode[$province->code] = $province;
+            $provinceByName[$this->normalize($province->name)] = $province;
+        }
 
-            // --- JAWA ---
-            'DKI JAKARTA' => ['Jakarta Pusat', 'Jakarta Utara', 'Jakarta Timur', 'Jakarta Selatan', 'Jakarta Barat'],
-            'JAWA BARAT' => ['Kota Bandung', 'Kota Bogor', 'Kota Bekasi', 'Kota Depok'],
-            'JAWA TENGAH' => ['Kota Semarang', 'Kota Surakarta', 'Kota Magelang'],
-            'DI YOGYAKARTA' => ['Kota Yogyakarta', 'Kab. Sleman', 'Kab. Bantul'],
-            'JAWA TIMUR' => ['Kota Surabaya', 'Kota Malang', 'Kota Kediri'],
-            'BANTEN' => ['Kota Serang', 'Kota Tangerang', 'Kota Cilegon'],
+        $provinceCount = 0;
+        foreach ($this->readCsv('provinsi.csv') as $row) {
+            $provinceCount++;
+            $code = $row['id'];
+            $province = $provinceByCode[$code] ?? $provinceByName[$this->normalize($row['name'])] ?? new Province();
+            $province->code = $code;
+            $province->name = mb_strtoupper($row['name'], 'UTF-8');
+            $province->save();
+            $provinceByCode[$code] = $province;
+            $provinceByName[$this->normalize($row['name'])] = $province;
+        }
 
-            // --- BALI & NUSA TENGGARA ---
-            'BALI' => ['Kota Denpasar', 'Kab. Badung', 'Kab. Gianyar'],
-            'NUSA TENGGARA BARAT' => ['Kota Mataram', 'Kota Bima', 'Kab. Lombok Barat'],
-            'NUSA TENGGARA TIMUR' => ['Kota Kupang', 'Kab. Flores Timur', 'Kab. Sikka'],
+        $provinceIdByCode = collect($provinceByCode)->mapWithKeys(fn (Province $province, $code) => [(string) $code => $province->id])->all();
+        $provinceCodeById = collect($provinceByCode)->mapWithKeys(fn (Province $province, $code) => [(string) $province->id => (string) $code])->all();
+        $cityByCode = [];
+        $cityByName = [];
+        foreach (City::query()->get() as $city) {
+            if ($city->code) $cityByCode[$city->code] = $city;
+            $provinceCode = $provinceCodeById[(string) $city->province_id] ?? '';
+            $cityByName[$city->province_id.'|'.$this->normalizeCity($city->name, $provinceCode)] = $city;
+        }
 
-            // --- KALIMANTAN ---
-            'KALIMANTAN BARAT' => ['Kota Pontianak', 'Kota Singkawang', 'Kab. Kubu Raya'],
-            'KALIMANTAN TENGAH' => ['Kota Palangkaraya', 'Kab. Kotawaringin Timur'],
-            'KALIMANTAN SELATAN' => ['Kota Banjarmasin', 'Kota Banjarbaru', 'Kab. Banjar'],
-            'KALIMANTAN TIMUR' => ['Kota Samarinda', 'Kota Balikpapan', 'Kota Bontang'],
-            'KALIMANTAN UTARA' => ['Kota Tarakan', 'Kab. Bulungan', 'Kab. Nunukan'],
+        $cityCount = 0;
+        foreach ($this->readCsv('kabupaten_kota.csv') as $row) {
+            $cityCount++;
+            $provinceCode = explode('.', $row['id'], 2)[0];
+            $provinceId = $provinceIdByCode[$provinceCode] ?? null;
+            if (!$provinceId) throw new RuntimeException("Provinsi {$provinceCode} tidak ditemukan untuk kota {$row['id']}.");
 
-            // --- SULAWESI ---
-            'SULAWESI UTARA' => ['Kota Manado', 'Kota Bitung', 'Kota Tomohon'],
-            'SULAWESI TENGAH' => ['Kota Palu', 'Kab. Donggala', 'Kab. Banggai'],
-            'SULAWESI SELATAN' => ['Kota Makassar', 'Kota Parepare', 'Kota Palopo'],
-            'SULAWESI TENGGARA' => ['Kota Kendari', 'Kota Bau-Bau', 'Kab. Kolaka'],
-            'GORONTALO' => ['Kota Gorontalo', 'Kab. Limboto', 'Kab. Boalemo'],
-            'SULAWESI BARAT' => ['Kab. Mamuju', 'Kab. Majene', 'Kab. Polewali Mandar'],
+            $key = $provinceId.'|'.$this->normalizeCity($row['name'], $provinceCode);
+            $city = $cityByCode[$row['id']] ?? $cityByName[$key] ?? new City();
+            $city->province_id = $provinceId;
+            $city->code = $row['id'];
+            $city->name = mb_strtoupper($row['name'], 'UTF-8');
+            $city->save();
+            $cityByCode[$row['id']] = $city;
+            $cityByName[$key] = $city;
+        }
 
-            // --- MALUKU & PAPUA ---
-            'MALUKU' => ['Kota Ambon', 'Kota Tual', 'Kab. Maluku Tengah'],
-            'MALUKU UTARA' => ['Kota Ternate', 'Kota Tidore Kepulauan', 'Kab. Halmahera Utara'],
-            'PAPUA' => ['Kota Jayapura', 'Kab. Jayapura', 'Kab. Biak Numfor'],
-            'PAPUA BARAT' => ['Kota Sorong', 'Kab. Manokwari', 'Kab. Fakfak'],
-            'PAPUA SELATAN' => ['Kab. Merauke', 'Kab. Mappi', 'Kab. Asmat'],
-            'PAPUA TENGAH' => ['Kab. Mimika', 'Kab. Nabire', 'Kab. Paniai'],
-            'PAPUA PEGUNUNGAN' => ['Kab. Jayawijaya', 'Kab. Lanny Jaya', 'Kab. Tolikara'],
-            'PAPUA BARAT DAYA' => ['Kota Sorong', 'Kab. Raja Ampat', 'Kab. Tambrauw'],
-        ];
+        $cityIdByCode = collect($cityByCode)->mapWithKeys(fn (City $city, $code) => [(string) $code => $city->id])->all();
+        $districtByName = [];
+        $districtByCode = [];
+        foreach (District::query()->get() as $district) {
+            $districtByName[$district->city_id.'|'.$this->normalize($district->name)] = $district;
+            if ($district->code) $districtByCode[$district->code] = $district;
+        }
 
-        foreach ($regions as $provinceName => $cities) {
-            // Menggunakan updateOrCreate agar data yang sudah ada tidak dobel
-            $province = Province::updateOrCreate(
-                ['name' => $provinceName]
-            );
+        $newDistrictRows = [];
+        $districtCodes = [];
+        $districtCount = 0;
+        foreach ($this->readCsv('kecamatan.csv') as $row) {
+            $districtCount++;
+            $cityCode = substr($row['id'], 0, 5);
+            $cityId = $cityIdByCode[$cityCode] ?? null;
+            if (!$cityId) throw new RuntimeException("Kabupaten/kota {$cityCode} tidak ditemukan untuk kecamatan {$row['id']}.");
 
-            foreach ($cities as $cityName) {
-                City::updateOrCreate([
-                    'province_id' => $province->id,
-                    'name' => strtoupper($cityName)
+            $key = $cityId.'|'.$this->normalize($row['name']);
+            if (isset($districtByCode[$row['id']])) {
+                $district = $districtByCode[$row['id']];
+                DB::table('districts')->where('id', $district->id)->update([
+                    'city_id' => $cityId, 'name' => mb_strtoupper($row['name'], 'UTF-8'), 'updated_at' => now(),
                 ]);
+                $districtCodes[$row['id']] = $district->id;
+                continue;
+            }
+
+            $existingDistrict = $districtByName[$key] ?? null;
+            if ($existingDistrict && $existingDistrict->code && $existingDistrict->code !== $row['id']) {
+                $existingDistrict = null;
+            }
+            if ($existingDistrict) {
+                DB::table('districts')->where('id', $existingDistrict->id)->update([
+                    'code' => $row['id'], 'city_id' => $cityId,
+                    'name' => mb_strtoupper($row['name'], 'UTF-8'), 'updated_at' => now(),
+                ]);
+                $districtCodes[$row['id']] = $existingDistrict->id;
+                $districtByCode[$row['id']] = $existingDistrict;
+                continue;
+            }
+
+            $newDistrictRows[] = [
+                'city_id' => $cityId,
+                'code' => $row['id'],
+                'name' => mb_strtoupper($row['name'], 'UTF-8'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+            if (count($newDistrictRows) >= self::BATCH_SIZE) {
+                DB::table('districts')->insertOrIgnore($newDistrictRows);
+                $newDistrictRows = [];
+            }
+        }
+        if ($newDistrictRows) DB::table('districts')->insertOrIgnore($newDistrictRows);
+
+        $districtIdByCode = DB::table('districts')->whereNotNull('code')->pluck('id', 'code')->all();
+        $districtIdByCode = array_merge($districtIdByCode, $districtCodes);
+
+        $villageBatch = [];
+        $villageCount = 0;
+        foreach ($this->readCsv('kelurahan.csv') as $row) {
+            $districtCode = substr($row['id'], 0, 8);
+            $districtId = $districtIdByCode[$districtCode] ?? null;
+            if (!$districtId) throw new RuntimeException("Kecamatan {$districtCode} tidak ditemukan untuk kelurahan {$row['id']}.");
+
+            $villageBatch[] = [
+                'district_id' => $districtId,
+                'code' => $row['id'],
+                'name' => mb_strtoupper($row['name'], 'UTF-8'),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+            if (count($villageBatch) >= self::BATCH_SIZE) {
+                DB::table('villages')->upsert($villageBatch, ['code'], ['district_id', 'name', 'updated_at']);
+                $villageCount += count($villageBatch);
+                $villageBatch = [];
+            }
+        }
+        if ($villageBatch) {
+            DB::table('villages')->upsert($villageBatch, ['code'], ['district_id', 'name', 'updated_at']);
+            $villageCount += count($villageBatch);
+        }
+
+        $removedLegacyCities = $this->removeUnusedLegacySampleCities();
+
+        $this->command?->info(sprintf(
+            'Data wilayah tersinkron: %s provinsi, %s kabupaten/kota, %s kecamatan, %s kelurahan.%s',
+            number_format($provinceCount), number_format($cityCount), number_format($districtCount), number_format($villageCount),
+            $removedLegacyCities ? ' '.$removedLegacyCities.' baris contoh lama yang tidak dipakai dibersihkan.' : ''
+        ));
+    }
+
+    /** @return \Generator<int, array{id: string, name: string}> */
+    private function readCsv(string $filename): \Generator
+    {
+        $path = database_path(self::DATA_DIRECTORY.'/'.$filename);
+        if (!is_file($path)) throw new RuntimeException("File data wilayah tidak ditemukan: {$path}");
+
+        $file = new SplFileObject($path, 'r');
+        $file->setCsvControl(',', '"', '');
+        $file->setFlags(SplFileObject::READ_CSV | SplFileObject::SKIP_EMPTY | SplFileObject::DROP_NEW_LINE);
+        $isHeader = true;
+        foreach ($file as $columns) {
+            if (!$columns || count($columns) < 2) continue;
+            if ($isHeader) {
+                $isHeader = false;
+                continue;
+            }
+            $code = trim((string) ($columns[0] ?? ''), "\xEF\xBB\xBF \t\n\r\0\x0B\"");
+            $name = trim((string) ($columns[1] ?? ''), " \t\n\r\0\x0B\"");
+            if ($code === '' || $name === '') continue;
+            yield ['id' => $code, 'name' => $name];
+        }
+    }
+
+    private function normalize(string $name): string
+    {
+        $name = mb_strtoupper(trim($name), 'UTF-8');
+        $name = preg_replace('/\s*\([^)]*\)/u', '', $name);
+        $name = preg_replace('/^(PROVINSI|PROV\.?|KABUPATEN|KAB\.?|KOTA|KECAMATAN|KEC\.?)\s+/u', '', $name);
+
+        return preg_replace('/[^\pL\pN]+/u', '', $name) ?? '';
+    }
+
+    private function normalizeCity(string $name, string $provinceCode): string
+    {
+        $name = mb_strtoupper(trim($name), 'UTF-8');
+        $name = preg_replace('/\s*\([^)]*\)/u', '', $name);
+        $name = preg_replace('/^(KABUPATEN|KAB\.?)\s+/u', '', $name);
+        if ($provinceCode === '31') $name = preg_replace('/^KOTA\s+/u', '', $name);
+
+        return preg_replace('/[^\pL\pN]+/u', '', $name) ?? '';
+    }
+
+    private function removeUnusedLegacySampleCities(): int
+    {
+        $provinceCodes = Province::query()->whereNotNull('code')->pluck('code', 'id')->all();
+        $officialNames = [];
+        foreach (City::query()->whereNotNull('code')->get(['province_id', 'name']) as $city) {
+            $provinceCode = (string) ($provinceCodes[$city->province_id] ?? '');
+            $officialNames[$this->normalizeCity($city->name, $provinceCode)] = true;
+        }
+
+        $removed = 0;
+        foreach (City::query()->whereNull('code')->get() as $city) {
+            $provinceCode = (string) ($provinceCodes[$city->province_id] ?? '');
+            $key = $this->normalizeCity($city->name, $provinceCode);
+            $isDuplicate = isset($officialNames[$key]);
+            $isOldSample = mb_strtoupper(trim($city->name), 'UTF-8') === 'KAB. LIMBOTO';
+            if (!$isDuplicate && !$isOldSample) continue;
+
+            $hasReferences = DB::table('users')->where('city_id', $city->id)->exists()
+                || DB::table('dojos')->where('city_id', $city->id)->exists()
+                || DB::table('officials')->where('city_id', $city->id)->exists()
+                || DB::table('districts')->where('city_id', $city->id)->exists();
+            if (!$hasReferences) {
+                $city->delete();
+                $removed++;
             }
         }
 
-        $this->command->info('Seluruh 38 Provinsi dan sampel Kota berhasil diimpor!');
+        return $removed;
     }
 }

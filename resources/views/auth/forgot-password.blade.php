@@ -22,4 +22,5 @@
             </x-primary-button>
         </div>
     </form>
+    <p class="auth-switch"><a href="{{ route('login') }}" class="auth-link">Kembali ke Masuk</a></p>
 </x-guest-layout>

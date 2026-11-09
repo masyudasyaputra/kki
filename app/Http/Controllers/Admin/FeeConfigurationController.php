@@ -18,7 +18,7 @@ class FeeConfigurationController extends Controller
         $user = Auth::user();
         
         // Ambil semua tingkatan sabuk urut berdasarkan level terendah
-        $beltLevels = BeltLevel::orderBy('order', 'asc')->get();
+        $beltLevels = BeltLevel::active()->orderBy('order', 'asc')->get();
         
         // Ambil konfigurasi yang sudah ada untuk wilayah user saat ini
         // Jika PB, province_id akan null. Jika Pengprov, akan berisi ID Provinsinya.

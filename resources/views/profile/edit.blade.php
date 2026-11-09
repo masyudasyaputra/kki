@@ -1,157 +1,32 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h1 class="page-title">
-            
-            {{ __('Manajemen Profil Pengurus') }}
-        </h1>
-    </x-slot>
-
-    <div class="mx-auto mt-4 flex max-w-7xl flex-wrap items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
-        <div><h3 class="text-sm font-semibold text-slate-900">Akun Google</h3><p class="text-xs text-slate-500">{{ auth()->user()->google_id ? 'Akun Google sudah terhubung.' : 'Hubungkan Google dengan email yang sama untuk pilihan masuk tambahan.' }}</p>@if ($errors->has('google'))<p class="text-xs text-red-600">{{ $errors->first('google') }}</p>@endif @if (session('status') === 'google-connected')<p class="text-xs text-emerald-700">Google berhasil dihubungkan.</p>@endif</div>
-        @if (!auth()->user()->google_id && config('services.google.client_id') && config('services.google.client_secret'))<a href="{{ route('google.connect') }}" class="btn btn-secondary">Hubungkan Google</a>@endif
-    </div>
-    <div class="py-10 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            {{-- Top Branding Card: Visual Akun & Label Role --}}
-            <div
-                class="bg-gray-900 rounded-2xl p-6 mb-8 text-white shadow-xl flex flex-col md:flex-row items-center gap-6 border-b-4 border-red-600">
-                <div class="flex-shrink-0">
-                    <div
-                        class="h-20 w-20 rounded-full bg-red-600 flex items-center justify-center text-3xl font-black shadow-lg border-4 border-gray-800">
-                        {{ substr(auth()->user()->name, 0, 1) }}
-                    </div>
-                </div>
-                <div class="text-center md:text-left flex-grow">
-                    <h3 class="text-2xl font-bold uppercase tracking-tight">{{ auth()->user()->name }}</h3>
-                    <p class="text-gray-400 text-sm font-medium tracking-widest mb-3">{{ auth()->user()->email }}</p>
-
-                    {{-- Badge Roles Dinamis --}}
-                    <div class="flex flex-wrap justify-center md:justify-start gap-2">
-                        @php
-                            // Mengambil array roles atau fallback ke string role tunggal
-                            $userRoles = is_array(auth()->user()->roles)
-                                ? auth()->user()->roles
-                                : [auth()->user()->role];
-
-                            // Mapping Label & Warna
-                            $roleData = [
-                                'pb' => ['label' => 'Pengurus Besar', 'class' => 'bg-white text-black'],
-                                'pengprov' => ['label' => 'Pengprov', 'class' => 'bg-red-600 text-white'],
-                                'pengcab' => ['label' => 'Pengcab', 'class' => 'bg-red-500 text-white'],
-                                'admin_dojo' => ['label' => 'Admin Dojo', 'class' => 'bg-gray-700 text-white'],
-                                'penguji' => ['label' => 'Penguji', 'class' => 'bg-yellow-500 text-black'],
-                                'member' => ['label' => 'Member', 'class' => 'bg-gray-500 text-white'],
-                            ];
-                        @endphp
-
-                        @foreach ($userRoles as $roleKey)
-                            @if (isset($roleData[$roleKey]))
-                                <span
-                                    class="px-3 py-1 {{ $roleData[$roleKey]['class'] }} text-[10px] font-bold rounded-md uppercase tracking-widest border border-white/10 shadow-sm">
-                                    {{ $roleData[$roleKey]['label'] }}
-                                </span>
-                            @endif
-                        @endforeach
-                    </div>
-                </div>
-                <div class="hidden lg:block opacity-10">
-                    <svg class="w-20 h-20" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 16l-5 2.72L7 16v-3.73l5 2.72 5-2.72V16z" />
-                    </svg>
-                </div>
+    @php
+        $isMember = $user->role === 'member';
+        $profileFields = ['name' => 'Nama lengkap', 'email' => 'Email', 'whatsapp' => 'WhatsApp', 'province_id' => 'Provinsi', 'city_id' => 'Kabupaten / kota', 'district' => 'Kecamatan', 'address' => 'Alamat', 'dojo_id' => 'Dojo', 'belt_level_id' => 'Tingkat sabuk', 'first_coach' => 'Pelatih awal'];
+        $missingFields = collect($profileFields)->filter(fn ($label, $field) => blank($user->$field));
+        $completion = (int) round((count($profileFields) - $missingFields->count()) / count($profileFields) * 100);
+        $verification = ['pending' => 'Menunggu pemeriksaan', 'approved' => 'Terverifikasi', 'revision' => 'Perlu perbaikan'][$user->verification_status ?? 'pending'] ?? 'Menunggu pemeriksaan';
+    @endphp
+    <x-slot name="header"><h1 class="page-title">{{ $isMember ? 'Profil Saya' : 'Profil Akun' }}</h1><p class="page-subtitle">Kelola identitas, kontak, dan keamanan akun Anda.</p></x-slot>
+    <div class="profile-workspace mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        <section class="profile-summary">
+            <div class="profile-avatar overflow-hidden">@if($user->photo)<img src="{{ asset('storage/'.$user->photo) }}" alt="Pasfoto {{ $user->name }}" class="h-full w-full object-cover">@else{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}@endif</div>
+            <div class="min-w-0 flex-1"><p class="profile-kicker">{{ $isMember ? 'Karateka KKI' : 'Akun KKI' }}</p><h2 class="break-words text-2xl font-bold">{{ $user->name }}</h2><p class="mt-1 break-all text-sm text-slate-500">{{ $user->email }}</p><div class="mt-3 flex flex-wrap gap-2">@foreach($user->allRoles() as $role)<span class="profile-chip">{{ \App\Services\RoleAccess::POSITIONS[$role] ?? \App\Services\RoleAccess::PERMISSIONS[$role] ?? str_replace('_', ' ', $role) }}</span>@endforeach @if($isMember)<x-verification-status :status="$user->verification_status" />@endif<span class="profile-chip {{ $user->is_active ? 'profile-chip-success' : '' }}">{{ $user->is_active ? 'Anggota aktif' : 'Belum aktif' }}</span></div></div>
+            @if($isMember)<a href="{{ route('member.card') }}" class="btn btn-secondary"><x-sidebar-icon name="membership" />Kartu anggota</a>@endif
+        </section>
+        @if(session('status') === 'profile-updated')<div class="profile-feedback" role="status">Profil berhasil disimpan. @if($isMember && $user->verification_status === 'pending')Data sabuk, wilayah, atau dojo yang berubah menunggu verifikasi pengurus provinsi atau Pusat.@endif</div>@endif
+        <nav class="profile-section-nav" aria-label="Bagian profil"><a href="#identitas">Identitas & kontak</a><a href="#wilayah">Wilayah & dojo</a><a href="#keamanan">Keamanan akun</a></nav>
+        <div class="grid items-start gap-6 lg:grid-cols-3">
+            <div class="min-w-0 space-y-6 lg:col-span-2">
+                <div class="profile-panel">@include('profile.partials.update-profile-information-form')</div>
+                <section id="keamanan" class="profile-panel profile-anchor">@include('profile.partials.update-password-form')</section>
+                <section class="profile-panel"><div class="flex flex-wrap items-center justify-between gap-4"><div><h2 class="profile-section-title">Akun Google</h2><p class="mt-2 text-sm text-slate-500">{{ $user->google_id ? 'Akun Google sudah terhubung untuk masuk ke KKI.' : 'Hubungkan akun Google dengan email yang sama untuk pilihan masuk tambahan.' }}</p></div>@if($user->google_id)<span class="profile-chip profile-chip-success">Terhubung</span>@elseif(config('services.google.client_id') && config('services.google.client_secret'))<a href="{{ route('google.connect') }}" class="btn btn-secondary">Hubungkan Google</a>@else<span class="profile-chip">Belum tersedia</span>@endif</div><x-input-error :messages="$errors->get('google')" class="mt-2" />@if(session('status') === 'google-connected')<p role="status" class="mt-3 text-sm text-emerald-700">Google berhasil dihubungkan.</p>@endif</section>
+                <details class="profile-panel profile-danger" @if($errors->userDeletion->isNotEmpty()) open @endif><summary class="cursor-pointer font-semibold text-red-800">Penghapusan akun</summary><div class="mt-5">@include('profile.partials.delete-user-form')</div></details>
             </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {{-- Bagian Kiri: Form Update --}}
-                <div class="lg:col-span-8 space-y-8">
-                    {{-- Form Informasi Dasar --}}
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-200">
-                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                            <h3 class="font-bold text-gray-800 uppercase text-xs tracking-widest">Informasi Identitas
-                            </h3>
-                            <span class="text-[10px] text-gray-400 font-medium">Update terakhir:
-                                {{ auth()->user()->updated_at->diffForHumans() }}</span>
-                        </div>
-                        <div class="p-6 sm:p-8">
-                            <div class="max-w-xl">
-                                @include('profile.partials.update-profile-information-form')
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Form Ganti Password --}}
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-2xl border border-gray-200">
-                        <div class="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
-                            <h3 class="font-bold text-gray-800 uppercase text-xs tracking-widest">Keamanan Akun</h3>
-                            <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                        </div>
-                        <div class="p-6 sm:p-8">
-                            <div class="max-w-xl">
-                                @include('profile.partials.update-password-form')
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Bagian Kanan: Info & Danger Zone --}}
-                <div class="lg:col-span-4 space-y-8">
-                    {{-- Info Wilayah Wewenang --}}
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-200">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Wilayah Tugas</h4>
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-3">
-                                <div
-                                    class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 text-xs">
-                                    PR</div>
-                                <div>
-                                    <p class="text-[10px] text-gray-400 leading-none">Provinsi</p>
-                                    <p class="text-sm font-bold text-gray-700">
-                                        {{ auth()->user()->province->name ?? 'Seluruh Indonesia' }}</p>
-                                </div>
-                            </div>
-                            @if (auth()->user()->city)
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 text-xs">
-                                        KT</div>
-                                    <div>
-                                        <p class="text-[10px] text-gray-400 leading-none">Kota/Kab</p>
-                                        <p class="text-sm font-bold text-gray-700">{{ auth()->user()->city->name }}</p>
-                                    </div>
-                                </div>
-                            @endif
-                            @if (auth()->user()->dojo)
-                                <div class="flex items-center gap-3">
-                                    <div
-                                        class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 text-xs">
-                                        DJ</div>
-                                    <div>
-                                        <p class="text-[10px] text-gray-400 leading-none">Dojo</p>
-                                        <p class="text-sm font-bold text-gray-700">{{ auth()->user()->dojo->name }}</p>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-
-                    {{-- Danger Zone --}}
-                    <div class="bg-red-50 rounded-2xl p-6 border border-red-100">
-                        <h4 class="text-xs font-bold text-red-700 uppercase tracking-widest mb-2 text-center">Tutup Akun
-                        </h4>
-                        <p class="text-[10px] text-red-500/70 text-center mb-4 leading-tight italic">Tindakan ini
-                            permanen. Seluruh data prestasi dan kepengurusan akan dihapus.</p>
-                        <div class="flex justify-center">
-                            @include('profile.partials.delete-user-form')
-                        </div>
-                    </div>
-                </div>
-            </div>
+            <aside class="space-y-6" aria-label="Ringkasan profil">
+                <section class="profile-panel"><h2 class="profile-section-title">Kelengkapan profil</h2><div class="my-4 flex items-center justify-between text-sm"><span class="text-slate-500">Data terisi</span><strong>{{ $completion }}%</strong></div><progress class="profile-progress" max="100" value="{{ $completion }}" aria-label="Kelengkapan profil">{{ $completion }}%</progress>@if($missingFields->isNotEmpty())<p class="mt-4 text-sm leading-6 text-slate-500">Lengkapi {{ $missingFields->values()->implode(', ') }}.</p>@else<p class="mt-4 text-sm text-emerald-700">Data profil sudah lengkap.</p>@endif<p class="mt-3 text-xs leading-5 text-slate-400">Indikator kelengkapan membantu Anda meninjau data; bukan status verifikasi.</p></section>
+                <section class="profile-panel"><h2 class="profile-section-title">{{ $isMember ? 'Keanggotaan karateka' : 'Data organisasi' }}</h2><dl class="profile-facts">@foreach(['Nomor anggota' => $user->member_number, 'Tingkat sabuk' => $user->beltLevel?->display_name, 'Dojo' => $user->dojo?->name, 'Provinsi' => $user->province?->name, 'Kabupaten / kota' => $user->city?->name, 'Kecamatan' => $user->district] as $label => $value)<div><dt>{{ $label }}</dt><dd>{{ filled($value) ? $value : 'Belum diisi' }}</dd></div>@endforeach @if($isMember)<div><dt>Verifikasi pendaftaran</dt><dd>{{ $verification }}</dd></div>@endif</dl>@if($isMember)<p class="mt-5 rounded-xl bg-amber-50 p-3 text-xs leading-5 text-amber-900">Perubahan sabuk/KYU/DAN, provinsi, kabupaten/kota, kecamatan, atau dojo memerlukan verifikasi pengurus provinsi atau Pusat. Data pribadi dan kontak dapat diubah tanpa verifikasi ulang.</p>@endif</section>
+                <p class="px-1 text-xs text-slate-400">Terakhir disimpan {{ $user->updated_at?->timezone('Asia/Jakarta')->format('d/m/Y H:i') }} WIB.</p>
+            </aside>
         </div>
     </div>
 </x-app-layout>

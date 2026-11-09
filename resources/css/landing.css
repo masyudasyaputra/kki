@@ -876,6 +876,85 @@ html {
         flex-direction: column;
     }
 }
+
+/* Dedicated public directories */
+.pp-page-hero {
+    color: white;
+    background-color: #171a19;
+    background-image: linear-gradient(115deg, #21191b 0%, #171a19 58%, #272022 100%);
+    border-bottom: 3px solid #762137;
+}
+.pp-page-hero-inner {
+    position: relative;
+    min-height: 245px;
+    padding-top: 52px;
+    padding-bottom: 42px;
+}
+.pp-page-hero .pp-eyebrow { color: #d4b5bb; }
+.pp-page-hero h1 { margin: 12px 0 7px; font-size: clamp(42px, 6vw, 68px); text-transform: uppercase; }
+.pp-page-hero p:not(.pp-eyebrow) { max-width: 650px; color: #c3c8c4; font-size: 15px; }
+.pp-page-stat { display: inline-flex; align-items: baseline; gap: 9px; margin-top: 17px; padding: 8px 12px; border: 1px solid #ffffff24; border-radius: 6px; color: #c3c8c4; font-size: 12px; }
+.pp-page-stat strong { color: white; font-family: "Barlow Condensed", sans-serif; font-size: 22px; }
+.pp-filter-panel { max-width: none; margin: 0 0 30px; padding: 20px; }
+.pp-filter-grid { display: grid; grid-template-columns: minmax(220px, 1.5fr) minmax(190px, 1fr) auto; align-items: end; gap: 14px; }
+.pp-filter-grid-dojos, .pp-filter-grid-members { grid-template-columns: minmax(230px, 1.5fr) minmax(170px, 1fr) minmax(170px, 1fr) auto; }
+.pp-filter-grid label { display: block; min-width: 0; color: #39413b; font-size: 12px; font-weight: 700; }
+.pp-filter-grid input, .pp-filter-grid select { display: block; width: 100%; min-height: 45px; margin-top: 7px; padding: 10px 12px; border: 1px solid #d7dcd0; border-radius: 6px; background: #fbfcf9; color: #202521; font: inherit; font-size: 13px; }
+.pp-filter-grid input:focus, .pp-filter-grid select:focus { outline: 3px solid #76213725; border-color: #762137; }
+.pp-filter-actions { display: flex; align-items: center; gap: 8px; }
+.pp-filter-actions .pp-btn { min-height: 45px; padding: 10px 16px; gap: 7px; white-space: nowrap; }
+.pp-outline-dark { border-color: #cfd4ca; background: white; color: #222723; }
+.pp-outline-dark:hover { background: #f1f2ed; }
+.pp-filter-note { margin-top: 12px; color: #6b736c; font-size: 11px; }
+.pp-agenda-page-list { margin-top: 0; }
+.pp-agenda-page-list .pp-agenda-item { grid-template-columns: 84px minmax(0, 1fr) auto; }
+.pp-agenda-details > p { margin: 4px 0; }
+.pp-page-empty { margin-top: 12px; }
+.pp-dojo-directory-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+.pp-dojo-directory-card { display: flex; min-width: 0; flex-direction: column; align-items: flex-start; padding: 22px; border: 1px solid #d9ddd2; border-radius: 9px; background: white; }
+.pp-dojo-card-top { display: flex; width: 100%; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.pp-directory-icon { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 10px; background: #f2e8ea; color: #762137; font-size: 18px; font-weight: 700; }
+.pp-directory-status { padding: 4px 8px; border-radius: 999px; background: #edf3e8; color: #48633b; font-size: 10px; font-weight: 700; }
+.pp-dojo-directory-card h2 { margin-bottom: 7px; font-size: 19px; font-weight: 700; line-height: 1.25; }
+.pp-dojo-directory-card p { margin: 4px 0; color: #606961; font-size: 13px; line-height: 1.55; }
+.pp-dojo-directory-card p strong { color: #343b35; }
+.pp-dojo-directory-card .pp-link { margin-top: auto; padding-top: 16px; color: #762137; font-size: 12px; font-weight: 700; }
+.pp-dojo-directory-card .pp-map-link { margin-top: 8px; color: #606961; font-size: 11px; font-weight: 600; }
+.pp-member-directory-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.pp-member-directory-card { display: flex; min-width: 0; align-items: center; gap: 14px; padding: 17px; border: 1px solid #dce0d6; border-radius: 9px; background: white; }
+.pp-member-avatar { display: grid; width: 46px; height: 46px; flex: 0 0 46px; place-items: center; border-radius: 50%; background: #f2e8ea; color: #762137; font-size: 18px; font-weight: 800; }
+.pp-member-card-main { min-width: 0; flex: 1; }
+.pp-member-number { color: #777f78; font-size: 10px; font-weight: 700; letter-spacing: .06em; }
+.pp-member-card-main h2 { overflow: hidden; margin: 2px 0 4px; color: #1b211d; font-size: 16px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+.pp-member-card-main p { overflow: hidden; margin: 2px 0; color: #69716a; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.pp-member-belt { display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; padding: 7px 10px; border: 1px solid #e5e7e1; border-radius: 7px; color: #343b35; font-size: 11px; font-weight: 700; }
+.pp-member-belt small { margin-top: 2px; color: #777f78; font-size: 9px; }
+.pp-section-action { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 25px; }
+.pp-section-action .pp-btn { min-height: 42px; padding: 9px 15px; gap: 8px; }
+.pp-nav a[aria-current="page"] { color: white; text-decoration: underline; text-decoration-color: #bd6674; text-underline-offset: 7px; }
+
+@media (max-width: 1000px) {
+    .pp-filter-grid-dojos, .pp-filter-grid-members { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .pp-dojo-directory-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 780px) {
+    .pp-page-hero-inner { min-height: 0; padding-top: 37px; padding-bottom: 30px; }
+    .pp-filter-grid, .pp-filter-grid-dojos, .pp-filter-grid-members { grid-template-columns: 1fr; }
+    .pp-filter-panel { padding: 15px; }
+    .pp-filter-actions { display: grid; grid-template-columns: 1fr 1fr; }
+    .pp-filter-actions .pp-btn { padding-inline: 10px; }
+    .pp-agenda-page-list .pp-agenda-item { grid-template-columns: 62px minmax(0, 1fr); gap: 14px; padding: 20px 0; }
+    .pp-agenda-page-list .pp-date { width: 58px; padding-right: 10px; }
+    .pp-agenda-page-list .pp-date strong { font-size: 34px; }
+    .pp-agenda-page-list .pp-agenda-item > .pp-link { grid-column: 2; }
+    .pp-dojo-directory-grid, .pp-member-directory-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+    .pp-member-directory-card { gap: 10px; padding: 13px; }
+    .pp-member-avatar { width: 38px; height: 38px; flex-basis: 38px; }
+    .pp-member-card-main h2 { font-size: 14px; }
+    .pp-member-belt { padding: 6px 7px; font-size: 10px; }
+}
 @media (max-width: 460px) {
     .pp-hero h1 {
         font-size: 55px;

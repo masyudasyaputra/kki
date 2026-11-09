@@ -6,6 +6,7 @@
                     {{ $title }}
                 </h1>
                 <p class="page-subtitle">
+                    @if (($role ?? '') === 'super_admin') Administrasi sistem dan pemantauan operasional · @endif
                     Organisasi, iuran, dan ujian • {{ now()->format('d M Y') }}
                 </p>
             </div>
@@ -91,6 +92,7 @@
         // ==========================================================
         $currentRole = $role ?? auth()->user()->role;
         $isPB = $currentRole === 'pb';
+        $isSuperAdmin = $currentRole === 'super_admin';
         $isPengprov = $currentRole === 'pengprov';
         $isPengcab = $currentRole === 'pengcab';
         $isAdminDojo = $currentRole === 'admin_dojo';
@@ -105,12 +107,12 @@
             $beltCounts ??
             $members
                 ->getCollection()
-                ->groupBy(fn($m) => $m->beltLevel->name ?? 'Putih')
+                ->groupBy(fn($m) => $m->beltLevel?->display_name ?? 'Belum ditetapkan')
                 ->map(fn($g) => $g->count())
                 ->toArray();
 
         if ($beltOptions && $beltOptions->count()) {
-            $orderMap = $beltOptions->pluck('order', 'name')->toArray();
+            $orderMap = $beltOptions->pluck('order', 'display_name')->toArray();
             uksort($beltCounts, function ($a, $b) use ($orderMap) {
                 $oa = $orderMap[$a] ?? 999;
                 $ob = $orderMap[$b] ?? 999;
@@ -130,6 +132,11 @@
             ['label' => 'Cabang dengan dojo', 'value' => number_format($organization['cities']), 'icon_bg' => 'bg-amber-50 text-amber-600', 'dot' => 'bg-amber-500', 'footer' => 'Kabupaten/kota dalam cakupan akun', 'icon' => 'M21 12a9 9 0 11-18 0 9 9 0 0118 0zM3 12h18M12 3a18 18 0 010 18 18 18 0 010-18z'],
         ];
 
+        if ($isSuperAdmin) {
+            $systemUsers = \App\Models\User::count();
+            $activeSystemUsers = \App\Models\User::where('is_active', true)->count();
+        }
+
         $rqProvince = request('province_id');
         $rqCity = request('city_id');
         $rqDojo = request('dojo_id');
@@ -140,6 +147,23 @@
 
     <div class="dashboard-overview py-4">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
+
+            @if ($isSuperAdmin)
+                <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div><h2 class="text-base font-semibold text-slate-900">Administrasi Super Admin</h2><p class="mt-1 text-sm text-slate-500">Pantau akun dan akses sistem, lalu buka pengelolaan utama dari sini.</p></div>
+                        <div class="rounded-xl bg-slate-50 px-4 py-3 text-sm"><span class="text-slate-500">Akun sistem</span><strong class="ml-2 text-slate-900">{{ number_format($systemUsers) }}</strong><span class="ml-2 text-emerald-700">{{ number_format($activeSystemUsers) }} aktif</span></div>
+                    </div>
+                    <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                        <a href="{{ route('admin.users.index') }}" class="rounded-xl border border-slate-200 p-4 transition hover:border-red-300 hover:bg-red-50"><strong class="block text-sm text-slate-900">Manajemen user</strong><span class="mt-1 block text-xs text-slate-500">Kelola akun, jabatan, role, dan wilayah akses.</span></a>
+                        <a href="{{ route('admin.access-audits.index') }}" class="rounded-xl border border-slate-200 p-4 transition hover:border-red-300 hover:bg-red-50"><strong class="block text-sm text-slate-900">Riwayat hak akses</strong><span class="mt-1 block text-xs text-slate-500">Tinjau perubahan role dan penugasan akun.</span></a>
+                        <a href="{{ route('admin.regions.index') }}" class="rounded-xl border border-slate-200 p-4 transition hover:border-red-300 hover:bg-red-50"><strong class="block text-sm text-slate-900">Kabupaten & kecamatan</strong><span class="mt-1 block text-xs text-slate-500">Kelola struktur wilayah organisasi.</span></a>
+                        <a href="{{ route('admin.provinces.index') }}" class="rounded-xl border border-slate-200 p-4 transition hover:border-red-300 hover:bg-red-50"><strong class="block text-sm text-slate-900">Provinsi / Pengprov</strong><span class="mt-1 block text-xs text-slate-500">Kelola data tingkat provinsi.</span></a>
+                        <a href="{{ route('admin.exams.index') }}" class="rounded-xl border border-slate-200 p-4 transition hover:border-red-300 hover:bg-red-50"><strong class="block text-sm text-slate-900">Jadwal dan peserta ujian</strong><span class="mt-1 block text-xs text-slate-500">Lihat sesi ujian dan data peserta.</span></a>
+                        <a href="{{ route('admin.exams.fees.index') }}" class="rounded-xl border border-slate-200 p-4 transition hover:border-red-300 hover:bg-red-50"><strong class="block text-sm text-slate-900">Biaya ujian</strong><span class="mt-1 block text-xs text-slate-500">Atur tarif UKT berdasarkan tingkatan.</span></a>
+                    </div>
+                </section>
+            @endif
 
             {{-- NOTIFIKASI STATUS DOJO (Khusus Admin Dojo) --}}
             @if ($isAdminDojo)
@@ -155,7 +179,7 @@
                             <div>
                                 <h4 class="text-sm font-semibold text-slate-900">Akun Belum Terhubung ke Dojo</h4>
                                 <p class="text-xs text-slate-500 mt-0.5">
-                                    Akun Anda belum memiliki penugasan Dojo resmi. Silakan hubungi Administrator Pengurus Besar atau Pengcab.
+                                    Akun Anda belum memiliki penugasan Dojo resmi. Silakan hubungi Administrator Pengurus Pusat atau Pengcab.
                                 </p>
                             </div>
                         </div>
@@ -275,6 +299,7 @@
 
             @include('admin.partials.dashboard-finance')
 
+            @if (!$isSuperAdmin)
             {{-- MAIN SECTION: TABLE & FILTERS --}}
             <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
                 {{-- Card Header & Filter Bar --}}
@@ -397,9 +422,7 @@
                                 <tr class="hover:bg-slate-50/70 transition-colors">
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-3">
-                                            <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center shrink-0">
-                                                {{ strtoupper(substr($member->name, 0, 1)) }}
-                                            </div>
+                                            <x-member-avatar :member="$member" />
                                             <div class="min-w-0">
                                                 <div class="font-semibold text-slate-900 text-sm truncate">
                                                     {{ $member->name }}
@@ -414,7 +437,7 @@
                                     <td class="px-6 py-4">
                                         <div class="flex items-center gap-2">
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border {{ beltBadgeClass($member->beltLevel->name ?? 'Putih') }}">
-                                                {{ $member->beltLevel->name ?? 'Putih' }}
+                                                {{ $member->beltLevel?->display_name ?? 'Belum ditetapkan' }}
                                             </span>
                                             @if (!empty($member->beltLevel->kyu_dan))
                                                 <span class="text-xs text-slate-400">
@@ -460,9 +483,7 @@
                         <div class="bg-white rounded-lg border border-slate-200/80 p-4 shadow-sm space-y-3">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="flex items-center gap-3 min-w-0">
-                                    <div class="w-9 h-9 rounded-full bg-slate-100 border border-slate-200 text-slate-700 font-semibold text-xs flex items-center justify-center shrink-0">
-                                        {{ strtoupper(substr($member->name, 0, 1)) }}
-                                    </div>
+                                    <x-member-avatar :member="$member" />
                                     <div class="min-w-0">
                                         <h4 class="font-semibold text-slate-900 text-sm truncate">{{ $member->name }}</h4>
                                         <p class="text-[11px] text-slate-400">{{ $member->member_number }}</p>
@@ -479,7 +500,7 @@
                                 <div>
                                     <span class="text-slate-400 text-[10px] block">Sabuk</span>
                                     <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border mt-0.5 {{ beltBadgeClass($member->beltLevel->name ?? 'Putih') }}">
-                                        {{ $member->beltLevel->name ?? 'Putih' }}
+                                        {{ $member->beltLevel?->display_name ?? 'Belum ditetapkan' }}
                                     </span>
                                 </div>
                                 <div class="text-right">
@@ -497,9 +518,10 @@
 
                 {{-- Pagination Footer --}}
                 <div class="p-4 sm:p-5 border-t border-slate-200/80 bg-slate-50/50">
-                    {{ $members->appends(request()->query())->links() }}
+                    <x-pagination :paginator="$members" label="anggota" />
                 </div>
             </div>
+            @endif
 
         </div>
     </div>

@@ -25,14 +25,7 @@ class ExamController extends Controller
     public function index(): View
     {
         $user = Auth::user();
-        $query = Exam::with(['province', 'participants']);
-
-        if ($user->role === 'pengprov') {
-            $query->where(function ($q) use ($user) {
-                $q->where('province_id', $user->province_id)
-                    ->orWhereNull('province_id');
-            });
-        }
+        $query = app(\App\Services\ExamCertificates::class)->visibleExams($user)->with(['province', 'participants']);
 
         $exams = $query->orderBy('execution_date', 'desc')->get();
         return view('admin.exams.index', compact('exams'));
@@ -52,7 +45,8 @@ class ExamController extends Controller
         ]);
 
         try {
-            if (Auth::user()->role === 'pengprov') {
+            if (!Auth::user()->hasRole(['pb', 'super_admin'])) {
+                abort_unless(Auth::user()->province_id, 403);
                 $validated['province_id'] = Auth::user()->province_id;
             }
 
@@ -70,6 +64,8 @@ class ExamController extends Controller
      */
     public function update(Request $request, Exam $exam): RedirectResponse
     {
+        app(\App\Services\ExamCertificates::class)->authorizeSessionChange(auth()->user(), $exam);
+        app(\App\Services\ExamReviewWorkflow::class)->assertEditable($exam);
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'exam_type' => 'required|in:dan,kyu',
@@ -91,6 +87,8 @@ class ExamController extends Controller
      */
     public function destroy(Exam $exam): RedirectResponse
     {
+        app(\App\Services\ExamCertificates::class)->authorizeSessionChange(auth()->user(), $exam);
+        app(\App\Services\ExamReviewWorkflow::class)->assertEditable($exam);
         try {
             if ($exam->participants()->count() > 0) {
                 return back()->with('error', 'Jadwal tidak bisa dihapus karena sudah memiliki peserta terdaftar.');
@@ -108,6 +106,7 @@ class ExamController extends Controller
      */
     public function show(Request $request, Exam $exam): View
     {
+        app(\App\Services\ExamCertificates::class)->authorize($request->user(), $exam);
         $user = Auth::user();
 
         $exam->load([
@@ -132,9 +131,15 @@ class ExamController extends Controller
 
         $dojos = Dojo::orderBy('name')->get();
         $cities = City::orderBy('name')->get();
-        $belts = BeltLevel::orderBy('order')->get();
+        $belts = BeltLevel::active()->orderBy('order')->get();
 
         $memberQuery = User::where('role', 'member');
+        $nationalRead = \App\Services\RoleAccess::nationalExamReader($user);
+        if (!$nationalRead && !$user->hasRole('panitia_ujian')) {
+            if ($user->hasRole(['pengcab', 'admin_pengcab'])) $memberQuery->where('province_id', $user->province_id ?? 0)->where('city_id', $user->city_id ?? 0);
+            elseif ($user->hasRole(['pengprov', 'admin_pengprov'])) $memberQuery->where('province_id', $user->province_id ?? 0);
+        }
+        if ($user->hasRole('panitia_ujian') && !$user->hasRole('pb') && $exam->province_id) $memberQuery->where('province_id', $exam->province_id);
         if ($user->role === 'admin_dojo') {
             $memberQuery->where('dojo_id', $user->dojo_id);
         } elseif ($user->role === 'pengprov') {
@@ -143,11 +148,13 @@ class ExamController extends Controller
         $members = $memberQuery->orderBy('name')->get();
 
         $certificateService = app(\App\Services\ExamCertificates::class);
-        $canSendCertificates = $user->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab']);
-        if ($canSendCertificates) $certificateService->authorize($user, $exam, true);
+        $canSendCertificates = \App\Services\RoleAccess::certificates($user);
+        $canManageParticipants = $user->hasRole(['super_admin', 'pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo', 'panitia_ujian'])
+            && !in_array($exam->review_status, ['submitted', 'approved']) && $exam->status !== 'completed';
+        if ($canSendCertificates) $certificateService->authorizeIssuance($user, $exam);
         $certificateTemplates = $canSendCertificates ? $certificateService->templates($user)->orderBy('name')->get() : collect();
         $examCertificates = \App\Models\ExamCertificate::whereIn('exam_participant_id', $exam->participants->pluck('id'))->get()->keyBy('exam_participant_id');
-        return view('admin.exams.show', compact('exam', 'members', 'dojos', 'cities', 'belts', 'certificateTemplates', 'examCertificates', 'canSendCertificates'));
+        return view('admin.exams.show', compact('exam', 'members', 'dojos', 'cities', 'belts', 'certificateTemplates', 'examCertificates', 'canSendCertificates', 'canManageParticipants'));
     }
 
     /**
@@ -161,6 +168,8 @@ class ExamController extends Controller
         ]);
 
         $exam = Exam::findOrFail($examId);
+        app(\App\Services\ExamCertificates::class)->authorize(auth()->user(), $exam);
+        app(\App\Services\ExamReviewWorkflow::class)->assertEditable($exam);
         $auth = Auth::user();
         $countSuccess = 0;
         $countSkipped = 0;
@@ -169,6 +178,7 @@ class ExamController extends Controller
         try {
             foreach ($request->user_ids as $userId) {
                 $user = User::findOrFail($userId);
+                abort_if($auth->hasRole('panitia_ujian') && !$auth->hasRole('pb') && $exam->province_id && (int) $user->province_id !== (int) $exam->province_id, 403);
 
                 if ($auth->role === 'admin_dojo' && $user->dojo_id !== $auth->dojo_id) {
                     continue;
@@ -183,8 +193,11 @@ class ExamController extends Controller
                     continue;
                 }
 
-                $currentBeltId = $user->belt_level_id ?? 1;
-                $targetBeltId = $currentBeltId + 1;
+                $current = $user->beltLevel ?? BeltLevel::active()->where('kyu_dan', 'Kyu 7')->first();
+                $target = app(\App\Services\BeltCatalog::class)->next($current, $exam->exam_type);
+                if (!$target) throw new \RuntimeException('Tidak ada tingkat berikutnya yang sesuai untuk '.$user->name.'. Periksa sabuk anggota dan jenis ujian.');
+                $currentBeltId = $current->id;
+                $targetBeltId = $target->id;
                 $fee = ExamFee::where('belt_level_id', $targetBeltId)->first();
 
                 ExamParticipant::create([
@@ -253,13 +266,15 @@ class ExamController extends Controller
      */
     public function updateResult(Request $request, Exam $exam): RedirectResponse
     {
+        app(\App\Services\ExamCertificates::class)->authorizeSessionChange(auth()->user(), $exam);
+        app(\App\Services\ExamReviewWorkflow::class)->assertEditable($exam);
         $request->validate([
             'participant_id' => 'required|exists:exam_participants,id',
             'status_result' => 'required|in:pass,fail,pending',
         ]);
 
         try {
-            $participant = ExamParticipant::findOrFail($request->participant_id);
+            $participant = $exam->participants()->findOrFail($request->participant_id);
             $participant->update(['status_result' => $request->status_result]);
 
             return back()->with('success', 'Hasil ujian berhasil diperbarui.');
@@ -273,6 +288,8 @@ class ExamController extends Controller
      */
     public function removeMember(ExamParticipant $participant): RedirectResponse
     {
+        app(\App\Services\ExamCertificates::class)->authorize(auth()->user(), $participant->exam);
+        app(\App\Services\ExamReviewWorkflow::class)->assertEditable($participant->exam);
         $auth = Auth::user();
 
         if ($auth->role === 'admin_dojo' && $participant->dojo_id !== $auth->dojo_id) {
@@ -294,6 +311,10 @@ class ExamController extends Controller
         ]);
 
         $auth = Auth::user();
+        foreach (ExamParticipant::with('exam')->whereIn('id', $request->participant_ids)->get() as $participant) {
+            app(\App\Services\ExamCertificates::class)->authorize($auth, $participant->exam);
+            app(\App\Services\ExamReviewWorkflow::class)->assertEditable($participant->exam);
+        }
 
         try {
             $query = ExamParticipant::whereIn('id', $request->participant_ids);
@@ -314,7 +335,7 @@ class ExamController extends Controller
 
     public function feeIndex(): View
     {
-        $belts = BeltLevel::orderBy('order')->get();
+        $belts = BeltLevel::active()->orderBy('order')->get();
         $fees = ExamFee::with('beltLevel')->get();
         return view('admin.exams.fees', compact('belts', 'fees'));
     }
@@ -322,7 +343,7 @@ class ExamController extends Controller
     public function feeStore(Request $request): RedirectResponse
     {
         $request->validate([
-            'belt_level_id' => 'required|exists:belt_levels,id',
+            'belt_level_id' => ['required', \Illuminate\Validation\Rule::exists('belt_levels', 'id')->where('is_active', true)],
             'amount' => 'required|numeric|min:0',
         ]);
 
@@ -344,6 +365,8 @@ class ExamController extends Controller
 
     public function showScoring(Exam $exam, $memberId)
     {
+        app(\App\Services\ExamCertificates::class)->authorize(auth()->user(), $exam);
+        abort_unless(app(\App\Services\ExamCertificates::class)->participants(auth()->user(), $exam)->where('user_id', $memberId)->exists(), 404);
         $score = \App\Models\ExamScore::where('exam_id', $exam->id)
             ->where('member_id', $memberId)
             ->first();
@@ -352,29 +375,8 @@ class ExamController extends Controller
             return response()->json(['message' => 'Data tidak ditemukan'], 404);
         }
 
-        // Mapping manual berdasarkan data gambar tabel belt_levels Anda
-        $beltMapping = [
-            1 => 'Putih - Kyu 10',
-            2 => 'Kuning Muda - Kyu 9',
-            3 => 'Kuning Tua - Kyu 8',
-            4 => 'Orange - Kyu 7',
-            5 => 'Hijau - Kyu 6',
-            6 => 'Biru - Kyu 5',
-            7 => 'Ungu - Kyu 4',
-            8 => 'Cokelat - Kyu 3',
-            9 => 'Cokelat - Kyu 2',
-            10 => 'Cokelat - Kyu 1',
-            11 => 'Hitam - DAN I',
-            12 => 'Hitam - DAN II',
-            13 => 'Hitam - DAN III',
-            14 => 'Hitam - DAN IV',
-            15 => 'Hitam - DAN V',
-            16 => 'Hitam - DAN VI',
-        ];
-
-        // Ambil string berdasarkan ID yang ada di kolom new_belt_level_id
-        $newBeltName = $beltMapping[$score->new_belt_level_id] ?? 'Level ' . $score->new_belt_level_id;
-
+        $belt = $score->newBeltLevel;
+        $newBeltName = $belt ? $belt->name.' - '.$belt->kyu_dan : '-';
         return response()->json([
             'kihon' => $score->kihon,
             'kata' => $score->kata,
@@ -400,7 +402,7 @@ class ExamController extends Controller
         // Buat string format: "Nama Sabuk (Kyu X)"
         $beltInfo = '-';
         if ($score->newBeltLevel) {
-            $beltInfo = $score->newBeltLevel->name . " - Kyu " . $score->newBeltLevel->order;
+            $beltInfo = $score->newBeltLevel->name . " - " . $score->newBeltLevel->kyu_dan;
         }
 
         return response()->json([

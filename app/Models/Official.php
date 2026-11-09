@@ -12,6 +12,7 @@ class Official extends Model
         'phone_number',
         'sk_number',
         'sk_expiry_date',
+        'sk_document_path',
         'level',
         'province_id',
         'city_id'

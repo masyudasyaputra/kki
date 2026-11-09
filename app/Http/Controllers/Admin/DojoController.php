@@ -8,6 +8,7 @@ use App\Models\City;
 use App\Models\Province;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
 
 class DojoController extends Controller
 {
@@ -75,10 +76,11 @@ class DojoController extends Controller
             ->where('sk_expiry_date', '<=', now()->addDays(30))
             ->get();
 
-        $dojos = \App\Support\TableSort::apply($query, $request, [
+        $dojoQuery = \App\Support\TableSort::apply($query, $request, [
             'name' => 'name', 'city' => ['city', 'name'], 'sensei' => 'sensei_name',
             'members' => 'members_count', 'expiry' => 'sk_expiry_date',
-        ])->paginate(10)->withQueryString();
+        ]);
+        $dojos = \App\Support\PageSize::paginate($dojoQuery, $request, 10);
 
         return view('admin.dojos.index', compact('dojos', 'warningDojos', 'provinces', 'cities'));
     }
@@ -99,6 +101,7 @@ class DojoController extends Controller
                 'phone_number' => 'nullable|string',
                 'sk_number' => 'nullable|string',
                 'sk_expiry_date' => 'required|date',
+                'sk_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
                 'province_id' => 'required_if:role,admin,pengprov',
                 'city_id' => 'required_if:role,admin,pengprov',
             ]);
@@ -111,6 +114,8 @@ class DojoController extends Controller
 
             // Tentukan status aktif otomatis
             $validated['is_active'] = Carbon::parse($request->sk_expiry_date)->isFuture();
+            $validated['sk_document_path'] = $request->file('sk_document')?->store('sk-documents/dojos', 'local');
+            unset($validated['sk_document']);
 
             Dojo::create($validated);
 
@@ -144,14 +149,21 @@ class DojoController extends Controller
             'phone_number' => 'nullable|string',
             'sk_number' => 'nullable|string',
             'sk_expiry_date' => 'required|date',
+            'sk_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
             'province_id' => 'required',
             'city_id' => 'required',
         ]);
 
         // OTOMATIS: Update status aktif berdasarkan tanggal baru
         $validated['is_active'] = Carbon::parse($request->sk_expiry_date)->isFuture();
+        $oldDocument = $dojo->sk_document_path;
+        if ($request->hasFile('sk_document')) {
+            $validated['sk_document_path'] = $request->file('sk_document')->store('sk-documents/dojos', 'local');
+        }
+        unset($validated['sk_document']);
 
         $dojo->update($validated);
+        if (!empty($validated['sk_document_path']) && $oldDocument) Storage::disk('local')->delete($oldDocument);
 
         return redirect()->route('admin.dojos.index')
             ->with('success', 'Data Dojo berhasil diperbarui!');

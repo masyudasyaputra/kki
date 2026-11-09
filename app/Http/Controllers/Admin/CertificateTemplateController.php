@@ -29,22 +29,17 @@ class CertificateTemplateController extends Controller
             'template_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
             'heading' => ['required_unless:render_mode,pdf', 'nullable', 'string', 'max:255'], 'organization' => ['required_unless:render_mode,pdf', 'nullable', 'string', 'max:255'],
             'title' => ['required_unless:render_mode,pdf', 'nullable', 'string', 'max:100'], 'color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'signer_left_title' => ['required_unless:render_mode,pdf', 'nullable', 'string', 'max:150'], 'signer_left_name' => ['required_unless:render_mode,pdf', 'nullable', 'string', 'max:255'], 'signer_left_rank' => ['nullable', 'string', 'max:150'],
-            'signer_right_title' => ['required_unless:render_mode,pdf', 'nullable', 'string', 'max:150'], 'signer_right_name' => ['required_unless:render_mode,pdf', 'nullable', 'string', 'max:255'], 'signer_right_rank' => ['nullable', 'string', 'max:150'],
             'background' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:5120'],
             'back_background' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:5120'],
             'signature_left' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
             'signature_right' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
         ]);
         $template = !empty($data['template_id']) ? $service->templates($request->user())->findOrFail($data['template_id']) : new CertificateTemplate;
-        if ($template->exists && !$request->user()->hasRole('pb')) {
-            abort_unless((int) $template->province_id === (int) $request->user()->province_id && $template->province_id
-                && (!$request->user()->hasRole(['pengcab', 'admin_pengcab']) || (int) $template->city_id === (int) $request->user()->city_id), 403);
-        }
         if ($data['render_mode'] === 'pdf' && !$request->hasFile('template_pdf') && empty($template->settings['pdf_path'])) {
             throw \Illuminate\Validation\ValidationException::withMessages(['template_pdf' => 'Unggah desain PDF untuk template ini.']);
         }
         $settings = array_merge(ExamCertificates::defaults($data['exam_type']), $template->settings ?? [], collect($data)->except(['template_id', 'name', 'exam_type', 'template_pdf', 'background', 'back_background', 'signature_left', 'signature_right'])->all());
+        $settings['heading'] = 'PENGURUS PUSAT';
         if ($request->hasFile('template_pdf')) {
             $settings['pdf_path'] = $request->file('template_pdf')->store('certificates/pdf-templates', 'public');
             $settings['pdf_layout'] = [];
@@ -54,10 +49,8 @@ class CertificateTemplateController extends Controller
             if ($request->hasFile($field)) $settings[$field] = $request->file($field)->store('certificates/templates', 'public');
         }
         $template->fill(['name' => $data['name'], 'exam_type' => $data['exam_type'], 'settings' => $settings]);
-        if (!$template->exists) {
-            $template->province_id = $request->user()->hasRole('pb') ? null : $request->user()->province_id;
-            $template->city_id = $request->user()->hasRole(['pb', 'pengprov', 'admin_pengprov']) ? null : $request->user()->city_id;
-        }
+        $template->province_id = null;
+        $template->city_id = null;
         $template->save();
         if ($settings['render_mode'] === 'pdf') return redirect()->route('admin.certificate-templates.layout', $template);
         return redirect()->route('admin.certificate-templates.index')->with('success', 'Template sertifikat disimpan.');
@@ -81,10 +74,6 @@ class CertificateTemplateController extends Controller
     {
         $service->authorizeTemplates($request->user());
         $service->templates($request->user())->findOrFail($template->id);
-        if (!$request->user()->hasRole('pb')) {
-            abort_unless($template->province_id && (int) $template->province_id === (int) $request->user()->province_id
-                && ($request->user()->hasRole(['pengprov', 'admin_pengprov']) || ($template->city_id && (int) $template->city_id === (int) $request->user()->city_id)), 403);
-        }
     }
 
     public function layout(Request $request, CertificateTemplate $template, ExamCertificates $service)
@@ -106,11 +95,12 @@ class CertificateTemplateController extends Controller
             'pages.*' => ['required', 'array:width,height'],
             'pages.*.width' => ['required', 'numeric', 'min:20', 'max:1200'], 'pages.*.height' => ['required', 'numeric', 'min:20', 'max:1200'],
             'layout' => ['required', 'array', 'min:1', 'max:150'],
-            'layout.*' => ['required', 'array:key,page,x,y,width,font_size,line_height,wrap,align,font,bold,color,text'],
+            'layout.*' => ['required', 'array:key,page,x,y,width,height,font_size,line_height,wrap,align,font,bold,color,text'],
             'layout.*.key' => ['required', Rule::in(array_keys(\App\Services\CertificatePdfLayout::fields()))],
             'layout.*.page' => ['required', 'integer', 'min:1', 'max:10'],
             'layout.*.x' => ['required', 'numeric', 'min:0', 'max:1200'], 'layout.*.y' => ['required', 'numeric', 'min:0', 'max:1200'],
-            'layout.*.width' => ['required', 'numeric', 'min:1', 'max:1200'], 'layout.*.font_size' => ['required', 'numeric', 'min:4', 'max:72'],
+            'layout.*.width' => ['required', 'numeric', 'min:1', 'max:1200'], 'layout.*.height' => ['sometimes', 'numeric', 'min:1', 'max:1200'],
+            'layout.*.font_size' => ['required', 'numeric', 'min:4', 'max:72'],
             'layout.*.line_height' => ['sometimes', 'numeric', 'min:4', 'max:144'], 'layout.*.wrap' => ['sometimes', 'boolean'],
             'layout.*.align' => ['required', Rule::in(['left', 'center', 'right'])], 'layout.*.font' => ['required', Rule::in(['serif', 'sans', 'mono'])],
             'layout.*.bold' => ['required', 'boolean'], 'layout.*.color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
@@ -118,7 +108,10 @@ class CertificateTemplateController extends Controller
         ]);
         foreach ($data['layout'] as $row) {
             $page = $data['pages'][$row['page'] - 1] ?? null;
-            if (!$page || $row['x'] + $row['width'] > $page['width'] + .1 || $row['y'] + $row['font_size'] * 25.4 / 72 > $page['height'] + .1) {
+            $height = $row['key'] === 'verification_qr'
+                ? (float) ($row['height'] ?? 0)
+                : (float) $row['font_size'] * 25.4 / 72;
+            if (!$page || $height <= 0 || $row['x'] + $row['width'] > $page['width'] + .1 || $row['y'] + $height > $page['height'] + .1) {
                 throw \Illuminate\Validation\ValidationException::withMessages(['layout' => 'Posisi teks harus berada di dalam halaman PDF.']);
             }
         }

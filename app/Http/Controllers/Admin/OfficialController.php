@@ -7,6 +7,7 @@ use App\Models\Official;
 use App\Models\Province;
 use App\Models\City; // Tambahkan ini agar bisa pilih kota saat edit
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class OfficialController extends Controller
 {
@@ -54,8 +55,11 @@ class OfficialController extends Controller
             'phone_number' => 'nullable|string|max:20',
             'sk_number' => 'nullable|string|max:100',
             'sk_expiry_date' => 'required|date',
+            'sk_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
+        $validated['sk_document_path'] = $request->file('sk_document')?->store('sk-documents/officials', 'local');
+        unset($validated['sk_document']);
         Official::create($validated);
 
         return redirect()->route('admin.officials.index')
@@ -88,9 +92,16 @@ class OfficialController extends Controller
             'phone_number' => 'nullable|string|max:20',
             'sk_number' => 'nullable|string|max:100',
             'sk_expiry_date' => 'required|date',
+            'sk_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
+        $oldDocument = $official->sk_document_path;
+        if ($request->hasFile('sk_document')) {
+            $validated['sk_document_path'] = $request->file('sk_document')->store('sk-documents/officials', 'local');
+        }
+        unset($validated['sk_document']);
         $official->update($validated);
+        if (!empty($validated['sk_document_path']) && $oldDocument) Storage::disk('local')->delete($oldDocument);
 
         return redirect()->route('admin.officials.index')
             ->with('success', 'Data Pengurus berhasil diperbarui!');

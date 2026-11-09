@@ -28,8 +28,11 @@ class PublicGoogleAuthTest extends TestCase
             $table->string('google_id')->nullable()->unique();
             $table->string('role')->default('member');
             $table->json('roles')->nullable();
+            $table->json('positions')->nullable();
             $table->string('parent_name')->nullable();
             $table->string('district', 150)->nullable();
+            $table->text('address')->nullable();
+            $table->string('first_coach')->nullable();
             $table->string('whatsapp')->nullable();
             $table->boolean('is_active')->default(false);
             foreach (['province_id', 'city_id', 'dojo_id', 'belt_level_id'] as $column) {
@@ -56,6 +59,8 @@ class PublicGoogleAuthTest extends TestCase
             $table->integer('city_id');
         });
         Schema::create('belt_levels', function (Blueprint $table) {
+            $table->boolean('is_active')->default(true);
+            $table->timestamps();
             $table->id();
             $table->string('name');
             $table->integer('order');
@@ -69,10 +74,58 @@ class PublicGoogleAuthTest extends TestCase
         $this->post('/register', [
             'name' => 'Anggota Medan', 'email' => 'medan@example.com',
             'password' => 'Password123!', 'password_confirmation' => 'Password123!',
-            'province_id' => $province->id, 'city_id' => $city->id, 'district' => 'Medan Johor',
-        ])->assertRedirect(route('dashboard'));
+            'province_id' => $province->id, 'city_id' => $city->id, 'district' => 'Medan Johor', 'first_coach' => 'Sensei Pertama',
+        ])->assertRedirect(route('member.dashboard'));
 
-        $this->assertDatabaseHas('users', ['email' => 'medan@example.com', 'city_id' => $city->id, 'district' => 'Medan Johor']);
+        $this->assertDatabaseHas('users', ['email' => 'medan@example.com', 'city_id' => $city->id, 'district' => 'Medan Johor', 'first_coach' => 'Sensei Pertama']);
+    }
+
+    public function test_auth_modal_receives_form_fragments_without_a_page_layout(): void
+    {
+        foreach (['login', 'register', 'forgot-password'] as $path) {
+            $this->withHeader('X-Auth-Modal', '1')->get('/'.$path.'?_auth_modal=1')
+                ->assertOk()->assertSee('auth-modal-card')->assertSee('<form', false)
+                ->assertDontSee('<!DOCTYPE', false)->assertDontSee('<iframe', false)->assertDontSee('@vite', false);
+        }
+    }
+
+    public function test_modal_registration_returns_dashboard_url_and_logs_in(): void
+    {
+        $this->postJson('/register?_auth_modal=1', ['name' => 'Anggota Modal', 'email' => 'modal@example.com', 'password' => 'Password123!', 'password_confirmation' => 'Password123!'])
+            ->assertCreated()->assertJsonPath('redirect', route('member.dashboard'));
+        $this->assertAuthenticated();
+    }
+
+    public function test_modal_login_returns_intended_destination(): void
+    {
+        User::create(['name' => 'Anggota Modal', 'email' => 'modal@example.com', 'password' => 'Password123!', 'role' => 'member']);
+        $this->withSession(['url.intended' => route('member.certificates')])
+            ->postJson('/login?_auth_modal=1', ['login' => 'modal@example.com', 'password' => 'Password123!'])
+            ->assertOk()->assertJsonPath('redirect', route('member.certificates'));
+        $this->assertAuthenticated();
+    }
+
+    public function test_invalid_modal_submission_returns_field_errors_without_redirecting(): void
+    {
+        $this->postJson('/register?_auth_modal=1', [])->assertUnprocessable()->assertJsonValidationErrors(['name', 'email', 'password']);
+        $this->postJson('/login?_auth_modal=1', ['login' => 'missing@example.com', 'password' => 'wrong'])->assertUnprocessable()->assertJsonValidationErrors('login');
+        $this->assertGuest();
+    }
+
+    public function test_modal_password_reset_returns_feedback_without_redirecting(): void
+    {
+        \Illuminate\Support\Facades\Password::shouldReceive('sendResetLink')->once()
+            ->with(['email' => 'member@example.com'])->andReturn(\Illuminate\Support\Facades\Password::RESET_LINK_SENT);
+        $this->postJson('/forgot-password', ['email' => 'member@example.com'])->assertOk()->assertJsonStructure(['message']);
+    }
+
+    public function test_registration_rejects_archived_belt_even_when_its_id_is_submitted_directly(): void
+    {
+        $belt = \App\Models\BeltLevel::create(['name' => 'Kuning Muda', 'order' => 1, 'is_active' => false]);
+        $this->post('/register', ['name' => 'Anggota', 'email' => 'old-belt@example.com',
+            'password' => 'Password123!', 'password_confirmation' => 'Password123!', 'belt_level_id' => $belt->id])
+            ->assertSessionHasErrors('belt_level_id');
+        $this->assertDatabaseMissing('users', ['email' => 'old-belt@example.com']);
     }
 
     public function test_district_requires_a_city_and_city_must_belong_to_province(): void
@@ -109,7 +162,7 @@ class PublicGoogleAuthTest extends TestCase
     public function test_manual_member_can_skip_unavailable_choices_and_optional_fields(): void
     {
         $this->post('/register', ['name' => 'Anggota Baru', 'email' => 'member@example.com', 'password' => 'Password123!', 'password_confirmation' => 'Password123!'])
-            ->assertRedirect(route('dashboard'));
+            ->assertRedirect(route('member.dashboard'));
         $member = User::firstOrFail();
         $this->assertSame('member', $member->role);
         $this->assertNull($member->dojo_id);
@@ -141,7 +194,7 @@ class PublicGoogleAuthTest extends TestCase
         $this->assertGuest();
         $this->assertSame(0, User::count());
         $this->get('/register?_auth_modal=1')->assertOk()->assertSee('Google terverifikasi');
-        $this->post('/register', ['name' => 'Profil Lengkap', 'email' => 'spoof@example.com'])->assertRedirect(route('dashboard'));
+        $this->post('/register', ['name' => 'Profil Lengkap', 'email' => 'spoof@example.com'])->assertRedirect(route('member.dashboard'));
         $member = User::firstOrFail();
         $this->assertSame('new@example.com', $member->email);
         $this->assertSame('google-123', $member->google_id);

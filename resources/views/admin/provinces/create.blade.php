@@ -51,7 +51,7 @@
                     </span>
                 </div>
 
-                <form action="{{ route('admin.provinces.store') }}" method="POST" class="p-6 sm:p-8 space-y-8">
+                <form action="{{ route('admin.provinces.store') }}" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-8">
                     @csrf
 
                     {{-- Section 1: Informasi Wilayah --}}
@@ -112,6 +112,7 @@
                                     required>
                             </div>
                         </div>
+                        <x-sk-document-upload entity="province" label="Unggah dokumen SK Pengprov" />
                     </div>
 
                     {{-- Actions --}}

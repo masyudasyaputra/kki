@@ -15,7 +15,7 @@ class UserImpersonation
         if (!$actor->is_active || (!$target->is_active && !$target->hasRole('member')) || $actor->id === $target->id) return false;
         if ($actor->hasRole('pb')) return true;
         if (!$actor->hasRole(['pengprov', 'admin_pengprov']) || !$actor->province_id) return false;
-        if ($target->hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov', 'verifikator_pb', 'verifikator_dewan_guru'])) return false;
+        if ($target->hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov', 'dewan_guru_pusat', 'verifikator_anggota_pb', 'verifikator_ujian_pb', 'pengelola_sertifikat_pb'])) return false;
         return (int) $target->province_id === (int) $actor->province_id;
     }
 

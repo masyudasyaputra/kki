@@ -1,351 +1,44 @@
-<x-app-layout>
+﻿<x-app-layout>
     @php
-        // Generate QR Code di sisi server
-        $qrCode = QrCode::format('svg')
-            ->size(200)
-            ->errorCorrection('H')
-            ->generate($user->member_number);
-        
-        $qrPngBase64 = base64_encode($qrCode);
+        $titles = ['overview' => 'Beranda Karateka', 'card' => 'Kartu Anggota', 'exams' => 'Ujian Saya', 'payments' => 'Pembayaran', 'certificates' => 'Sertifikat Saya'];
+        $verification = ['pending' => 'Menunggu pemeriksaan', 'approved' => 'Terverifikasi', 'revision' => 'Perlu perbaikan'][$user->verification_status ?? 'pending'] ?? 'Menunggu pemeriksaan';
     @endphp
-
-    <x-slot name="header">
-        <h1 class="page-title">
-            Digital ID Member
-        </h1>
-    </x-slot>
-
-    <section class="mx-auto mt-4 max-w-7xl rounded-xl border border-slate-200 bg-white p-4" aria-label="Status verifikasi pendaftaran">
-        <p class="text-sm font-semibold">Verifikasi pendaftaran: {{ ['pending' => 'Menunggu pemeriksaan', 'approved' => 'Disetujui', 'revision' => 'Perlu perbaikan'][$user->verification_status ?? 'pending'] ?? 'Menunggu pemeriksaan' }}</p>
-        @if ($user->verification_status === 'revision' && $latestVerification?->notes)
-            <p class="mt-2 whitespace-pre-wrap text-sm text-red-700">{{ $latestVerification->notes }}</p>
-            <a href="{{ route('profile.edit') }}" class="mt-2 inline-flex text-sm font-semibold text-red-600">Perbarui profil</a>
+    <x-slot name="header"><h1 class="page-title">{{ $titles[$section] }}</h1><p class="page-subtitle">Ruang karateka KKI</p></x-slot>
+    <div class="karateka-space mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+        <div class="flex flex-wrap items-center gap-3"><span class="text-sm text-slate-500">Verifikasi data anggota</span><x-verification-status :status="$user->verification_status" /></div>
+        @if ($section === 'overview')
+            <section class="karateka-hero">
+                <div><p class="karateka-eyebrow">Keluarga besar KKI</p><h2>Oss, {{ $user->name }}.</h2><p>Terus berlatih, tumbuh, dan raih tingkatan berikutnya.</p><div class="mt-6 flex flex-wrap gap-3"><a href="{{ route('member.card') }}" class="btn bg-white text-slate-900">Lihat kartu anggota</a><a href="{{ route('profile.edit') }}" class="btn border border-white/30 text-white">Lengkapi profil</a></div></div>
+                <div class="karateka-rank"><x-sidebar-icon name="belt" class="h-10 w-10" /><span>Tingkatan saat ini</span><strong>{{ $user->beltLevel?->name ?? 'Belum ditentukan' }}</strong><span>{{ $user->beltLevel?->kyu_dan ?? 'Lengkapi data tingkatan di profil' }}</span></div>
+            </section>
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                @foreach ([['Status anggota', $user->is_active ? 'Aktif' : 'Belum aktif', 'membership', 'card'], ['Ujian diikuti', $summary['exams'], 'exam', 'exams'], ['Tagihan menunggu', $summary['pending'], 'wallet', 'payments'], ['Sertifikat diterima', $summary['certificates'], 'certificate', 'certificates']] as [$label, $value, $icon, $target])
+                    <a href="{{ route('member.'.$target) }}" class="karateka-stat"><x-sidebar-icon :name="$icon" class="h-5 w-5" /><span>{{ $label }}</span><strong>{{ $value }}</strong></a>
+                @endforeach
+            </div>
+            <div class="grid gap-6 lg:grid-cols-3">
+                <section class="karateka-panel lg:col-span-2"><p class="karateka-eyebrow">Langkah berikutnya</p><h2>Keanggotaan Anda</h2><div class="mt-5 rounded-xl bg-slate-50 p-4"><p class="font-semibold">Verifikasi: {{ $verification }}</p><p class="mt-2 text-sm text-slate-600">{{ $user->verification_status === 'approved' ? 'Data pendaftaran Anda sudah disetujui. Pantau status anggota dan pembayaran melalui ruang karateka.' : 'Pastikan identitas, dojo, wilayah, dan tingkatan sabuk sudah sesuai agar pengurus dapat memeriksa pendaftaran Anda.' }}</p>@if($user->verification_status === 'revision' && $latestVerification?->notes)<p class="mt-3 whitespace-pre-wrap text-sm text-red-700">{{ $latestVerification->notes }}</p>@endif<a href="{{ route('profile.edit') }}" class="mt-4 inline-flex text-sm font-semibold text-red-700">Periksa profil &rarr;</a></div>@if($summary['pending'])<a href="{{ route('member.payments') }}" class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm"><span>{{ $summary['pending'] }} tagihan menunggu pembayaran</span><strong>Rp {{ number_format($summary['amount'], 0, ',', '.') }} &rarr;</strong></a>@endif</section>
+                <section class="karateka-panel"><p class="karateka-eyebrow">Tempat berlatih</p><h2>Dojo Anda</h2><div class="my-5 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-700"><x-sidebar-icon name="building" class="h-6 w-6" /></div><p class="text-lg font-bold">{{ $user->dojo?->name ?? 'Dojo belum dipilih' }}</p><p class="mt-2 text-sm text-slate-500">{{ $user->city?->name ?? 'Kabupaten / kota belum diisi' }}</p><p class="mt-1 text-sm text-slate-500">{{ $user->province?->name ?? 'Provinsi belum diisi' }}</p><a href="{{ route('public.dojos') }}" class="mt-6 inline-flex text-sm font-semibold text-red-700">Jelajahi direktori dojo &rarr;</a></section>
+            </div>
+            <section><h2 class="mb-4 text-lg font-bold">Jelajahi ruang karateka</h2><div class="grid gap-4 sm:grid-cols-3">@foreach([['exams', 'exam', 'Ujian & tingkatan', 'Lihat ujian yang diikuti, target sabuk, dan hasil ujian.'], ['payments', 'receipt', 'Iuran & pembayaran', 'Pantau tagihan dan riwayat pembayaran Anda.'], ['certificates', 'certificate', 'Koleksi sertifikat', 'Buka dan unduh sertifikat yang dikirim pengurus.']] as [$target, $icon, $label, $description])<a href="{{ route('member.'.$target) }}" class="karateka-panel karateka-shortcut"><x-sidebar-icon :name="$icon" class="mb-4 h-6 w-6 text-red-700" /><h3 class="font-bold">{{ $label }} &rarr;</h3><p class="mt-2 text-sm text-slate-500">{{ $description }}</p></a>@endforeach</div></section>
+        @elseif ($section === 'card')
+            <div class="karateka-panel flex flex-wrap items-center justify-between gap-3"><div><h2>Identitas karateka</h2><p class="mt-1 text-sm text-slate-500">Verifikasi: {{ $verification }} · Status anggota: {{ $user->is_active ? 'Aktif' : 'Belum aktif' }}</p></div><a href="{{ route('profile.edit') }}" class="btn btn-secondary">Perbarui data</a></div>
+            @include('member.card')
+        @elseif ($section === 'exams')
+            <section class="karateka-panel"><div class="flex flex-wrap items-center justify-between gap-4"><div><h2>Perjalanan ujian Anda</h2><p class="mt-2 text-sm text-slate-500">Kepesertaan dan hasil yang dicatat oleh pengurus. Hubungi pengurus dojo untuk pendaftaran ujian.</p></div><a href="{{ route('public.agenda') }}" class="btn btn-secondary">Lihat agenda UKT</a></div>
+            @forelse($myExams as $participant)<article class="mt-5 grid gap-4 border-t border-slate-100 pt-5 sm:grid-cols-3"><div><h3 class="font-bold">{{ $participant->exam?->name ?? 'Ujian' }}</h3><p class="mt-1 text-sm text-slate-500">{{ $participant->exam?->execution_date?->format('d/m/Y') ?? 'Jadwal belum tersedia' }} · {{ $participant->exam?->location ?? 'Lokasi belum tersedia' }}</p></div><div class="text-sm"><p class="text-slate-500">Target tingkatan</p><p class="mt-1 font-semibold">{{ $participant->targetBelt?->display_name ?? 'Belum ditentukan' }}</p></div><div class="text-sm"><span class="karateka-badge">{{ ['pass' => 'Lulus', 'fail' => 'Belum lulus', 'pending' => 'Menunggu hasil'][$participant->result ?? 'pending'] ?? 'Menunggu hasil' }}</span><p class="mt-2 text-slate-500">Biaya ujian: {{ $participant->payment_status === 'paid' ? 'Lunas' : 'Belum lunas' }}</p></div></article>@empty<div class="karateka-empty"><x-sidebar-icon name="exam" class="h-8 w-8" /><h3>Belum ada ujian yang diikuti</h3><p>Kepesertaan akan tampil setelah pengurus mendaftarkan Anda.</p></div>@endforelse
+            <x-pagination :paginator="$myExams" label="ujian" /></section>
+        @elseif ($section === 'payments')
+            <section class="karateka-panel"><h2>Tagihan & riwayat pembayaran</h2><p class="mt-2 text-sm text-slate-500">Pembayaran iuran dan ujian yang tercatat atas nama Anda.</p>
+            @forelse($myPayments as $payment)
+                @php($canPay = $payment->status === 'pending' && $payment->payment_url && (!$payment->expires_at || $payment->expires_at->isFuture()) && in_array(parse_url($payment->payment_url, PHP_URL_SCHEME), ['https', 'http'], true))
+                <article class="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5"><div><h3 class="font-bold">{{ $payment->type === 'ujian' ? 'Biaya ujian' : 'Iuran anggota' }}</h3><p class="mt-1 break-all text-sm text-slate-500">{{ $payment->invoice_number }}</p><p class="mt-1 text-xs text-slate-500">{{ $payment->created_at?->format('d/m/Y') }}@if($payment->paid_at) · Dibayar {{ $payment->paid_at->format('d/m/Y') }}@endif</p></div><div class="flex flex-wrap items-center gap-4"><strong>Rp {{ number_format($payment->amount, 0, ',', '.') }}</strong><span class="karateka-badge">{{ ['pending' => 'Menunggu pembayaran', 'paid' => 'Lunas', 'failed' => 'Gagal', 'expired' => 'Kedaluwarsa', 'canceled' => 'Dibatalkan'][$payment->status] ?? $payment->status }}</span>@if($canPay)<a href="{{ $payment->payment_url }}" class="btn btn-primary">Lanjutkan pembayaran</a>@elseif($payment->status === 'pending')<span class="text-xs text-slate-500">Hubungi pengurus untuk tautan pembayaran.</span>@endif</div></article>
+            @empty<div class="karateka-empty"><x-sidebar-icon name="wallet" class="h-8 w-8" /><h3>Belum ada transaksi</h3><p>Tagihan dan pembayaran Anda akan ditampilkan di sini.</p></div>@endforelse
+            <x-pagination :paginator="$myPayments" label="transaksi" /></section>
+        @elseif ($section === 'certificates')
+            <section class="karateka-panel"><h2>Pencapaian karateka</h2><p class="mt-2 text-sm text-slate-500">Sertifikat resmi yang sudah dikirim oleh pengurus kepada Anda.</p>
+            @forelse($myCertificates as $certificate)<article class="mt-5 flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5"><div class="flex items-start gap-3"><x-sidebar-icon name="certificate" class="h-7 w-7 text-red-700" /><div><h3 class="font-bold">{{ $certificate->snapshot['exam_name'] ?? 'Sertifikat ujian' }}</h3><p class="mt-1 text-sm text-slate-500">{{ $certificate->snapshot['rank'] ?? '' }} · {{ $certificate->number }}</p><p class="mt-1 text-xs text-slate-500">Diterima {{ $certificate->sent_at->format('d/m/Y') }}</p></div></div><a class="btn btn-secondary" href="{{ route('member.certificates.show', $certificate) }}" target="_blank" rel="noopener">Buka / Unduh sertifikat</a></article>@empty<div class="karateka-empty"><x-sidebar-icon name="certificate" class="h-8 w-8" /><h3>Sertifikat pertama Anda menanti</h3><p>Sertifikat akan tersedia setelah diterbitkan dan dikirim oleh pengurus.</p></div>@endforelse
+            <x-pagination :paginator="$myCertificates" label="sertifikat" /></section>
         @endif
-    </section>
-
-    <section class="mx-auto mt-4 max-w-7xl rounded-xl border border-slate-200 bg-white p-4" aria-label="Sertifikat saya">
-        <h2 class="text-sm font-semibold">Sertifikat Saya</h2>
-        @forelse($myCertificates as $certificate)
-            <div class="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3"><div><p class="text-sm font-semibold">{{ $certificate->snapshot['exam_name'] }} · {{ $certificate->snapshot['rank'] }}</p><p class="mt-1 text-xs text-slate-500">{{ $certificate->number }} · Diterima {{ $certificate->sent_at->format('d/m/Y') }}</p></div><a class="btn btn-secondary" href="{{ route('member.certificates.show', $certificate) }}" target="_blank" rel="noopener">Buka / Unduh sertifikat</a></div>
-        @empty<p class="mt-2 text-xs text-slate-500">Sertifikat yang dikirim pengurus akan tampil di sini.</p>@endforelse
-    </section>
-
-    <div x-data="{
-        showPreview: false,
-        photoScale: 100,
-        nameSize: 18,
-        verticalGap: 24,
-        cardColor: '#dc2626',
-        isDownloading: false,
-    
-        waitImagesLoaded(rootEl) {
-            const imgs = Array.from(rootEl.querySelectorAll('img'));
-            return Promise.all(
-                imgs.map((img) => {
-                    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
-                    return new Promise((resolve) => {
-                        img.onload = () => resolve();
-                        img.onerror = () => resolve();
-                    });
-                })
-            );
-        },
-    
-        async downloadNow() {
-            this.isDownloading = true;
-            try {
-                const original = document.getElementById('captureArea');
-                if (!original) throw new Error('Elemen tidak ditemukan');
-
-                if (document.fonts?.ready) await document.fonts.ready;
-                await this.waitImagesLoaded(original);
-    
-                const canvas = await html2canvas(original, {
-                    backgroundColor: null,
-                    scale: 4, 
-                    useCORS: true,
-                    allowTaint: false,
-                    onclone: (clonedDoc) => {
-                        const clonedEl = clonedDoc.getElementById('captureArea');
-                        clonedEl.style.transform = 'none';
-                    }
-                });
-    
-                const link = document.createElement('a');
-                link.download = `ID-{{ strtoupper(str_replace(' ', '-', $user->name)) }}.png`;
-                link.href = canvas.toDataURL('image/png', 1.0);
-                link.click();
-            } catch (err) {
-                console.error('Render error:', err);
-                alert('Gagal download: ' + err.message);
-            } finally {
-                this.isDownloading = false;
-            }
-        }
-    }" class="py-6 md:py-12 bg-slate-50 min-h-screen">
-        
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10">
-
-                {{-- SISI KIRI: KARTU UTAMA --}}
-                <div class="lg:col-span-5 xl:col-span-4 flex flex-col items-center">
-                    <div class="w-full max-w-[320px]">
-                        <div class="relative group cursor-pointer" @click="showPreview = true">
-                            <div class="absolute -inset-1 bg-red-600 rounded-[2.2rem] blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-
-                            <div class="relative bg-slate-900 rounded-[2rem] overflow-hidden text-white shadow-2xl aspect-[4/5] w-full border border-slate-800 transition-all duration-500"
-                                :style="{ background: `linear-gradient(135deg, ${cardColor}, #000)` }">
-                                <div class="relative h-full w-full flex flex-col items-center justify-between p-6">
-                                    <div class="w-full flex justify-between items-center">
-                                        <div class="bg-white/10 p-1.5 rounded-lg border border-white/20">
-                                            <x-application-logo class="h-3 w-auto fill-current text-white" />
-                                        </div>
-                                        <span class="text-[7px] font-black tracking-widest uppercase bg-white/20 px-2 py-1 rounded">
-                                            Official Member
-                                        </span>
-                                    </div>
-
-                                    <div class="flex flex-col items-center w-full">
-                                        <div class="rounded-full border-4 border-white/20 shadow-xl overflow-hidden mb-3 shrink-0 w-20 h-20">
-                                            @if ($user->photo)
-                                                <img src="{{ asset('storage/' . $user->photo) }}" class="w-full h-full object-cover">
-                                            @else
-                                                <div class="h-full w-full bg-red-900 flex items-center justify-center font-black text-2xl uppercase">
-                                                    {{ substr($user->name, 0, 1) }}
-                                                </div>
-                                            @endif
-                                        </div>
-                                        <h3 class="font-black uppercase tracking-tight text-center leading-tight mb-1" style="font-size: 16px;">
-                                            {{ $user->name }}
-                                        </h3>
-                                        <p class="text-[8px] font-black text-red-100 uppercase tracking-widest italic">
-                                            Sabuk {{ $user->beltLevel->name ?? '-' }}
-                                        </p>
-                                    </div>
-
-                                    <div class="w-full bg-black/40 rounded-xl p-3 border border-white/10 backdrop-blur-sm">
-                                        <div class="flex justify-between items-end">
-                                            <div class="text-left space-y-1.5">
-                                                <div>
-                                                    <p class="text-[5px] text-white/40 uppercase font-black">Dojo</p>
-                                                    <p class="text-[9px] font-bold uppercase truncate max-w-[100px]">
-                                                        {{ $user->dojo->name ?? 'Pusat' }}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <p class="text-[5px] text-white/40 uppercase font-black">ID Member</p>
-                                                    <p class="text-[9px] font-bold uppercase font-mono italic">
-                                                        {{ $user->member_number }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div class="bg-white p-1 rounded-md shrink-0">
-                                                <img src="data:image/svg+xml;base64,{{ $qrPngBase64 }}" class="h-8 w-8" alt="QR">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <button @click="showPreview = true"
-                            class="mt-6 w-full py-4 bg-slate-900 rounded-2xl text-xs font-black text-white hover:bg-black transition-all shadow-lg flex items-center justify-center uppercase tracking-widest">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                            </svg>
-                            Sesuaikan Kartu
-                        </button>
-                    </div>
-                </div>
-
-                {{-- SISI KANAN: BIODATA (Update: Ditambah Nama Orgtua & WA) --}}
-                <div class="lg:col-span-7 xl:col-span-8">
-                    <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-200 p-8 md:p-12">
-                        <div class="flex items-center gap-4 mb-8 pb-6 border-b border-slate-100">
-                            <div class="h-12 w-12 bg-red-600 text-white rounded-xl flex items-center justify-center text-lg font-black italic shadow-lg">
-                                OSS
-                            </div>
-                            <div>
-                                <h3 class="text-xl font-black text-slate-800 uppercase tracking-tight">Data Anggota</h3>
-                                <p class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">FORKI - Digital Member ID</p>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 md:gap-10">
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">Nama Atlet</label>
-                                <p class="font-bold text-slate-800 text-lg uppercase leading-tight">{{ $user->name }}</p>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">ID Registrasi</label>
-                                <p class="font-bold text-slate-800 text-lg">{{ $user->member_number }}</p>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">Kabupaten / Kota</label>
-                                <p class="font-bold text-slate-800 text-lg uppercase">{{ $user->city?->name ?? '-' }}</p>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">Kecamatan</label>
-                                <p class="font-bold text-slate-800 text-lg uppercase">{{ $user->district ?: '-' }}</p>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">Asal Dojo</label>
-                                <p class="font-black text-slate-800 text-lg uppercase">{{ $user->dojo->name ?? 'Pusat' }}</p>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">Tingkatan</label>
-                                <p class="font-bold text-slate-800 text-lg uppercase italic">Sabuk {{ $user->beltLevel->name ?? '-' }}</p>
-                            </div>
-                            
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">WhatsApp</label>
-                                <p class="font-bold text-slate-800 text-lg italic underline">{{ $user->whatsapp ?? '-' }}</p>
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-[9px] font-black text-red-600 uppercase tracking-widest">Nama Orang Tua</label>
-                                <p class="font-bold text-slate-800 text-lg uppercase">{{ $user->parent_name ?? '-' }}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- MODAL PREVIEW & EDITOR --}}
-        <div x-show="showPreview" x-cloak class="fixed inset-0 z-[100] flex flex-col bg-slate-900">
-            <div class="flex items-center justify-between px-6 py-4 bg-white/5 border-b border-white/10 backdrop-blur-md">
-                <h4 class="text-white font-black uppercase italic tracking-tighter">ID Card Editor</h4>
-                <button @click="showPreview = false" class="text-white/70 hover:text-white">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-            </div>
-
-            <div class="flex-1 overflow-y-auto flex flex-col lg:flex-row bg-slate-100">
-                {{-- Area Preview --}}
-                <div class="lg:w-1/2 p-6 md:p-12 flex items-center justify-center bg-slate-200/50 sticky top-0 z-10 lg:relative border-b lg:border-b-0 lg:border-r border-slate-300">
-                    <div class="scale-[0.7] sm:scale-100 transition-transform origin-center">
-                        <div id="captureArea"
-                            class="relative overflow-hidden text-white shadow-2xl rounded-[2rem] flex-shrink-0"
-                            :style="{ width: '320px', height: '400px', background: `linear-gradient(135deg, ${cardColor}, #000)` }">
-                            
-                            <div class="relative h-full w-full flex flex-col items-center justify-between"
-                                :style="{ padding: verticalGap + 'px' }">
-                                
-                                <div class="w-full flex justify-between items-center px-1">
-                                    <div class="bg-white/10 p-2 rounded-lg border border-white/20">
-                                        <x-application-logo class="h-4 w-auto fill-current text-white" />
-                                    </div>
-                                    <span class="text-[8px] font-black tracking-widest uppercase bg-white/20 px-2 py-1 rounded">Official Member</span>
-                                </div>
-
-                                <div class="flex flex-col items-center w-full">
-                                    <div class="rounded-full border-4 border-white/20 shadow-2xl overflow-hidden mb-4 shrink-0"
-                                        :style="{ width: photoScale + 'px', height: photoScale + 'px' }">
-                                        @if ($user->photo)
-                                            <img src="{{ asset('storage/' . $user->photo) }}" class="h-full w-full object-cover">
-                                        @else
-                                            <div class="h-full w-full bg-red-900 flex items-center justify-center font-black text-white uppercase"
-                                                :style="{ fontSize: (photoScale/3) + 'px' }">
-                                                {{ substr($user->name, 0, 1) }}
-                                            </div>
-                                        @endif
-                                    </div>
-
-                                    <h3 class="font-black uppercase leading-tight text-center w-full mb-1 tracking-tight px-2"
-                                        :style="{ fontSize: nameSize + 'px' }">
-                                        {{ $user->name }}
-                                    </h3>
-
-                                    <p class="text-[8px] font-black text-red-100 uppercase tracking-[0.3em] italic">
-                                        Sabuk {{ $user->beltLevel->name ?? '-' }}
-                                    </p>
-                                </div>
-
-                                <div class="w-full bg-black/40 rounded-2xl p-4 border border-white/10 backdrop-blur-md">
-                                    <div class="flex justify-between items-end">
-                                        <div class="space-y-2 text-left">
-                                            <div>
-                                                <p class="text-[6px] text-white/40 uppercase font-black mb-0.5">Dojo</p>
-                                                <p class="text-[9px] font-bold uppercase truncate max-w-[120px]">{{ $user->dojo->name ?? 'Pusat' }}</p>
-                                            </div>
-                                            <div>
-                                                <p class="text-[6px] text-white/40 uppercase font-black mb-0.5">ID Member</p>
-                                                <p class="text-[9px] font-bold uppercase font-mono tracking-tighter">{{ $user->member_number }}</p>
-                                            </div>
-                                        </div>
-                                        <div class="bg-white p-1 rounded-lg shrink-0 shadow-xl">
-                                            <img src="data:image/svg+xml;base64,{{ $qrPngBase64 }}" class="h-9 w-9" alt="QR">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Kontrol Panel --}}
-                <div class="lg:w-1/2 p-8 md:p-12 bg-white rounded-t-[3rem] lg:rounded-none relative z-20">
-                    <div class="max-w-md mx-auto space-y-10">
-                        <div>
-                            <div class="flex justify-between mb-4">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ukuran Foto</label>
-                                <span class="text-[10px] font-bold text-red-600" x-text="photoScale + 'px'"></span>
-                            </div>
-                            <input type="range" min="70" max="110" x-model="photoScale" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-red-600">
-                        </div>
-
-                        <div>
-                            <div class="flex justify-between mb-4">
-                                <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ukuran Nama</label>
-                                <span class="text-[10px] font-bold text-red-600" x-text="nameSize + 'px'"></span>
-                            </div>
-                            <input type="range" min="14" max="22" x-model="nameSize" class="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-red-600">
-                        </div>
-
-                        <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-4">Warna Tema</label>
-                            <div class="flex flex-wrap items-center gap-3">
-                                <input type="color" x-model="cardColor" class="w-12 h-10 rounded-lg cursor-pointer border-none p-0 overflow-hidden shadow-sm">
-                                <template x-for="c in ['#dc2626', '#1e293b', '#065f46', '#000000']">
-                                    <button @click="cardColor = c" :style="{ background: c }"
-                                        class="w-8 h-8 rounded-full border-2 border-white shadow-sm hover:scale-110 transition-transform"
-                                        :class="cardColor === c ? 'ring-2 ring-red-500 ring-offset-2' : ''"></button>
-                                </template>
-                            </div>
-                        </div>
-
-                        <div class="pt-6">
-                            <button @click="downloadNow()" :disabled="isDownloading"
-                                class="w-full py-5 bg-slate-900 rounded-2xl text-sm font-black text-white hover:bg-black transition-all shadow-xl flex items-center justify-center uppercase tracking-[0.2em] disabled:opacity-50">
-                                <span x-show="!isDownloading" class="flex items-center italic">
-                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                                    Download ID Card PNG
-                                </span>
-                                <span x-show="isDownloading" class="flex items-center">
-                                    <svg class="animate-spin h-5 w-5 mr-3 text-white" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    Memproses...
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-    <style>
-        [x-cloak] { display: none !important; }
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 18px;
-            width: 18px;
-            border-radius: 50%;
-            background: #dc2626;
-            cursor: pointer;
-            border: 3px solid white;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-        }
-    </style>
 </x-app-layout>

@@ -1,71 +1,37 @@
 <section>
-    <header>
-        <h2 class="text-lg font-medium text-gray-900">
-            {{ __('Profile Information') }}
-        </h2>
-
-        <p class="mt-1 text-sm text-gray-600">
-            {{ __("Update your account's profile information and email address.") }}
-        </p>
-    </header>
-
-    <form id="send-verification" method="post" action="{{ route('verification.send') }}">
-        @csrf
-    </form>
-
-    <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
-        @csrf
-        @method('patch')
-
-        <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
+    <form id="send-verification" method="post" action="{{ route('verification.send') }}">@csrf</form>
+    <form method="post" enctype="multipart/form-data" action="{{ route('profile.update') }}" class="profile-form" x-data="profileRegion(@js(['province' => (string) old('province_id', $user->province_id), 'city' => (string) old('city_id', $user->city_id), 'dojo' => (string) old('dojo_id', $user->dojo_id), 'district' => (string) old('district', $user->district), 'cities' => $cities, 'dojos' => $dojos, 'districts' => $districts, 'baseUrl' => url('/api')]))">
+        @csrf @method('patch')
+        <header id="identitas" class="profile-anchor"><p class="profile-kicker">01 / Data pribadi</p><h2 class="profile-section-title">Identitas & kontak</h2><p class="mt-2 text-sm text-slate-500">Gunakan data yang sesuai dengan identitas pendaftaran Anda. Nama dan email wajib diisi.</p></header>
+        @if($errors->getBag('default')->any())<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800" role="alert"><p class="font-semibold">Profil belum tersimpan. Periksa isian berikut:</p><ul class="mt-2 list-inside list-disc">@foreach($errors->getBag('default')->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
+        <div class="flex flex-wrap items-start gap-5 rounded-xl border border-slate-200 bg-slate-50 p-4" x-data="{ preview: null, error: '', destroy() { if (this.preview) URL.revokeObjectURL(this.preview); }, select(event) { if (this.preview) URL.revokeObjectURL(this.preview); this.preview = null; this.error = ''; const file = event.target.files[0]; if (!file) return; if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 2097152) { this.error = 'Pilih gambar JPG, PNG, atau WebP dengan ukuran maksimal 2 MB.'; event.target.value = ''; return; } this.preview = URL.createObjectURL(file); } }">
+            <div class="flex h-32 w-24 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white">
+                <img x-show="preview" x-cloak :src="preview" alt="Pratinjau pasfoto baru" class="h-full w-full object-cover">
+                @if($user->photo)<img x-show="!preview" src="{{ asset('storage/'.$user->photo) }}" alt="Pasfoto tersimpan" class="h-full w-full object-cover">@else<span x-show="!preview" class="text-3xl font-bold text-slate-400">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}</span>@endif
+            </div>
+            <div class="min-w-0 flex-1"><x-input-label for="photo" value="Pasfoto" /><input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" @change="select($event)" aria-describedby="photo-help"><p id="photo-help" class="profile-field-help">JPG, PNG, atau WebP, maksimal 2 MB. Disarankan foto tegak 3:4 dengan wajah terlihat jelas. Foto akan digunakan pada profil dan kartu anggota.</p><p x-show="preview" x-cloak role="status" class="mt-2 text-xs text-amber-800">Pratinjau foto baru. Klik Simpan perubahan untuk mengunggah.</p><p x-show="error" x-cloak x-text="error" role="alert" class="mt-2 text-sm text-red-700"></p><x-input-error :messages="$errors->get('photo')" class="mt-2" /></div>
         </div>
-
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $user->email)" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
-
-            @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! $user->hasVerifiedEmail())
-                <div>
-                    <p class="text-sm mt-2 text-gray-800">
-                        {{ __('Your email address is unverified.') }}
-
-                        <button form="send-verification" class="btn btn-secondary">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
-                    </p>
-
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600">
-                            {{ __('A new verification link has been sent to your email address.') }}
-                        </p>
-                    @endif
-                </div>
-            @endif
+        <div class="grid gap-5 sm:grid-cols-2">
+            <div><x-input-label for="name" value="Nama lengkap *" /><x-text-input id="name" name="name" type="text" :value="old('name', $user->name)" required autocomplete="name" maxlength="255" /><x-input-error :messages="$errors->get('name')" class="mt-2" /></div>
+            <div><x-input-label for="email" value="Email *" /><x-text-input id="email" name="email" type="email" :value="old('email', $user->email)" required autocomplete="email" maxlength="255" /><x-input-error :messages="$errors->get('email')" class="mt-2" /></div>
+            <div><x-input-label for="whatsapp" value="Nomor WhatsApp" /><x-text-input id="whatsapp" name="whatsapp" type="tel" :value="old('whatsapp', $user->whatsapp)" autocomplete="tel" placeholder="08xxxxxxxxxx" maxlength="25" /><p class="profile-field-help">Gunakan nomor aktif. Format 08 atau +62 diterima.</p><x-input-error :messages="$errors->get('whatsapp')" class="mt-2" /></div>
+            <div><x-input-label for="parent_name" value="Nama orang tua / wali" /><x-text-input id="parent_name" name="parent_name" type="text" :value="old('parent_name', $user->parent_name)" maxlength="255" placeholder="Opsional" /><x-input-error :messages="$errors->get('parent_name')" class="mt-2" /></div>
+            <div class="sm:col-span-2"><x-input-label for="address" value="Alamat lengkap" /><textarea id="address" name="address" rows="3" maxlength="2000" autocomplete="street-address" placeholder="Jalan, nomor rumah, RT/RW, kelurahan">{{ old('address', $user->address) }}</textarea><x-input-error :messages="$errors->get('address')" class="mt-2" /></div>
         </div>
-
-        <div>
-            <x-input-label for="district" value="Kecamatan" />
-            <x-text-input id="district" name="district" type="text" class="mt-1 block w-full" :value="old('district', $user->district)" maxlength="150" placeholder="Nama Kecamatan" />
-            <x-input-error class="mt-2" :messages="$errors->get('district')" />
-            <p class="mt-1 text-xs text-gray-500">Kabupaten / Kota: {{ $user->city?->name ?? 'Belum ditetapkan' }}</p>
-        </div>
-
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
-
-            @if (session('status') === 'profile-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600"
-                >{{ __('Saved.') }}</p>
-            @endif
-        </div>
+        @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !$user->hasVerifiedEmail())<div class="rounded-xl bg-amber-50 p-4 text-sm text-amber-900"><p>Email belum diverifikasi.</p><button form="send-verification" class="mt-2 font-semibold underline">Kirim ulang email verifikasi</button>@if(session('status') === 'verification-link-sent')<p role="status" class="mt-2">Tautan verifikasi baru sudah dikirim.</p>@endif</div>@endif
+        <fieldset id="wilayah" class="profile-anchor border-t border-slate-100 pt-6"><legend class="sr-only">Wilayah dan dojo</legend><p class="profile-kicker">02 / Data karateka</p><h2 class="profile-section-title">Wilayah & dojo</h2><p class="mb-5 mt-2 text-sm text-slate-500">{{ $isMember ? 'Pilih provinsi dan kabupaten / kota untuk melihat dojo yang tersedia.' : 'Wilayah penugasan dikelola oleh administrator. Pilihan dojo mengikuti wilayah akun Anda.' }}</p>
+            <div class="grid gap-5 sm:grid-cols-2">
+                @if($isMember)
+                    <div><x-input-label for="province_id" value="Provinsi" /><select id="province_id" name="province_id" x-model="province" @change="changeProvince()"><option value="">Belum dipilih</option>@foreach($provinces as $province)<option value="{{ $province->id }}">{{ $province->name }}</option>@endforeach</select><x-input-error :messages="$errors->get('province_id')" class="mt-2" /></div>
+                    <div><x-input-label for="city_id" value="Kabupaten / kota" /><select id="city_id" name="city_id" x-model="city" @change="changeCity()" :disabled="!province || loadingCities"><option value="" x-text="loadingCities ? 'Memuat wilayah...' : 'Belum dipilih'"></option><template x-for="item in cities" :key="item.id"><option :value="String(item.id)" :selected="String(item.id) === city" x-text="item.name"></option></template></select><x-input-error :messages="$errors->get('city_id')" class="mt-2" /></div>
+                @endif
+                <div><x-input-label for="district" value="Kecamatan" /><input id="district" name="district" type="text" x-model="district" list="profile-districts" maxlength="150" autocomplete="address-level3" placeholder="Ketik atau pilih kecamatan" :disabled="!city || loadingDojos"><datalist id="profile-districts"><template x-for="item in districts" :key="item.id"><option :value="item.name"></option></template></datalist><p class="profile-field-help">Boleh diketik jika belum tersedia dalam daftar.</p><x-input-error :messages="$errors->get('district')" class="mt-2" /></div>
+                <div><x-input-label for="dojo_id" value="Nama dojo" /><select id="dojo_id" name="dojo_id" x-model="dojo" :disabled="!city || loadingDojos"><option value="" x-text="loadingDojos ? 'Memuat dojo...' : 'Belum dipilih'"></option><template x-for="item in dojos" :key="item.id"><option :value="String(item.id)" :selected="String(item.id) === dojo" x-text="item.name"></option></template></select><p x-show="city && !loadingDojos && !dojos.length" x-cloak class="profile-field-help">Belum ada dojo di wilayah ini. Data dapat dilengkapi kemudian.</p><x-input-error :messages="$errors->get('dojo_id')" class="mt-2" /></div>
+                @if($isMember)<div><x-input-label for="belt_level_id" value="Tingkat sabuk" /><select id="belt_level_id" name="belt_level_id"><option value="">Belum dipilih</option>@foreach($beltLevels as $belt)<option value="{{ $belt->id }}" @selected((string)old('belt_level_id', $user->belt_level_id) === (string)$belt->id)>{{ $belt->name }} {{ $belt->kyu_dan }}</option>@endforeach</select><x-input-error :messages="$errors->get('belt_level_id')" class="mt-2" /></div>@endif
+                <div><x-input-label for="first_coach" value="Pelatih awal" /><x-text-input id="first_coach" name="first_coach" type="text" :value="old('first_coach', $user->first_coach)" maxlength="255" placeholder="Nama pelatih pertama Anda" /><x-input-error :messages="$errors->get('first_coach')" class="mt-2" /></div>
+            </div>
+            <div x-show="regionError" x-cloak role="alert" class="mt-3 text-sm text-red-700"><span x-text="regionError"></span> <button type="button" @click="retry()" class="font-semibold underline">Coba lagi</button></div>
+        </fieldset>
+        <div class="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5"><p class="text-xs text-slate-500">Pastikan data sudah sesuai sebelum menyimpan.</p><button class="btn btn-primary" type="submit" :disabled="loadingCities || loadingDojos || !!regionError">Simpan perubahan</button></div>
     </form>
 </section>

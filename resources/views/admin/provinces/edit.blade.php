@@ -51,7 +51,7 @@
                     </span>
                 </div>
 
-                <form action="{{ route('admin.provinces.update', $province->id) }}" method="POST" class="p-6 sm:p-8 space-y-8">
+                <form action="{{ route('admin.provinces.update', $province->id) }}" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-8">
                     @csrf
                     @method('PUT')
 
@@ -107,6 +107,7 @@
                                     required>
                             </div>
                         </div>
+                        <x-sk-document-upload entity="province" :record="$province" label="Unggah / ganti dokumen SK Pengprov" />
                     </div>
 
                     {{-- Actions --}}

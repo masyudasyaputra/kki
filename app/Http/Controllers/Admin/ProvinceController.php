@@ -7,6 +7,7 @@ use App\Models\Province;
 use App\Models\Official;
 use App\Models\Dojo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProvinceController extends Controller
 {
@@ -92,12 +93,15 @@ class ProvinceController extends Controller
         $validated = $request->validate([
             'name' => 'required|unique:provinces,name',
             'leader_name' => 'required|string',
-            'sk_number' => 'nullable',
+            'sk_number' => 'nullable|string|max:100',
             'sk_expiry_date' => 'required|date',
+            'sk_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ], [
             'name.unique' => 'Provinsi tersebut sudah terdaftar sebelumnya.'
         ]);
 
+        $validated['sk_document_path'] = $request->file('sk_document')?->store('sk-documents/provinces', 'local');
+        unset($validated['sk_document']);
         Province::create($validated);
         return redirect()->route('admin.provinces.index')->with('success', 'Data berhasil disimpan.');
     }
@@ -109,11 +113,18 @@ class ProvinceController extends Controller
         $validated = $request->validate([
             'name' => 'required|unique:provinces,name,' . $id,
             'leader_name' => 'required|string',
-            'sk_number' => 'nullable',
+            'sk_number' => 'nullable|string|max:100',
             'sk_expiry_date' => 'required|date',
+            'sk_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
+        $oldDocument = $province->sk_document_path;
+        if ($request->hasFile('sk_document')) {
+            $validated['sk_document_path'] = $request->file('sk_document')->store('sk-documents/provinces', 'local');
+        }
+        unset($validated['sk_document']);
         $province->update($validated);
+        if (!empty($validated['sk_document_path']) && $oldDocument) Storage::disk('local')->delete($oldDocument);
         return redirect()->route('admin.provinces.index')->with('success', 'Data berhasil diperbarui.');
     }
 

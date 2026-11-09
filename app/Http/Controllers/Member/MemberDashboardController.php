@@ -3,33 +3,36 @@
 namespace App\Http\Controllers\Member;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExamCertificate;
+use App\Models\ExamParticipant;
+use App\Support\PageSize;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-use SimpleSoftwareIO\QrCode\Facades\QrCode; // Pastikan ini ada
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class MemberDashboardController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        // 1. Ambil data user beserta relasinya
-        $user = Auth::user()->load(['beltLevel', 'province', 'city', 'dojo']);
+        $user = $request->user()->load(['beltLevel', 'province', 'city', 'dojo']);
+        $section = $request->route('section', 'overview');
         $latestVerification = $user->membershipVerifications()->latest('id')->first();
-        $myCertificates = \App\Models\ExamCertificate::whereNotNull('sent_at')->whereHas('participant', fn ($q) => $q->where('user_id', $user->id))->latest('sent_at')->get();
+        $certificates = ExamCertificate::whereNotNull('sent_at')
+            ->whereHas('participant', fn ($query) => $query->where('user_id', $user->id));
+        $participants = ExamParticipant::where('user_id', $user->id);
+        $payments = $user->payments()->getQuery();
+        $summary = [
+            'exams' => (clone $participants)->count(),
+            'certificates' => (clone $certificates)->count(),
+            'pending' => (clone $payments)->where('status', 'pending')->count(),
+            'amount' => (clone $payments)->where('status', 'pending')->sum('amount'),
+        ];
+        $myCertificates = $section === 'certificates' ? PageSize::paginate($certificates->latest('sent_at'), $request) : collect();
+        $myExams = $section === 'exams' ? PageSize::paginate($participants->with(['exam', 'targetBelt'])->latest('id'), $request) : collect();
+        $myPayments = $section === 'payments' ? PageSize::paginate($payments->latest('id'), $request) : collect();
+        $qrPngBase64 = $section === 'card'
+            ? base64_encode(QrCode::format('svg')->size(200)->errorCorrection('H')->generate((string) ($user->member_number ?: $user->id)))
+            : null;
 
-        // 2. Ambil data tagihan yang belum lunas
-        $unpaidBill = \App\Models\Payment::where('user_id', $user->id)
-            ->where('status', 'pending')
-            ->first();
-
-        // 3. Generate QR Code (Gunakan format SVG agar tidak butuh ekstensi Imagick)
-        $qrCode = QrCode::format('svg')
-            ->size(150)
-            ->errorCorrection('H')
-            ->generate($user->member_number);
-        
-        $qrPngBase64 = base64_encode($qrCode);
-
-        // 4. Kirim SEMUA variabel ke view
-        return view('member.dashboard', compact('user', 'unpaidBill', 'qrPngBase64', 'latestVerification', 'myCertificates'));
+        return view('member.dashboard', compact('user', 'section', 'latestVerification', 'summary', 'myCertificates', 'myExams', 'myPayments', 'qrPngBase64'));
     }
 }

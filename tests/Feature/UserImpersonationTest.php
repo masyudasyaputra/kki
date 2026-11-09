@@ -48,7 +48,7 @@ class UserImpersonationTest extends TestCase
     public function test_provincial_admin_can_only_impersonate_lower_accounts_in_same_province(): void
     {
         $admin = $this->user('pengprov'); $local = $this->user('member');
-        $denied = [$this->user('member', 2), $this->user('pb'), $this->user('pengprov'), $this->user('verifikator_pb'), $this->user('verifikator_dewan_guru'), $this->user('member', 1, ['roles' => ['pb']])];
+        $denied = [$this->user('member', 2), $this->user('pb'), $this->user('pengprov'), $this->user('verifikator_anggota_pb'), $this->user('dewan_guru_pusat'), $this->user('verifikator_ujian_pb'), $this->user('pengelola_sertifikat_pb'), $this->user('member', 1, ['roles' => ['pb']])];
         $this->actingAs($admin);
         foreach ($denied as $target) $this->post(route('admin.users.login-as', $target))->assertForbidden();
         $this->assertDatabaseCount('user_impersonations', 0);

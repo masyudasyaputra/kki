@@ -12,17 +12,10 @@ class ExamFeeSeeder extends Seeder
      */
     public function run(): void
     {
-        // Data berdasarkan gambar daftar biaya ujian
-        $fees = [
-            ['belt_level_id' => 2, 'amount' => 150000], // Sabuk Putih ke Kuning
-            ['belt_level_id' => 4, 'amount' => 170000], // Sabuk Kuning ke Orange
-            ['belt_level_id' => 5, 'amount' => 190000], // Sabuk Orange ke Hijau
-            ['belt_level_id' => 6, 'amount' => 210000], // Sabuk Hijau ke Biru
-            ['belt_level_id' => 7, 'amount' => 230000], // Sabuk Biru ke Ungu
-            ['belt_level_id' => 8, 'amount' => 250000], // Sabuk Ungu ke Coklat
-            ['belt_level_id' => 9, 'amount' => 250000],
-            ['belt_level_id' => 10, 'amount' => 250000], // Sabuk Coklat Kyu 3 ke 2 & 1
-        ];
+        $amounts = ['Kyu 6' => 150000, 'Kyu 5' => 190000, 'Kyu 4' => 210000,
+            'Kyu 3' => 230000, 'Kyu 2' => 250000, 'Kyu 1' => 250000];
+        $fees = \App\Models\BeltLevel::active()->whereIn('kyu_dan', array_keys($amounts))->get()
+            ->map(fn ($belt) => ['belt_level_id' => $belt->id, 'amount' => $amounts[$belt->kyu_dan]]);
 
         foreach ($fees as $fee) {
             DB::table('exam_fees')->updateOrInsert(

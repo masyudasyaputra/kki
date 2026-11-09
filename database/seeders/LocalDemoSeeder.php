@@ -32,8 +32,8 @@ class LocalDemoSeeder extends Seeder
         $this->phone = 1; $this->memberNumber = 1; $this->members = []; $this->accounts = [];
         DB::transaction(function () {
             if (BeltLevel::count() === 0) $this->call(BeltLevelSeeder::class);
-            $belts = BeltLevel::orderBy('order')->get();
-            if ($belts->count() < 16) throw new \RuntimeException('Master tingkatan sabuk harus lengkap sebelum mengisi data demo.');
+            $belts = BeltLevel::active()->orderBy('order')->get();
+            if ($belts->count() < 13) throw new \RuntimeException('Master tingkatan sabuk harus lengkap sebelum mengisi data demo.');
             foreach ($belts as $belt) ExamFee::firstOrCreate(['belt_level_id' => $belt->id], ['amount' => 100000 + $belt->order * 20000]);
             $pb = $this->account('pb', 'pb', 'Admin PB', [], ['pb', 'super_admin']);
             $nationalVerifier = $this->account('verifikator.pb', 'verifikator_pb', 'Tim Verifikasi PB');
@@ -73,7 +73,7 @@ class LocalDemoSeeder extends Seeder
                         $dojoAdmin = $this->account('dojo.'.$citySlug.$dojoIndex, 'admin_dojo', 'Admin Dojo '.ucfirst($citySlug).' '.$dojoIndex, $scope + ['dojo_id' => $dojo->id]);
                         $group = ['dojo' => $dojo, 'admin' => $dojoAdmin, 'members' => []];
                         $names = ['Andi Pratama', 'Bunga Lestari', 'Citra Maharani', 'Dimas Saputra', 'Eka Wijaya', 'Farah Aulia', 'Gilang Ramadhan', 'Hana Putri'];
-                        $orders = [1, 6, 9, 10, 11, 5, 8, 2];
+                        $orders = [1, 4, 6, 7, 11, 3, 5, 2];
                         foreach ($names as $slot => $name) {
                             $number = $this->memberNumber++;
                             $member = $this->account('anggota'.str_pad($number, 3, '0', STR_PAD_LEFT), 'member', $name.' '.ucfirst($citySlug).' '.$dojoIndex,
@@ -107,8 +107,12 @@ class LocalDemoSeeder extends Seeder
 
     private function account(string $login, string $role, string $name, array $attributes = [], ?array $roles = null): User
     {
+        $all = \App\Services\RoleAccess::migrateRoles(array_merge([$role], $roles ?? []));
+        if (in_array('pb', $all, true)) $all[] = 'pengelola_sertifikat_pb';
+        $positions = array_values(array_intersect(array_keys(\App\Services\RoleAccess::POSITIONS), $all)) ?: ['member'];
         $user = User::firstOrCreate(['email' => $login.'@demo.kki.test'], array_replace([
-            'name' => '[DEMO] '.$name, 'password' => $this->passwordHash, 'role' => $role, 'roles' => $roles ?? [$role],
+            'name' => '[DEMO] '.$name, 'password' => $this->passwordHash, 'role' => \App\Services\RoleAccess::primary($positions),
+            'positions' => $positions, 'roles' => array_values(array_intersect(array_keys(\App\Services\RoleAccess::PERMISSIONS), $all)),
             'is_active' => true, 'whatsapp' => $this->nextPhone(),
         ], $attributes));
         if (!str_starts_with($user->name, '[DEMO]')) throw new \RuntimeException('Alamat akun demo sudah dipakai data lain: '.$user->email);
@@ -178,8 +182,10 @@ class LocalDemoSeeder extends Seeder
                 foreach ($slots as $slot) {
                     $member = $group['members'][$slot]->fresh();
                     $current = $belts->firstWhere('id', $member->belt_level_id);
-                    $targetOrder = $type === 'dan' ? min(16, max(11, $current->order + 1)) : min(10, $current->order + 1);
-                    $target = $belts->firstWhere('order', $targetOrder);
+                    $current ??= $member->beltLevel;
+                    $target = app(\App\Services\BeltCatalog::class)->next($current, $type)
+                        ?? $belts->filter(fn ($belt) => str_contains(strtolower($belt->kyu_dan), $type))->last();
+                    $targetOrder = $target->order;
                     $participant = ExamParticipant::firstOrCreate(['exam_id' => $exam->id, 'user_id' => $member->id], [
                         'dojo_id' => $group['dojo']->id, 'current_belt_id' => $current->id, 'target_belt_id' => $target->id,
                         'fee_amount' => 100000 + $targetOrder * 20000, 'payment_status' => $status === 'completed' || $groupIndex % 2 === 0 ? 'paid' : 'unpaid',

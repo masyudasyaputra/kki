@@ -26,7 +26,7 @@ class MembershipVerificationController extends Controller
                 ->orWhere('whatsapp', 'like', "%$search%")
                 ->orWhere(fn ($q) => $q->whereMemberNumber($search)));
         }
-        $members = $query->latest('id')->paginate(15)->withQueryString();
+        $members = \App\Support\PageSize::paginate($query->latest('id'), $request, 15);
         $level = $review->level($request->user());
         return view('admin.verifications.index', compact('members', 'counts', 'status', 'level'));
     }
@@ -42,6 +42,7 @@ class MembershipVerificationController extends Controller
 
     public function store(Request $request, int $member, MembershipReview $review)
     {
+        abort_if($request->session()->has('impersonation'), 403, 'Kembali ke akun sendiri sebelum melakukan verifikasi.');
         $data = $request->validate([
             'status' => ['required', Rule::in(['approved', 'revision'])],
             'notes' => ['nullable', 'required_if:status,revision', 'string', 'max:5000'],
