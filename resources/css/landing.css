@@ -2,11 +2,15 @@ html {
     scroll-behavior: smooth;
 }
 .pp {
-    --red: #d8272e;
+    --red: #6f1b2a;
+    --red-hover: #7d2432;
+    --red-soft: #f7ecef;
+    --red-focus: #a85863;
+    --red-light: #c98291;
     --ink: #141717;
-    --muted: #606961;
-    --line: #dce0d6;
-    background: #f5f5ef;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    background: #f3f4f6;
     color: var(--ink);
     font-family: "Barlow", sans-serif;
     line-height: 1.6;
@@ -22,7 +26,7 @@ html {
     text-decoration: none;
 }
 .pp :focus-visible {
-    outline: 3px solid #e6595e;
+    outline: 3px solid var(--red-focus);
     outline-offset: 4px;
 }
 .pp section[id] {
@@ -82,11 +86,11 @@ html {
     transform: translateY(-2px);
 }
 .pp-red {
-    background: var(--red);
+    background: linear-gradient(115deg, #7d2432 0%, #641b29 58%, #511521 100%);
     color: white;
 }
 .pp-red:hover {
-    background: #b61920;
+    background: linear-gradient(115deg, #913040 0%, #762334 58%, #601a29 100%);
 }
 .pp-outline {
     border-color: #ffffff50;
@@ -203,7 +207,7 @@ html {
     margin: 25px 0;
 }
 .pp-hero em {
-    color: #f05a5f;
+    color: #e5e7eb;
     font-style: normal;
 }
 .pp-hero .pp-copy {
@@ -310,8 +314,8 @@ html {
     height: 44px;
     width: 44px;
     border-radius: 10px;
-    background: #fbecee;
-    color: #bd1c24;
+    background: var(--red-soft);
+    color: var(--red);
     display: grid;
     place-items: center;
     flex-shrink: 0;
@@ -366,7 +370,7 @@ html {
     top: 51px;
     width: 1px;
     height: calc(100% - 53px);
-    background: #cdd3c6;
+    background: #d1d5db;
 }
 .pp-num {
     display: grid;
@@ -399,12 +403,12 @@ html {
     margin-top: 12px;
     padding: 3px 9px;
     font-size: 10px;
-    background: #e8eade;
-    color: #4e5949;
+    background: #e5e7eb;
+    color: #4b5563;
     border-radius: 4px;
 }
 .pp-roles {
-    background: #e8eade;
+    background: #f3f4f6;
 }
 .pp-tabs {
     display: flex;
@@ -414,7 +418,7 @@ html {
 }
 .pp-tab {
     padding: 10px 15px;
-    border: 1px solid #aab3a0;
+    border: 1px solid #cbd5e1;
     border-radius: 5px;
     font-size: 12px;
     font-weight: 600;
@@ -517,7 +521,7 @@ html {
     display: flex;
     align-items: center;
     gap: 24px;
-    background: #f9faf6;
+    background: #f9fafb;
 }
 .pp-empty h3 {
     font-weight: 700;
@@ -530,11 +534,11 @@ html {
     max-width: 560px;
 }
 .pp-empty .pp-icon {
-    background: #e8eade;
-    color: #526049;
+    background: #e5e7eb;
+    color: #4b5563;
 }
 .pp-directory {
-    background: #f0f1eb;
+    background: #f3f4f6;
 }
 .pp-search {
     background: white;

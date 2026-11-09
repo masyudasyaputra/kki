@@ -20,11 +20,11 @@
 .kki-page-loader-public { background:rgb(20 23 23 / 0.28); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
 .kki-page-loader-public .kki-loader-emblem { width:6rem; height:6rem; }
 .kki-page-loader-public .kki-loader-emblem img { width:4.4rem; height:4.4rem; padding:0.25rem; border-radius:0.75rem; background:#fff; }
-.kki-page-loader-public .kki-loader-ring { border-color:rgb(255 255 255 / 0.16); border-top-color:#d8272e; border-right-color:#f05a5f; }
+.kki-page-loader-public .kki-loader-ring { border-color:rgb(255 255 255 / 0.16); border-top-color:#762137; border-right-color:#a85863; }
 .kki-page-loader-public .kki-loader-title { color:#fff; font-family:"Barlow Condensed",sans-serif; font-size:1.2rem; letter-spacing:0.16em; }
 .kki-page-loader-public .kki-loader-message { color:#c1c9c3; }
 .kki-page-loader-public .kki-loader-track { background:rgb(255 255 255 / 0.16); }
-.kki-page-loader-public .kki-loader-track span { background:linear-gradient(90deg,#d8272e,#f05a5f); }
+.kki-page-loader-public .kki-loader-track span { background:linear-gradient(90deg,#762137,#b96d7c); }
 @keyframes kki-loader-spin { to { transform:rotate(360deg); } }
 @keyframes kki-logo-breathe { 0%,100% { transform:scale(0.96); } 50% { transform:scale(1.04); } }
 @keyframes kki-progress-slide { to { transform:translateX(330%); } }
