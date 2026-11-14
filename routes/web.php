@@ -110,6 +110,12 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
     ->group(function () {
         Route::get('/sk-documents/{entity}/{id}', [\App\Http\Controllers\Admin\SkDocumentController::class, 'show'])->name('sk-documents.show');
 
+        Route::middleware('role:super_admin')->group(function () {
+            Route::get('/nomor-id', [\App\Http\Controllers\Admin\MemberNumberController::class, 'index'])->name('member-numbers.index');
+            Route::get('/nomor-id/{member}/edit', [\App\Http\Controllers\Admin\MemberNumberController::class, 'edit'])->name('member-numbers.edit');
+            Route::put('/nomor-id/{member}', [\App\Http\Controllers\Admin\MemberNumberController::class, 'update'])->name('member-numbers.update');
+        });
+
         Route::middleware('role:pb,super_admin,pengprov,admin_pengprov,pengcab,admin_pengcab,admin_dojo')->group(function () {
             Route::get('/finance', [FinanceController::class, 'index'])->name('finance.index');
             Route::get('/finance/export', [FinanceController::class, 'export'])->name('finance.export');

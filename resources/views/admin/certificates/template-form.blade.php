@@ -43,7 +43,7 @@
             <p class="mt-2 text-xs leading-5 text-slate-500">Penandatangan dipilih dari akun user aktif dengan sabuk DAN. Atur nama, tingkat DAN, dan jabatan melalui <a class="font-semibold text-[#762137] underline" href="{{ route('admin.certificate-signers.index') }}">Pengaturan Penandatangan Sertifikat</a>. QR unik untuk setiap sertifikat membuka halaman verifikasi dan menampilkan kedua penandatangan.</p>
             <p class="mt-4 text-xs text-slate-500" x-show="renderMode === 'pdf'">Nomor ID MSH KKI peserta dimasukkan pada data sertifikat peserta. Tambahkan isian “No. ID MSH KKI” di editor jika desain PDF memuat kolom tersebut.</p>
             <div x-show="renderMode === 'builtin'" class="mt-4 grid gap-4 sm:grid-cols-2">
-                @foreach(['background' => 'Latar depan · maks. 5 MB', 'back_background' => 'Latar lembar nilai · maks. 5 MB', 'signature_left' => 'Tanda tangan kiri · maks. 2 MB', 'signature_right' => 'Tanda tangan kanan · maks. 2 MB'] as $key => $label)
+                @foreach(['background' => 'Latar depan · maks. 5 MB', 'back_background' => 'Latar lembar nilai · maks. 5 MB', 'signature_left' => 'Tanda tangan kiri · maks. 2 MB', 'signature_center' => 'Tanda tangan tengah · maks. 2 MB', 'signature_right' => 'Tanda tangan kanan · maks. 2 MB'] as $key => $label)
                     <label>{{ $label }}<input type="file" name="{{ $key }}" accept="image/png,image/jpeg">@if(!empty($templateSettings[$key]))<a class="mt-1 inline-block text-xs text-[#762137]" target="_blank" rel="noopener" href="{{ url('storage/'.$templateSettings[$key]) }}">Lihat gambar tersimpan</a>@endif</label>
                 @endforeach
             </div>

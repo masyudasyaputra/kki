@@ -6,7 +6,7 @@ function initCreateForms() {
             const link = event.target.closest('a[href]');
             if (!link || event.ctrlKey || event.metaKey) return;
             const url = new URL(link.href, location.href);
-            if (url.origin === location.origin && /\/admin\/(?:dashboard|dojos|officials|provinces|users|members)$/.test(url.pathname)) {
+            if (url.origin === location.origin && /\/admin\/(?:dashboard|dojos|officials|provinces|users|members|nomor-id)$/.test(url.pathname)) {
                 event.preventDefault();
                 window.parent.postMessage({ type: 'create-modal:cancel' }, location.origin);
             }
@@ -66,11 +66,13 @@ function initCreateForms() {
         const link = event.target.closest('a[href]');
         if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         const url = new URL(link.href, location.href);
-        if (url.origin !== location.origin || !/\/admin\/(dojos|officials|provinces|users|members)\/create\/?$/.test(url.pathname)) return;
+        const numberEditor = link.hasAttribute('data-member-number-modal') && /\/admin\/nomor-id\/\d+\/edit\/?$/.test(url.pathname);
+        if (url.origin !== location.origin || (!numberEditor && !/\/admin\/(dojos|officials|provinces|users|members)\/create\/?$/.test(url.pathname))) return;
         event.preventDefault();
         if (!dialog) build();
         opener = link;
-        dialog.querySelector('h2').textContent = link.textContent.trim() || 'Tambah data';
+        dialog.querySelector('h2').textContent = link.dataset.modalTitle || link.textContent.trim() || 'Tambah data';
+        frame.title = numberEditor ? 'Kelola Nomor ID anggota' : 'Form tambah data';
         feedback.textContent = 'Memuat form...'; feedback.hidden = false; frame.hidden = true;
         url.searchParams.set('_form_modal', '1');
         frame.src = url.href;

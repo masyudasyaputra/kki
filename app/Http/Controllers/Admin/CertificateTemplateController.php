@@ -32,20 +32,21 @@ class CertificateTemplateController extends Controller
             'background' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:5120'],
             'back_background' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:5120'],
             'signature_left' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
+            'signature_center' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
             'signature_right' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
         ]);
         $template = !empty($data['template_id']) ? $service->templates($request->user())->findOrFail($data['template_id']) : new CertificateTemplate;
         if ($data['render_mode'] === 'pdf' && !$request->hasFile('template_pdf') && empty($template->settings['pdf_path'])) {
             throw \Illuminate\Validation\ValidationException::withMessages(['template_pdf' => 'Unggah desain PDF untuk template ini.']);
         }
-        $settings = array_merge(ExamCertificates::defaults($data['exam_type']), $template->settings ?? [], collect($data)->except(['template_id', 'name', 'exam_type', 'template_pdf', 'background', 'back_background', 'signature_left', 'signature_right'])->all());
+        $settings = array_merge(ExamCertificates::defaults($data['exam_type']), $template->settings ?? [], collect($data)->except(['template_id', 'name', 'exam_type', 'template_pdf', 'background', 'back_background', 'signature_left', 'signature_center', 'signature_right'])->all());
         $settings['heading'] = 'PENGURUS PUSAT';
         if ($request->hasFile('template_pdf')) {
             $settings['pdf_path'] = $request->file('template_pdf')->store('certificates/pdf-templates', 'public');
             $settings['pdf_layout'] = [];
             $settings['pdf_pages'] = [];
         }
-        foreach (['background', 'back_background', 'signature_left', 'signature_right'] as $field) {
+        foreach (['background', 'back_background', 'signature_left', 'signature_center', 'signature_right'] as $field) {
             if ($request->hasFile($field)) $settings[$field] = $request->file($field)->store('certificates/templates', 'public');
         }
         $template->fill(['name' => $data['name'], 'exam_type' => $data['exam_type'], 'settings' => $settings]);

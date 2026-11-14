@@ -160,6 +160,7 @@ class ExamCertificates
         return ['heading' => 'PENGURUS PUSAT', 'organization' => 'KUSHIN RYU M KARATE-DO INDONESIA',
             'title' => 'IJAZAH', 'color' => $type === 'dan' ? '#9b773b' : '#ad342c',
             'signer_left_title' => 'Ketua Umum', 'signer_left_name' => '', 'signer_left_rank' => '',
+            'signer_center_title' => '', 'signer_center_name' => '', 'signer_center_rank' => '',
             'signer_right_title' => 'Ketua Dewan Guru', 'signer_right_name' => '', 'signer_right_rank' => ''];
     }
 
@@ -167,8 +168,9 @@ class ExamCertificates
     {
         $templateSettings = array_merge(self::defaults($exam->exam_type), $template->settings ?? []);
         $assignedSigners = [];
-        foreach (['left', 'right'] as $side) {
+        foreach (['left', 'center', 'right'] as $side) {
             $signerId = $templateSettings['signer_'.$side.'_user_id'] ?? null;
+            if ($side === 'center' && !$signerId) continue; // Preserve previously configured two-signer templates.
             $signer = $signerId ? User::with('beltLevel')->find($signerId) : null;
             $validSigner = $signer && $signer->is_active && str_contains(strtolower($signer->beltLevel?->kyu_dan ?? ''), 'dan');
             if ($validSigner) {
@@ -190,8 +192,9 @@ class ExamCertificates
             if (($template->settings['render_mode'] ?? '') === 'pdf') {
                 $layoutKeys = array_column($template->settings['pdf_layout'] ?? [], 'key');
                 $requiredLayoutKeys = ['name', 'no_id_msh', 'verification_qr', 'signer_left_title', 'signer_left_name', 'signer_left_rank', 'signer_right_title', 'signer_right_name', 'signer_right_rank'];
+                if (!empty($templateSettings['signer_center_user_id'])) $requiredLayoutKeys = array_merge($requiredLayoutKeys, ['signer_center_title', 'signer_center_name', 'signer_center_rank']);
                 if (empty($template->settings['pdf_path']) || array_diff($requiredLayoutKeys, $layoutKeys)) {
-                    $errors[] = 'Atur koordinat PDF untuk nama, No. ID MSH KKI, QR verifikasi, dan jabatan/nama/tingkat DAN kedua penandatangan.';
+                    $errors[] = 'Atur koordinat PDF untuk nama, No. ID MSH KKI, QR verifikasi, dan jabatan/nama/tingkat DAN seluruh penandatangan.';
                 }
                 if (in_array('no_id_msh', $layoutKeys, true) && empty($identity['no_id_msh'])) $errors[] = 'Nomor ID MSH KKI peserta belum diisi.';
             }

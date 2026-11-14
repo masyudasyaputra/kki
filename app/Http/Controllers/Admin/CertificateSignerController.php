@@ -27,20 +27,26 @@ class CertificateSignerController extends Controller
         $service->templates($request->user())->findOrFail($template->id);
         $eligibleIds = $this->eligibleSigners()->pluck('users.id')->all();
         $data = $request->validate([
-            'signer_left_user_id' => ['required', 'integer', Rule::in($eligibleIds), 'different:signer_right_user_id'],
+            'signer_left_user_id' => ['required', 'integer', Rule::in($eligibleIds), 'different:signer_right_user_id', 'different:signer_center_user_id'],
             'signer_left_title' => ['required', 'string', 'max:150'],
+            'signer_center_user_id' => ['required', 'integer', Rule::in($eligibleIds), 'different:signer_right_user_id'],
+            'signer_center_title' => ['required', 'string', 'max:150'],
             'signer_right_user_id' => ['required', 'integer', Rule::in($eligibleIds)],
             'signer_right_title' => ['required', 'string', 'max:150'],
         ], [
             'signer_left_user_id.in' => 'Pilih user aktif yang memiliki tingkat sabuk DAN.',
             'signer_right_user_id.in' => 'Pilih user aktif yang memiliki tingkat sabuk DAN.',
-            'signer_left_user_id.different' => 'Penandatangan kiri dan kanan harus menggunakan user yang berbeda.',
+            'signer_center_user_id.in' => 'Pilih user aktif yang memiliki tingkat sabuk DAN.',
+            'signer_center_user_id.required' => 'Pilih penandatangan tengah.',
+            'signer_center_title.required' => 'Isi jabatan penandatangan tengah.',
+            'signer_left_user_id.different' => 'Setiap posisi penandatangan harus menggunakan user yang berbeda.',
+            'signer_center_user_id.different' => 'Setiap posisi penandatangan harus menggunakan user yang berbeda.',
         ]);
 
         DB::transaction(function () use ($template, $data) {
             $template = CertificateTemplate::whereKey($template->id)->lockForUpdate()->firstOrFail();
             $settings = $template->settings ?? [];
-            foreach (['left', 'right'] as $side) {
+            foreach (['left', 'center', 'right'] as $side) {
                 $user = User::with('beltLevel')->findOrFail($data['signer_'.$side.'_user_id']);
                 $settings['signer_'.$side.'_user_id'] = $user->id;
                 $settings['signer_'.$side.'_title'] = trim($data['signer_'.$side.'_title']);

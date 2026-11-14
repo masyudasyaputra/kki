@@ -33,8 +33,9 @@
                 </dl>
                 <div class="mt-7 border-t border-slate-100 pt-5">
                     <h2 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Penandatangan</h2>
-                    <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                        @foreach(['left' => 'Penandatangan 1', 'right' => 'Penandatangan 2'] as $side => $label)
+                    <div class="mt-3 grid gap-3 {{ !empty($signers['signer_center_name']) ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }}">
+                        @foreach(['left' => 'Penandatangan kiri', 'center' => 'Penandatangan tengah', 'right' => 'Penandatangan kanan'] as $side => $label)
+                            @continue($side === 'center' && empty($signers['signer_center_name']))
                             <div class="rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-500">{{ $signers['signer_'.$side.'_title'] ?? $label }}</p><p class="mt-1 font-semibold text-slate-900">{{ $signers['signer_'.$side.'_name'] ?? '—' }}</p><p class="mt-1 text-xs text-slate-500">{{ $signers['signer_'.$side.'_rank'] ?? '' }}</p></div>
                         @endforeach
                     </div>

@@ -29,3 +29,9 @@ Identitas aplikasi menggunakan PP KKI (Pengurus Pusat KKI), Kushin Ryu M Karate-
 - File unggahan tersimpan di `storage/app/public`. Folder ini harus dapat ditulis oleh PHP dan dipertahankan antar deployment. Saat pindah server, salin file unggahan bersama database; Git tidak membawa foto pengguna.
 - Jalankan `php artisan storage:link` agar web server dapat melayani file langsung. Jika hosting tidak mendukung symlink, route `/storage/{path}` akan melayani gambar dan PDF publik melalui Laravel. Permintaan URL yang tidak menunjuk file harus diteruskan ke `public/index.php`.
 - URL unggahan memakai domain aplikasi, terpisah dari `ASSET_URL` yang dapat diarahkan ke CDN untuk aset statis. File privat tetap berada di disk `local` dan tidak dilayani route publik ini.
+
+## Manajemen Nomor ID
+
+Menu **Pengaturan Sistem → Manajemen Nomor ID** (`/admin/nomor-id`) hanya dapat diakses Super Admin. Tersedia pencarian, filter provinsi, perubahan nomor penuh, hitung ulang nomor otomatis, pertukaran nomor dua anggota, dan riwayat perubahan beserta alasannya.
+
+Saat deploy, jalankan migrasi `2026_11_14_000001_add_member_number_management.php` sebelum membuka menu. Migrasi menyimpan nomor anggota saat ini tanpa menggantinya. Anggota baru mendapat nomor otomatis yang unik. Nomor yang sudah diterbitkan tetap tersimpan ketika profil berubah; hitung ulang hanya dilakukan melalui menu ini. Sertifikat lama menggunakan snapshot penerbitannya dan tidak diubah oleh koreksi nomor.

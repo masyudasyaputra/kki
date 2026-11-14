@@ -13,7 +13,7 @@ class MemberObserver
      */
     public function created(User $user): void
     {
-        //
+        app(\App\Services\MemberNumbers::class)->issue($user);
     }
 
     /**
@@ -21,6 +21,7 @@ class MemberObserver
      */
     public function updated(User $user)
     {
+        if ($user->wasChanged('role')) app(\App\Services\MemberNumbers::class)->issue($user);
         // Jika kolom belt_level_id berubah (artinya naik sabuk)
         if ($user->isDirty('belt_level_id')) {
             try {

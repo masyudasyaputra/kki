@@ -84,6 +84,10 @@
                         messages.push(message);
                         const input = form.elements.namedItem(name);
                         if (input instanceof HTMLElement) {
+                            // Optional registration groups must reveal their invalid field.
+                            for (let group = input.closest('details'); group; group = group.parentElement?.closest('details')) {
+                                group.open = true;
+                            }
                             input.setAttribute('aria-invalid', 'true');
                             const hint = document.createElement('p');
                             hint.className = 'mt-1 text-xs text-red-700'; hint.dataset.authFieldError = 'true'; hint.textContent = message;

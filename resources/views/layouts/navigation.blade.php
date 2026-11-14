@@ -39,7 +39,7 @@
     $activeCertificateSigners = request()->routeIs('admin.certificate-signers.*');
     $activeSystem = $activeUsers || $activeProv || $activeFees || $activeExamFees
         || $activeBeltLevels || $activeCertificateSigners
-        || request()->routeIs('admin.regions.*', 'admin.access-audits.*', 'admin.certificate-templates.*');
+        || request()->routeIs('admin.regions.*', 'admin.access-audits.*', 'admin.certificate-templates.*', 'admin.member-numbers.*');
 
     $roleLabel = \App\Services\RoleAccess::POSITIONS[$u->role] ?? str_replace('_', ' ', $u->role ?? 'member');
     $canManageOrganization = $isStruktural || $hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov']);
@@ -130,6 +130,7 @@
                     @endif
                     @if ($hasRole(['pb', 'super_admin']))
                         <p class="sidebar-section-label">Master Data & Audit</p>
+                        @if($isSuperAdmin)<a href="{{ route('admin.member-numbers.index') }}" class="sidebar-link {{ request()->routeIs('admin.member-numbers.*') ? 'is-active' : '' }}" @if(request()->routeIs('admin.member-numbers.*')) aria-current="page" @endif><x-sidebar-icon name="membership" /><span>Manajemen Nomor ID</span></a>@endif
                         <a href="{{ route('admin.belt-levels.index') }}" class="sidebar-link {{ $activeBeltLevels ? 'is-active' : '' }}" @if($activeBeltLevels) aria-current="page" @endif><x-sidebar-icon name="belt" /><span>Pengaturan Sabuk Kyu/DAN</span></a>
                         <a class="sidebar-link {{ request()->routeIs('admin.access-audits.*') ? 'is-active' : '' }}" href="{{ route('admin.access-audits.index') }}" @if(request()->routeIs('admin.access-audits.*')) aria-current="page" @endif><x-sidebar-icon name="audit" /><span>Riwayat Hak Akses</span></a>
                     @endif

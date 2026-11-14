@@ -138,6 +138,11 @@ class User extends Authenticatable
 
     public function getMemberNumberAttribute(): string
     {
+        return $this->getAttribute('member_number_override') ?: $this->automatic_member_number;
+    }
+
+    public function getAutomaticMemberNumberAttribute(): string
+    {
         $belt = $this->relationLoaded('beltLevel') || $this->belt_level_id ? $this->beltLevel : null;
         $prefix = str_contains(mb_strtolower($belt?->name ?? ''), 'hitam') ? 'MSH-' : '';
 
@@ -145,6 +150,21 @@ class User extends Authenticatable
     }
 
     public function scopeWhereMemberNumber($query, string $number)
+    {
+        // Compatibility with older schemas during rollout and isolated test databases.
+        if (!$this->getConnection()->getSchemaBuilder()->hasColumn($this->getTable(), 'member_number_override')) {
+            return $this->scopeWhereAutomaticMemberNumber($query, $number);
+        }
+
+        return $query->where(function ($numbers) use ($number) {
+            $numbers->where('member_number_override', strtoupper(trim($number)))
+                ->orWhere(function ($automatic) use ($number) {
+                    $automatic->whereNull('member_number_override')->whereAutomaticMemberNumber($number);
+                });
+        });
+    }
+
+    public function scopeWhereAutomaticMemberNumber($query, string $number)
     {
         if (!preg_match('/^(MSH-)?([A-Z]{3})-(\d{5,})$/', strtoupper(trim($number)), $matches)) {
             return $query->whereRaw('1 = 0');
