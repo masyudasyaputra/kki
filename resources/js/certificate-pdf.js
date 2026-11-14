@@ -1,7 +1,7 @@
 import * as pdfjs from 'pdfjs-dist/build/pdf.mjs';
 import workerUrl from 'pdfjs-dist/build/pdf.worker.min.mjs?url';
 import { PDFDocument } from 'pdf-lib';
-import { buildCertificatePdf, fieldText, fontNames, PT_PER_MM, textLayout } from './certificate-pdf-core';
+import { buildCertificatePdf, isQrField, fieldText, fontNames, PT_PER_MM, textLayout } from './certificate-pdf-core';
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 const byId = id => document.getElementById(id);
@@ -44,7 +44,7 @@ async function startEditor() {
         const row = layout[selected];
         byId('field-properties').disabled = !row;
         byId('custom-text-label').hidden = !row || row.key !== 'custom';
-        const isQr = row?.key === 'verification_qr';
+        const isQr = isQrField(row?.key);
         byId('prop-height').closest('label').hidden = !isQr;
         byId('text-field-properties').hidden = isQr;
         byId('qr-field-help').hidden = !isQr;
@@ -61,16 +61,16 @@ async function startEditor() {
             if (Number(row.page) !== pageNumber) return;
             list.add(new Option(config.fields[row.key] + (row.key === 'custom' ? ': ' + row.text : ''), index, false, selected === index));
             const box = document.createElement('div');
-            const isQr = row.key === 'verification_qr';
+            const isQr = isQrField(row.key);
             if (isQr) {
                 const size = Number(row.height ?? row.width);
                 Object.assign(box.style, { position: 'absolute', left: row.x * PT_PER_MM * scale + 'px', top: row.y * PT_PER_MM * scale + 'px',
                     width: row.width * PT_PER_MM * scale + 'px', height: size * PT_PER_MM * scale + 'px', outline: index === selected ? '2px solid #762137' : '1px dashed #64748b',
                     background: index === selected ? '#fff4' : 'white', cursor: 'move', userSelect: 'none', touchAction: 'none' });
-                if (config.values.verification_qr_svg) {
+                if (config.values[row.key + '_svg']) {
                     const image = document.createElement('img');
                     image.alt = 'QR verifikasi sertifikat'; image.draggable = false;
-                    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(config.values.verification_qr_svg)}`;
+                    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(config.values[row.key + '_svg'])}`;
                     Object.assign(image.style, { width: '100%', height: '100%', display: 'block', pointerEvents: 'none' });
                     box.append(image);
                 } else box.textContent = 'QR TTE';
@@ -98,7 +98,7 @@ async function startEditor() {
                 const move = e => {
                     const bounds = pages[pageNumber - 1];
                     row.x = round(Math.max(0, Math.min(bounds.width - row.width, start.rowX + (e.clientX - start.x) / (PT_PER_MM * scale))));
-                    const rowHeight = row.key === 'verification_qr' ? Number(row.height ?? row.width) : row.font_size / PT_PER_MM;
+                    const rowHeight = isQrField(row.key) ? Number(row.height ?? row.width) : row.font_size / PT_PER_MM;
                     row.y = round(Math.max(0, Math.min(bounds.height - rowHeight, start.rowY + (e.clientY - start.y) / (PT_PER_MM * scale))));
                     box.style.left = row.x * PT_PER_MM * scale + 'px'; box.style.top = row.y * PT_PER_MM * scale + 'px'; syncProperties(); changed();
                 };
@@ -130,7 +130,7 @@ async function startEditor() {
         if (saving) return;
         if (layout.length >= 150) return setStatus('Maksimal 150 isian per template.', true);
         const key = byId('field-key').value;
-        const isQr = key === 'verification_qr';
+        const isQr = isQrField(key);
         layout.push({ key, page: pageNumber, x: 20, y: 30, width: isQr ? 22 : Math.min(100, pages[pageNumber - 1].width - 20), height: isQr ? 22 : 8, font_size: 14, line_height: 17, wrap: false, align: 'left', font: 'serif', bold: false, color: '#000000', text: 'Teks tambahan' });
         selected = layout.length - 1; changed(); drawOverlays();
     });

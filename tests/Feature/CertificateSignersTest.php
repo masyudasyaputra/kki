@@ -107,8 +107,39 @@ class CertificateSignersTest extends TestCase
             $this->assertStringContainsString('koordinat PDF',implode(' ',$exception->errors()['certificate']));
         }
         foreach(['title','name','rank'] as $part) $settings['pdf_layout'][]=['key'=>'signer_center_'.$part];
+        foreach(['left','center','right'] as $side) $settings['pdf_layout'][]=['key'=>'signer_'.$side.'_qr'];
         $template->update(['settings'=>$settings]);
         $data=app(ExamCertificates::class)->payload($exam,$participant,$template,['no_id_msh'=>'MSH-TEST'],true);
         $this->assertSame('Ketua Tengah',$data['template']['signer_center_name']);
+    }
+
+    public function test_each_signer_has_an_individual_signed_qr_that_cannot_be_substituted(): void
+    {
+        [$template,$payload,$left,$center,$right]=$this->setupSigners();
+        $this->put(route('admin.certificate-signers.update',$template),$payload)->assertSessionHasNoErrors();
+        [$exam,$participant]=$this->certificateData($template);
+        $data=app(ExamCertificates::class)->payload($exam,$participant,$template->fresh(),[],true);
+        $certificate=ExamCertificate::create(['exam_participant_id'=>$participant->id,'number'=>'KKI-QR-TEST','snapshot'=>$data]);
+        $data=\App\Services\CertificateVerificationLinks::attach($data,$certificate->id);
+        $data['number']=$certificate->number;
+        $certificate->update(['snapshot'=>$data]);
+        $this->assertCount(3,array_unique($data['signer_verification_urls']));
+        $values=CertificatePdfLayout::values($data);
+        foreach(['left'=>$left,'center'=>$center,'right'=>$right] as $side=>$signer){
+            $url=$data['signer_verification_urls'][$side];
+            parse_str(parse_url($url,PHP_URL_QUERY),$parameters);
+            $this->assertSame((string)$signer->id,$parameters['signer_id']);
+            $this->assertSame($side,$parameters['signer']);
+            $this->assertStringContainsString('<svg',$values['signer_'.$side.'_qr_svg']);
+            $this->get($url)->assertOk()->assertSee('Verifikasi penandatangan')->assertSee($signer->name)->assertSee('ID akun penandatangan: '.$signer->id);
+        }
+        $centerUrl=$data['signer_verification_urls']['center'];
+        $this->get($centerUrl)->assertOk()->assertDontSee($left->name)->assertDontSee($right->name);
+        $this->get(str_replace('signer=center','signer=left',$centerUrl))->assertForbidden();
+        $this->get(URL::signedRoute('certificates.verify',['certificate'=>$certificate->id,'signer'=>'center','signer_id'=>$left->id]))->assertNotFound();
+        $center->name='Nama profil berubah';$center->save();
+        $this->get($centerUrl)->assertOk()->assertSee('Ketua Tengah')->assertDontSee('Nama profil berubah');
+        $this->assertNotSame($values['signer_left_qr_svg'],$values['signer_center_qr_svg']);
+        $this->view('admin.certificates.print',['data'=>$data,'draft'=>false])->assertSee('QR penandatangan center');
     }
 }

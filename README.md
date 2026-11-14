@@ -32,6 +32,11 @@ Identitas aplikasi menggunakan PP KKI (Pengurus Pusat KKI), Kushin Ryu M Karate-
 
 ## Manajemen Nomor ID
 
+
 Menu **Pengaturan Sistem → Manajemen Nomor ID** (`/admin/nomor-id`) hanya dapat diakses Super Admin. Tersedia pencarian, filter provinsi, perubahan nomor penuh, hitung ulang nomor otomatis, pertukaran nomor dua anggota, dan riwayat perubahan beserta alasannya.
 
 Saat deploy, jalankan migrasi `2026_11_14_000001_add_member_number_management.php` sebelum membuka menu. Migrasi menyimpan nomor anggota saat ini tanpa menggantinya. Anggota baru mendapat nomor otomatis yang unik. Nomor yang sudah diterbitkan tetap tersimpan ketika profil berubah; hitung ulang hanya dilakukan melalui menu ini. Sertifikat lama menggunakan snapshot penerbitannya dan tidak diubah oleh koreksi nomor.
+
+## QR penandatangan sertifikat
+
+Setiap penandatangan mendapat URL verifikasi bertanda tangan yang mengikat sertifikat, posisi kiri/tengah/kanan, dan ID akun penandatangannya. Halaman hasil pemindaian menampilkan identitas dari snapshot penerbitan. Pada template PDF, tempatkan isian **QR pribadi penandatangan kiri/tengah/kanan** melalui editor koordinat; masing-masing penandatangan yang ditetapkan wajib memiliki koordinat QR sebelum penerbitan baru.

@@ -7,7 +7,6 @@ use App\Services\ExamCertificates;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\Rule;
 
 class CertificateController extends Controller
@@ -62,7 +61,7 @@ class CertificateController extends Controller
             }
             $snapshot['number'] = $certificate->number;
             $certificate->snapshot = $snapshot; $certificate->issued_by = $request->user()->id; $certificate->save();
-            $snapshot['verification_url'] = URL::signedRoute('certificates.verify', ['certificate' => $certificate->id]);
+            $snapshot = \App\Services\CertificateVerificationLinks::attach($snapshot, $certificate->id);
             $certificate->snapshot = $snapshot; $certificate->save();
             return $certificate;
         });
@@ -76,6 +75,9 @@ class CertificateController extends Controller
         $template = $service->templates($request->user())->where('exam_type', $exam->exam_type)->findOrFail($request->integer('template_id') ?: ($exam->certificate_settings['template_id'] ?? 0));
         $data = $service->payload($exam, $person, $template);
         $data['verification_url'] = url('/verifikasi-sertifikat/pratinjau');
+        foreach (['left', 'center', 'right'] as $side) {
+            if (!empty($data['template']['signer_'.$side.'_name'])) $data['signer_verification_urls'][$side] = $data['verification_url'].'?signer='.$side;
+        }
         $draft = true;
         if (($data['template']['render_mode'] ?? '') === 'pdf') return $this->pdfView($data, $draft);
         return view('admin.certificates.print', compact('data', 'draft'));
@@ -87,7 +89,7 @@ class CertificateController extends Controller
         $person = $service->participants($request->user(), $exam)->findOrFail($participant);
         $certificate = ExamCertificate::where('exam_participant_id', $person->id)->firstOrFail();
         $data = $certificate->snapshot;
-        $data['verification_url'] = URL::signedRoute('certificates.verify', ['certificate' => $certificate->id]);
+        $data = \App\Services\CertificateVerificationLinks::attach($data, $certificate->id);
         $draft = false;
         if (($data['template']['render_mode'] ?? '') === 'pdf') return $this->pdfView($data, $draft);
         return view('admin.certificates.print', compact('data', 'draft'));
@@ -138,7 +140,7 @@ class CertificateController extends Controller
     {
         abort_unless($certificate->sent_at && (int) $certificate->participant?->user_id === (int) $request->user()->id, 404);
         $data = $certificate->snapshot;
-        $data['verification_url'] = URL::signedRoute('certificates.verify', ['certificate' => $certificate->id]);
+        $data = \App\Services\CertificateVerificationLinks::attach($data, $certificate->id);
         $draft = false;
         if (($data['template']['render_mode'] ?? '') === 'pdf') return $this->pdfView($data, $draft);
         return view('admin.certificates.print', compact('data', 'draft'));

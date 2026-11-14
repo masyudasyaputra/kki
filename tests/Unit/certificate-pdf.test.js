@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { PDFDocument, StandardFonts, degrees } from 'pdf-lib';
+import { readFile } from 'node:fs/promises';
 import { buildCertificatePdf, fieldText, PT_PER_MM, textGeometry, textLayout } from '../../resources/js/certificate-pdf-core.js';
 
 const row = overrides => ({ key: 'name', page: 1, x: 30, y: 50, width: 120, font_size: 18, align: 'center', font: 'serif', bold: true, color: '#000000', ...overrides });
@@ -12,6 +13,29 @@ async function sourcePdf(rotation = 0) {
     const back = doc.addPage([842, 595]); back.drawText('LEMBAR NILAI', { x: 40, y: 550 });
     return doc.save();
 }
+
+test('PDF embeds the QR belonging to each of three signers rather than reusing the certificate QR', async () => {
+    const png = await readFile(new URL('../../public/images/logo-kki-dark.png', import.meta.url));
+    const originalImage = globalThis.Image, originalDocument = globalThis.document;
+    const decoded = [];
+    globalThis.Image = class { naturalWidth = 240; naturalHeight = 240; async decode() { decoded.push(decodeURIComponent(this.src)); } };
+    globalThis.document = { createElement: () => ({ getContext: () => ({ drawImage() {} }), toBlob: callback => callback(new Blob([png], { type: 'image/png' })) }) };
+    try {
+        const values = {}, rows = [];
+        for (const [index, side] of ['left', 'center', 'right'].entries()) {
+            const key = `signer_${side}_qr`;
+            values[key + '_svg'] = `<svg data-signer="${side}" xmlns="http://www.w3.org/2000/svg"></svg>`;
+            rows.push(row({ key, x: 30 + index * 40, width: 22, height: 22 }));
+        }
+        const pdf = await PDFDocument.load(await buildCertificatePdf(await sourcePdf(), rows, values));
+        assert.equal(pdf.getPageCount(), 2);
+        assert.equal(decoded.length, 3);
+        for (const [index, side] of ['left', 'center', 'right'].entries()) assert.ok(decoded[index].includes(`data-signer="${side}"`));
+    } finally {
+        if (originalImage === undefined) delete globalThis.Image; else globalThis.Image = originalImage;
+        if (originalDocument === undefined) delete globalThis.document; else globalThis.document = originalDocument;
+    }
+});
 
 test('top-left millimeters convert to PDF baseline and alignment precisely', async () => {
     const doc = await PDFDocument.create(); const font = await doc.embedFont(StandardFonts.TimesRomanBold);

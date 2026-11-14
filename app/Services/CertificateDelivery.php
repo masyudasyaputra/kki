@@ -3,7 +3,6 @@ namespace App\Services;
 
 use App\Models\{Exam, ExamCertificate, User, BeltLevel, BeltHistory};
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Validation\ValidationException;
 
 class CertificateDelivery
@@ -36,7 +35,7 @@ class CertificateDelivery
                 $snapshot['number'] = $number;
                 $snapshot['photo'] = $identity['photo'] ?? null;
                 $certificate = ExamCertificate::create(['exam_participant_id' => $person->id, 'issued_by' => $actor->id, 'number' => $number, 'snapshot' => $snapshot]);
-                $snapshot['verification_url'] = URL::signedRoute('certificates.verify', ['certificate' => $certificate->id]);
+                $snapshot = \App\Services\CertificateVerificationLinks::attach($snapshot, $certificate->id);
                 $certificate->update(['snapshot' => $snapshot]);
             }
             $belt = BeltLevel::where('kyu_dan', $certificate->snapshot['rank'])->where('name', $certificate->snapshot['belt'])->first();

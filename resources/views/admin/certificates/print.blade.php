@@ -5,6 +5,7 @@
 .signature-row-three .signature{width:33.333%;overflow-wrap:anywhere}.signature-photo{position:absolute;left:0;top:0}</style></head><body>
 @php
     $t = $data['template'];
+    $qrValues = \App\Services\CertificatePdfLayout::values($data);
     $formatDate = fn ($value) => $value ? \Carbon\Carbon::parse($value)->locale('id')->translatedFormat('d F Y') : '—';
 @endphp
 <div class="toolbar"><button type="button" onclick="window.print()">Cetak / Simpan sebagai PDF</button><p>{{ $draft ? 'DRAF — belum diterbitkan' : $data['number'] }} · {{ $data['name'] }}</p><span class="print-hint">A4 lanskap · 2 halaman · skala 100% · nonaktifkan header/footer browser</span></div>
@@ -25,7 +26,7 @@
                 @foreach(['left', 'center', 'right'] as $side)
                     @continue($side === 'center' && !$hasCenterSigner)
                     @if($side === 'right' && !$hasCenterSigner)<div>@if(!empty($data['photo']))<img class="photo" src="{{ url('storage/'.$data['photo']) }}" alt="Foto peserta">@else<div class="photo-placeholder">Foto 3 × 4</div>@endif</div>@endif
-                    <div class="signature"><div>{{ $t['signer_'.$side.'_title'] ?? '' }}</div><div class="signature-space">@if(!empty($t['signature_'.$side]))<img src="{{ url('storage/'.$t['signature_'.$side]) }}" alt="Tanda tangan {{ $side === 'center' ? 'tengah' : ($side === 'left' ? 'kiri' : 'kanan') }}">@endif</div><p class="signature-name">{{ ($t['signer_'.$side.'_name'] ?? '') ?: 'Nama penandatangan' }}</p><div class="signature-rank">{{ $t['signer_'.$side.'_rank'] ?? '' }}</div></div>
+                    <div class="signature"><div>{{ $t['signer_'.$side.'_title'] ?? '' }}</div><div class="signature-space">@if(!empty($qrValues['signer_'.$side.'_qr_svg']))<img class="signer-qr" src="data:image/svg+xml;base64,{{ base64_encode($qrValues['signer_'.$side.'_qr_svg']) }}" alt="QR penandatangan {{ $side }}">@elseif(!empty($t['signature_'.$side]))<img src="{{ url('storage/'.$t['signature_'.$side]) }}" alt="Tanda tangan {{ $side === 'center' ? 'tengah' : ($side === 'left' ? 'kiri' : 'kanan') }}">@endif</div><p class="signature-name">{{ ($t['signer_'.$side.'_name'] ?? '') ?: 'Nama penandatangan' }}</p><div class="signature-rank">{{ $t['signer_'.$side.'_rank'] ?? '' }}</div></div>
                 @endforeach
             </div>
         </div>
@@ -41,6 +42,6 @@
                 <tr><td>{{ $row['label'] }}</td><td>{{ $row['value'] === null || $row['value'] === '' ? '—' : (is_numeric($row['value']) ? rtrim(rtrim(number_format((float) $row['value'], 2, '.', ''), '0'), '.') : $row['value']) }}</td><td>{{ $row['words'] }}</td></tr>
             @endforeach
         </tbody></table>
-        <div class="back-footer"><div class="examiner"><strong>TIM PENGUJI</strong><p>{{ $data['examiner'] ?: '—' }}</p><p>{{ $data['number'] ?? 'DRAF' }}</p><p>ID Anggota: {{ $data['member_number'] }}</p></div><div class="back-signature"><p>{{ $data['issue_place'] }}, {{ $formatDate($data['issue_date']) }}</p><p>{{ $t['signer_right_title'] }}</p><div class="signature-space">@if(!empty($t['signature_right']))<img src="{{ url('storage/'.$t['signature_right']) }}" alt="Tanda tangan">@endif</div><strong>{{ $t['signer_right_name'] }}</strong><p>{{ $t['signer_right_rank'] }}</p></div></div>
+        <div class="back-footer"><div class="examiner"><strong>TIM PENGUJI</strong><p>{{ $data['examiner'] ?: '—' }}</p><p>{{ $data['number'] ?? 'DRAF' }}</p><p>ID Anggota: {{ $data['member_number'] }}</p></div><div class="back-signature"><p>{{ $data['issue_place'] }}, {{ $formatDate($data['issue_date']) }}</p><p>{{ $t['signer_right_title'] }}</p><div class="signature-space">@if(!empty($qrValues['signer_right_qr_svg']))<img class="signer-qr" src="data:image/svg+xml;base64,{{ base64_encode($qrValues['signer_right_qr_svg']) }}" alt="QR penandatangan kanan">@elseif(!empty($t['signature_right']))<img src="{{ url('storage/'.$t['signature_right']) }}" alt="Tanda tangan">@endif</div><strong>{{ $t['signer_right_name'] }}</strong><p>{{ $t['signer_right_rank'] }}</p></div></div>
     </section>
 </main></body></html>

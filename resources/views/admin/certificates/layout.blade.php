@@ -24,7 +24,7 @@
                         <label class="block text-xs font-medium text-slate-700">Data yang ditambahkan<select id="field-key" class="mt-1.5 w-full rounded-lg border-slate-300 text-sm">
                             <optgroup label="Peserta">@foreach(['name', 'number', 'member_number', 'no_id_msh', 'birth_details', 'birth_place', 'birth_date', 'province', 'city', 'dojo', 'photo'] as $key)@if(isset($editorConfig['fields'][$key]))<option value="{{ $key }}">{{ $editorConfig['fields'][$key] }}</option>@endif @endforeach</optgroup>
                             <optgroup label="Ujian & hasil">@foreach(['rank', 'belt', 'exam_name', 'exam_date', 'location', 'issue_place', 'issue_date', 'decision_number', 'decision_date', 'examiner', 'result'] as $key)<option value="{{ $key }}">{{ $editorConfig['fields'][$key] }}</option>@endforeach</optgroup>
-                            <optgroup label="Tanda tangan digital">@foreach(['signer_left_title', 'signer_left_name', 'signer_left_rank', 'signer_center_title', 'signer_center_name', 'signer_center_rank', 'signer_right_title', 'signer_right_name', 'signer_right_rank', 'verification_qr'] as $key)<option value="{{ $key }}">{{ $editorConfig['fields'][$key] }}</option>@endforeach</optgroup>
+                            <optgroup label="Tanda tangan digital">@foreach(['signer_left_title', 'signer_left_name', 'signer_left_rank', 'signer_left_qr', 'signer_center_title', 'signer_center_name', 'signer_center_rank', 'signer_center_qr', 'signer_right_title', 'signer_right_name', 'signer_right_rank', 'signer_right_qr', 'verification_qr'] as $key)<option value="{{ $key }}">{{ $editorConfig['fields'][$key] }}</option>@endforeach</optgroup>
                             <optgroup label="Nilai ujian">@foreach($editorConfig['fields'] as $key => $label)@if(str_starts_with($key, 'score_') || str_starts_with($key, 'words_'))<option value="{{ $key }}">{{ $label }}</option>@endif @endforeach</optgroup>
                             <option value="custom">Teks bebas</option>
                         </select></label>
@@ -45,7 +45,7 @@
                         <div class="flex items-center gap-4"><label class="flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" id="prop-bold" class="rounded border-slate-300"> Tebal</label><label class="flex items-center gap-2 text-xs text-slate-600">Warna<input type="color" id="prop-color" value="#000000" class="h-8 w-10 rounded border-slate-200 p-0.5"></label></div>
                         <label id="custom-text-label" hidden class="block text-xs font-medium text-slate-600">Teks bebas<textarea id="prop-text" maxlength="1000" rows="3" class="mt-1 w-full rounded-lg border-slate-300 text-sm"></textarea></label>
                     </div>
-                    <div id="qr-field-help" hidden class="rounded-lg bg-rose-50 p-3 text-xs leading-5 text-[#641b2d]">QR TTE/verifikasi dibuat otomatis saat sertifikat diterbitkan. Atur ukuran dan posisinya di sini.</div>
+                    <div id="qr-field-help" hidden class="rounded-lg bg-rose-50 p-3 text-xs leading-5 text-[#641b2d]">QR dibuat otomatis saat penerbitan. Gunakan QR pribadi kiri, tengah, dan kanan untuk masing-masing penandatangan, lalu atur ukuran serta posisinya.</div>
                     <button type="button" id="remove-field" class="btn btn-secondary w-full justify-center">Hapus isian terpilih</button>
                 </fieldset>
             </aside>

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header"><h1 class="page-title">Penandatangan Sertifikat</h1><p class="page-subtitle">Tiga posisi penandatangan: kiri, tengah, dan kanan.</p></x-slot>
     <div class="certificate-management mx-auto max-w-7xl space-y-4 px-4 py-5 sm:px-6">
-        <p class="text-xs leading-6 text-slate-500">Pilih tiga user berbeda yang aktif dan bersabuk DAN. Nama dan tingkat DAN mengikuti data akun saat sertifikat diterbitkan. Sertifikat lama tetap memakai data penerbitannya.</p>
+        <p class="text-xs leading-6 text-slate-500">Pilih tiga user berbeda yang aktif dan bersabuk DAN. Setiap penandatangan memiliki QR verifikasi sendiri, sesuai identitasnya pada sertifikat. Nama dan tingkat DAN mengikuti data akun saat sertifikat diterbitkan.</p>
         @if(session('success'))<div role="status" class="cert-alert cert-alert-success">{{ session('success') }}</div>@endif
         @if($errors->any())<div role="alert" class="cert-alert cert-alert-error">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
         @if($templates->isEmpty())

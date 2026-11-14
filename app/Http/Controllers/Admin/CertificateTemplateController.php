@@ -109,7 +109,7 @@ class CertificateTemplateController extends Controller
         ]);
         foreach ($data['layout'] as $row) {
             $page = $data['pages'][$row['page'] - 1] ?? null;
-            $height = $row['key'] === 'verification_qr'
+            $height = in_array($row['key'], ['verification_qr', 'signer_left_qr', 'signer_center_qr', 'signer_right_qr'], true)
                 ? (float) ($row['height'] ?? 0)
                 : (float) $row['font_size'] * 25.4 / 72;
             if (!$page || $height <= 0 || $row['x'] + $row['width'] > $page['width'] + .1 || $row['y'] + $height > $page['height'] + .1) {

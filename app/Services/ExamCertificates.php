@@ -191,10 +191,13 @@ class ExamCertificates
             foreach ($fields as $key => $label) if ($score?->$key === null || $score?->$key === '') $errors[] = "Nilai $label belum diisi.";
             if (($template->settings['render_mode'] ?? '') === 'pdf') {
                 $layoutKeys = array_column($template->settings['pdf_layout'] ?? [], 'key');
-                $requiredLayoutKeys = ['name', 'no_id_msh', 'verification_qr', 'signer_left_title', 'signer_left_name', 'signer_left_rank', 'signer_right_title', 'signer_right_name', 'signer_right_rank'];
+                $requiredLayoutKeys = ['name', 'no_id_msh', 'signer_left_title', 'signer_left_name', 'signer_left_rank', 'signer_right_title', 'signer_right_name', 'signer_right_rank'];
                 if (!empty($templateSettings['signer_center_user_id'])) $requiredLayoutKeys = array_merge($requiredLayoutKeys, ['signer_center_title', 'signer_center_name', 'signer_center_rank']);
+                foreach (['left', 'center', 'right'] as $side) {
+                    if (!empty($templateSettings['signer_'.$side.'_user_id'])) $requiredLayoutKeys[] = 'signer_'.$side.'_qr';
+                }
                 if (empty($template->settings['pdf_path']) || array_diff($requiredLayoutKeys, $layoutKeys)) {
-                    $errors[] = 'Atur koordinat PDF untuk nama, No. ID MSH KKI, QR verifikasi, dan jabatan/nama/tingkat DAN seluruh penandatangan.';
+                    $errors[] = 'Atur koordinat PDF untuk nama, No. ID MSH KKI, QR masing-masing penandatangan, dan jabatan/nama/tingkat DAN seluruh penandatangan.';
                 }
                 if (in_array('no_id_msh', $layoutKeys, true) && empty($identity['no_id_msh'])) $errors[] = 'Nomor ID MSH KKI peserta belum diisi.';
             }

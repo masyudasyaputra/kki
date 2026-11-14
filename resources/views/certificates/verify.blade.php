@@ -9,11 +9,12 @@
     @php
         $formatDate = fn ($value) => $value ? \Carbon\Carbon::parse($value)->locale('id')->translatedFormat('d F Y') : '—';
         $signers = $data['template'] ?? [];
+        $selectedSide = $selectedSide ?? null;
     @endphp
     <main class="mx-auto max-w-2xl">
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="bg-gradient-to-r from-[#4a1421] via-[#6e1d31] to-[#87283c] px-6 py-7 text-white sm:px-8">
-                <div class="flex items-center gap-4"><img src="{{ asset('images/logo-kki-dark.png') }}" alt="Logo KKI" class="h-12 w-12 object-contain"><div><p class="text-xs font-semibold uppercase tracking-widest text-rose-100/80">Pengurus Pusat KKI</p><h1 class="mt-1 text-xl font-bold">Verifikasi sertifikat</h1></div></div>
+                <div class="flex items-center gap-4"><img src="{{ asset('images/logo-kki-dark.png') }}" alt="Logo KKI" class="h-12 w-12 object-contain"><div><p class="text-xs font-semibold uppercase tracking-widest text-rose-100/80">Pengurus Pusat KKI</p><h1 class="mt-1 text-xl font-bold">{{ $selectedSide ? 'Verifikasi penandatangan' : 'Verifikasi sertifikat' }}</h1></div></div>
             </div>
             <div class="p-6 sm:p-8">
                 <div class="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold" aria-hidden="true">✓</span><div><h2 class="font-semibold">Sertifikat terdaftar</h2><p class="mt-1 text-sm leading-5 text-emerald-800">Data sertifikat ini cocok dengan catatan penerbitan KKI.</p></div></div>
@@ -33,10 +34,12 @@
                 </dl>
                 <div class="mt-7 border-t border-slate-100 pt-5">
                     <h2 class="text-xs font-semibold uppercase tracking-wide text-slate-500">Penandatangan</h2>
-                    <div class="mt-3 grid gap-3 {{ !empty($signers['signer_center_name']) ? 'sm:grid-cols-3' : 'sm:grid-cols-2' }}">
+                    @if($selectedSide)<p class="mt-2 text-xs text-slate-500">QR pribadi penandatangan {{ ['left'=>'kiri','center'=>'tengah','right'=>'kanan'][$selectedSide] }} pada sertifikat ini.</p>@endif
+                    <div class="mt-3 grid gap-3 {{ $selectedSide ? '' : (!empty($signers['signer_center_name']) ? 'sm:grid-cols-3' : 'sm:grid-cols-2') }}">
                         @foreach(['left' => 'Penandatangan kiri', 'center' => 'Penandatangan tengah', 'right' => 'Penandatangan kanan'] as $side => $label)
+                            @continue($selectedSide && $side !== $selectedSide)
                             @continue($side === 'center' && empty($signers['signer_center_name']))
-                            <div class="rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-500">{{ $signers['signer_'.$side.'_title'] ?? $label }}</p><p class="mt-1 font-semibold text-slate-900">{{ $signers['signer_'.$side.'_name'] ?? '—' }}</p><p class="mt-1 text-xs text-slate-500">{{ $signers['signer_'.$side.'_rank'] ?? '' }}</p></div>
+                            <div class="rounded-xl border border-slate-200 p-4"><p class="text-xs text-slate-500">{{ $signers['signer_'.$side.'_title'] ?? $label }}</p><p class="mt-1 font-semibold text-slate-900">{{ $signers['signer_'.$side.'_name'] ?? '—' }}</p><p class="mt-1 text-xs text-slate-500">{{ $signers['signer_'.$side.'_rank'] ?? '' }}</p>@if($selectedSide && !empty($signers['signer_'.$side.'_user_id']))<p class="mt-2 text-xs text-slate-500">ID akun penandatangan: {{ $signers['signer_'.$side.'_user_id'] }}</p>@endif</div>
                         @endforeach
                     </div>
                 </div>

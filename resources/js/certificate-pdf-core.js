@@ -1,6 +1,7 @@
 import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 
 export const PT_PER_MM = 72 / 25.4;
+export const isQrField = key => ['verification_qr', 'signer_left_qr', 'signer_center_qr', 'signer_right_qr'].includes(key);
 export const fontNames = {
     serif: [StandardFonts.TimesRoman, StandardFonts.TimesRomanBold],
     sans: [StandardFonts.Helvetica, StandardFonts.HelveticaBold],
@@ -89,8 +90,9 @@ export async function buildCertificatePdf(bytes, layout, values, draft = false) 
     for (const row of layout) {
         const page = pages[Number(row.page) - 1];
         if (!page) throw new Error('Nomor halaman pada koordinat tidak ada dalam PDF.');
-        if (row.key === 'verification_qr') {
-            if (!values.verification_qr_svg) continue;
+        if (isQrField(row.key)) {
+            const qrSvg = values[row.key + '_svg'];
+            if (!qrSvg) continue;
             const width = Number(row.width) * PT_PER_MM;
             const height = Number(row.height ?? row.width) * PT_PER_MM;
             const x = Number(row.x) * PT_PER_MM;
@@ -98,7 +100,7 @@ export async function buildCertificatePdf(bytes, layout, values, draft = false) 
             if (![x, top, width, height].every(Number.isFinite) || x < 0 || top < 0 || width <= 0 || height <= 0 || x + width > page.getWidth() + .3 || top + height > page.getHeight() + .3) {
                 throw new Error('Koordinat QR berada di luar halaman PDF.');
             }
-            const image = await output.embedPng(await svgPngBytes(values.verification_qr_svg));
+            const image = await output.embedPng(await svgPngBytes(qrSvg));
             page.drawImage(image, { x, y: page.getHeight() - top - height, width, height });
             continue;
         }
