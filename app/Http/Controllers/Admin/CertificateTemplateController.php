@@ -80,7 +80,7 @@ class CertificateTemplateController extends Controller
     {
         $this->editableTemplate($request, $template, $service);
         abort_unless(!empty($template->settings['pdf_path']), 404);
-        $editorConfig = ['pdfUrl' => asset('storage/'.$template->settings['pdf_path']), 'fields' => \App\Services\CertificatePdfLayout::fields(),
+        $editorConfig = ['pdfUrl' => url('storage/'.$template->settings['pdf_path']), 'fields' => \App\Services\CertificatePdfLayout::fields(),
             'values' => \App\Services\CertificatePdfLayout::sample($template->exam_type), 'layout' => $template->settings['pdf_layout'] ?? [],
             'saveUrl' => route('admin.certificate-templates.layout.save', $template), 'csrf' => csrf_token(), 'version' => hash('sha256', json_encode($template->settings))];
         return view('admin.certificates.layout', compact('template', 'editorConfig'));

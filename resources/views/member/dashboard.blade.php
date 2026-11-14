@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     @php
         $titles = ['overview' => 'Beranda Karateka', 'card' => 'Kartu Anggota', 'exams' => 'Ujian Saya', 'payments' => 'Pembayaran', 'certificates' => 'Sertifikat Saya'];
         $verification = ['pending' => 'Menunggu pemeriksaan', 'approved' => 'Terverifikasi', 'revision' => 'Perlu perbaikan'][$user->verification_status ?? 'pending'] ?? 'Menunggu pemeriksaan';
@@ -7,20 +7,7 @@
     <div class="karateka-space mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         <div class="flex flex-wrap items-center gap-3"><span class="text-sm text-slate-500">Verifikasi data anggota</span><x-verification-status :status="$user->verification_status" /></div>
         @if ($section === 'overview')
-            <section class="karateka-hero">
-                <div><p class="karateka-eyebrow">Keluarga besar KKI</p><h2>Oss, {{ $user->name }}.</h2><p>Terus berlatih, tumbuh, dan raih tingkatan berikutnya.</p><div class="mt-6 flex flex-wrap gap-3"><a href="{{ route('member.card') }}" class="btn bg-white text-slate-900">Lihat kartu anggota</a><a href="{{ route('profile.edit') }}" class="btn border border-white/30 text-white">Lengkapi profil</a></div></div>
-                <div class="karateka-rank"><x-sidebar-icon name="belt" class="h-10 w-10" /><span>Tingkatan saat ini</span><strong>{{ $user->beltLevel?->name ?? 'Belum ditentukan' }}</strong><span>{{ $user->beltLevel?->kyu_dan ?? 'Lengkapi data tingkatan di profil' }}</span></div>
-            </section>
-            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                @foreach ([['Status anggota', $user->is_active ? 'Aktif' : 'Belum aktif', 'membership', 'card'], ['Ujian diikuti', $summary['exams'], 'exam', 'exams'], ['Tagihan menunggu', $summary['pending'], 'wallet', 'payments'], ['Sertifikat diterima', $summary['certificates'], 'certificate', 'certificates']] as [$label, $value, $icon, $target])
-                    <a href="{{ route('member.'.$target) }}" class="karateka-stat"><x-sidebar-icon :name="$icon" class="h-5 w-5" /><span>{{ $label }}</span><strong>{{ $value }}</strong></a>
-                @endforeach
-            </div>
-            <div class="grid gap-6 lg:grid-cols-3">
-                <section class="karateka-panel lg:col-span-2"><p class="karateka-eyebrow">Langkah berikutnya</p><h2>Keanggotaan Anda</h2><div class="mt-5 rounded-xl bg-slate-50 p-4"><p class="font-semibold">Verifikasi: {{ $verification }}</p><p class="mt-2 text-sm text-slate-600">{{ $user->verification_status === 'approved' ? 'Data pendaftaran Anda sudah disetujui. Pantau status anggota dan pembayaran melalui ruang karateka.' : 'Pastikan identitas, dojo, wilayah, dan tingkatan sabuk sudah sesuai agar pengurus dapat memeriksa pendaftaran Anda.' }}</p>@if($user->verification_status === 'revision' && $latestVerification?->notes)<p class="mt-3 whitespace-pre-wrap text-sm text-red-700">{{ $latestVerification->notes }}</p>@endif<a href="{{ route('profile.edit') }}" class="mt-4 inline-flex text-sm font-semibold text-red-700">Periksa profil &rarr;</a></div>@if($summary['pending'])<a href="{{ route('member.payments') }}" class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm"><span>{{ $summary['pending'] }} tagihan menunggu pembayaran</span><strong>Rp {{ number_format($summary['amount'], 0, ',', '.') }} &rarr;</strong></a>@endif</section>
-                <section class="karateka-panel"><p class="karateka-eyebrow">Tempat berlatih</p><h2>Dojo Anda</h2><div class="my-5 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-700"><x-sidebar-icon name="building" class="h-6 w-6" /></div><p class="text-lg font-bold">{{ $user->dojo?->name ?? 'Dojo belum dipilih' }}</p><p class="mt-2 text-sm text-slate-500">{{ $user->city?->name ?? 'Kabupaten / kota belum diisi' }}</p><p class="mt-1 text-sm text-slate-500">{{ $user->province?->name ?? 'Provinsi belum diisi' }}</p><a href="{{ route('public.dojos') }}" class="mt-6 inline-flex text-sm font-semibold text-red-700">Jelajahi direktori dojo &rarr;</a></section>
-            </div>
-            <section><h2 class="mb-4 text-lg font-bold">Jelajahi ruang karateka</h2><div class="grid gap-4 sm:grid-cols-3">@foreach([['exams', 'exam', 'Ujian & tingkatan', 'Lihat ujian yang diikuti, target sabuk, dan hasil ujian.'], ['payments', 'receipt', 'Iuran & pembayaran', 'Pantau tagihan dan riwayat pembayaran Anda.'], ['certificates', 'certificate', 'Koleksi sertifikat', 'Buka dan unduh sertifikat yang dikirim pengurus.']] as [$target, $icon, $label, $description])<a href="{{ route('member.'.$target) }}" class="karateka-panel karateka-shortcut"><x-sidebar-icon :name="$icon" class="mb-4 h-6 w-6 text-red-700" /><h3 class="font-bold">{{ $label }} &rarr;</h3><p class="mt-2 text-sm text-slate-500">{{ $description }}</p></a>@endforeach</div></section>
+            @include('member.overview')
         @elseif ($section === 'card')
             <div class="karateka-panel flex flex-wrap items-center justify-between gap-3"><div><h2>Identitas karateka</h2><p class="mt-1 text-sm text-slate-500">Verifikasi: {{ $verification }} · Status anggota: {{ $user->is_active ? 'Aktif' : 'Belum aktif' }}</p></div><a href="{{ route('profile.edit') }}" class="btn btn-secondary">Perbarui data</a></div>
             @include('member.card')

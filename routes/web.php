@@ -22,6 +22,10 @@ use App\Models\Exam;
 use App\Models\User;
 use Illuminate\Http\Request;
 
+// Web servers serve existing storage links directly; Laravel handles hosts without one.
+Route::get('/storage/{path}', \App\Http\Controllers\PublicFileController::class)
+    ->where('path', '.*')->name('public.storage');
+
 Route::get('/', function () {
     if (in_array(request('auth'), ['login', 'register'], true)) session()->keep(['errors', '_old_input', 'status']);
     $dojos = Dojo::query()

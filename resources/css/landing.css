@@ -1012,7 +1012,7 @@ html {
 }
 
 /* Latar putih menjaga logo pada wordmark terbaca di header dan footer. */
-.pp .pp-brand img[src] {
+.pp .pp-brand img[src$="/images/logo-kki.png"] {
     background-color: #fff;
     border-radius: 6px;
     padding: 3px;

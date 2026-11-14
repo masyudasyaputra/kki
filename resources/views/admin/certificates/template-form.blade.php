@@ -25,7 +25,7 @@
             <label>File template PDF <span class="text-rose-700">*</span><input type="file" name="template_pdf" accept="application/pdf,.pdf" :required="renderMode === 'pdf' && @js(empty($templateSettings['pdf_path']))"></label>
             <p class="mt-2">PDF maksimal 20 MB dan 10 halaman. Template KKI 343 × 223 mm didukung; halaman pertama dan kedua dapat dipakai untuk sisi depan dan belakang. Sesudah disimpan, Anda mengatur posisi data pada PDF.</p>
             @if(!empty($templateSettings['pdf_path']))
-                <a target="_blank" rel="noopener" href="{{ asset('storage/'.$templateSettings['pdf_path']) }}" class="cert-back mt-2 inline-block">Lihat PDF tersimpan ↗</a>
+                <a target="_blank" rel="noopener" href="{{ url('storage/'.$templateSettings['pdf_path']) }}" class="cert-back mt-2 inline-block">Lihat PDF tersimpan ↗</a>
                 <p class="mt-2">Kosongkan unggahan untuk mempertahankan PDF saat ini. Mengganti file akan menghapus koordinat lama agar dapat diatur ulang.</p>
             @endif
         </section>
@@ -44,7 +44,7 @@
             <p class="mt-4 text-xs text-slate-500" x-show="renderMode === 'pdf'">Nomor ID MSH KKI peserta dimasukkan pada data sertifikat peserta. Tambahkan isian “No. ID MSH KKI” di editor jika desain PDF memuat kolom tersebut.</p>
             <div x-show="renderMode === 'builtin'" class="mt-4 grid gap-4 sm:grid-cols-2">
                 @foreach(['background' => 'Latar depan · maks. 5 MB', 'back_background' => 'Latar lembar nilai · maks. 5 MB', 'signature_left' => 'Tanda tangan kiri · maks. 2 MB', 'signature_right' => 'Tanda tangan kanan · maks. 2 MB'] as $key => $label)
-                    <label>{{ $label }}<input type="file" name="{{ $key }}" accept="image/png,image/jpeg">@if(!empty($templateSettings[$key]))<a class="mt-1 inline-block text-xs text-[#762137]" target="_blank" rel="noopener" href="{{ asset('storage/'.$templateSettings[$key]) }}">Lihat gambar tersimpan</a>@endif</label>
+                    <label>{{ $label }}<input type="file" name="{{ $key }}" accept="image/png,image/jpeg">@if(!empty($templateSettings[$key]))<a class="mt-1 inline-block text-xs text-[#762137]" target="_blank" rel="noopener" href="{{ url('storage/'.$templateSettings[$key]) }}">Lihat gambar tersimpan</a>@endif</label>
                 @endforeach
             </div>
         </details>

@@ -58,7 +58,7 @@ $faqs = [
 <header class="pp-header">
 <div class="pp-wrap pp-header-inner">
 <a href="#beranda" class="pp-brand" aria-label="PP KKI - Beranda">
-<img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" width="46" height="46">
+<img src="{{ asset('images/logo-kki-dark.png') }}" alt="Logo KKI" width="46" height="46">
 <span>
 <strong>PP KKI</strong>
 <small>Pengurus Pusat</small>
@@ -284,7 +284,7 @@ $faqs = [
 </section>
 <section id="tentang" class="pp-section pp-about">
 <div class="pp-wrap pp-about-grid">
-<img src="{{ asset('images/logo-kki.png') }}" alt="Lambang KKI dengan bunga melati dan pusat merah putih" width="140" height="140" loading="lazy">
+<img src="{{ asset('images/logo-kki-dark.png') }}" alt="Lambang KKI dengan bunga melati dan pusat merah putih" width="140" height="140" loading="lazy">
 <div>
 <p class="pp-eyebrow">Pengurus Pusat KKI</p>
 <h2 class="pp-display">Berakar pada karakter.<br>Terikat persaudaraan.</h2>
@@ -326,7 +326,7 @@ $faqs = [
 <div class="pp-wrap">
 <div class="pp-footer-top">
 <a href="#beranda" class="pp-brand">
-<img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" width="46" height="46" loading="lazy">
+<img src="{{ asset('images/logo-kki-dark.png') }}" alt="Logo KKI" width="46" height="46" loading="lazy">
 <span>
 <strong>PP KKI</strong>
 <small>Pengurus Pusat</small>

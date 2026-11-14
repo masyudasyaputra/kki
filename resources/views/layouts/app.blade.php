@@ -1,6 +1,7 @@
 @php
     $errors = $errors ?? new \Illuminate\Support\ViewErrorBag();
     $embeddedForm = request()->boolean('_form_modal') || request()->header('Sec-Fetch-Dest') === 'iframe';
+    $memberWorkspace = auth()->user()?->role === 'member';
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
@@ -59,7 +60,7 @@
             {{ $slot }}
         </main>
     @else
-    <div class="min-h-screen flex flex-col lg:pl-[240px]">
+    <div class="{{ $memberWorkspace ? 'member-shell' : '' }} min-h-screen flex flex-col lg:pl-[240px]">
 
         @include('layouts.navigation')
 
@@ -72,7 +73,7 @@
                 </div>
                 <div class="flex shrink-0 items-center gap-2 sm:gap-4">
                 <a href="{{ route('profile.edit') }}" class="flex min-w-0 items-center gap-2 rounded-xl p-1 text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Profil akun {{ auth()->user()->name }}">
-                    <span class="hidden h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#f4e9ea] text-sm font-semibold text-[#6f1b2a] sm:flex">{{ mb_strtoupper(mb_substr(auth()->user()->name, 0, 1)) }}</span>
+                    <x-member-avatar :member="auth()->user()" class="account-avatar" />
                     <div class="min-w-0 text-right sm:text-left">
                         <p class="max-w-[64px] truncate text-xs font-semibold text-slate-900 sm:max-w-[220px] sm:text-sm">{{ auth()->user()->name }}</p>
                         <p class="mt-0.5 text-[10px] uppercase tracking-wide text-slate-500">{{ auth()->user()->role === 'pb' ? 'Pengurus Pusat' : str_replace('_', ' ', auth()->user()->role ?? 'member') }}</p>
@@ -109,6 +110,9 @@
                 </div>
             </div>
         </footer>
+        @if ($memberWorkspace)
+            @include('member.bottom-navigation')
+        @endif
     </div>
     @endif
 </body>

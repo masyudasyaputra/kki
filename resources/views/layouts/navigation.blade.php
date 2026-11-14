@@ -52,7 +52,7 @@
 <aside id="backend-sidebar" class="backend-sidebar" :class="{ 'is-open': sidebarOpen }" :inert="!sidebarOpen && !desktopSidebar" @keydown.escape.window="sidebarOpen = false">
     <div class="flex h-20 shrink-0 items-center justify-between border-b border-white/10 px-6">
         <a href="{{ url('/') }}" class="flex items-center gap-3">
-            <img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" class="h-10 w-10 object-contain">
+            <img src="{{ asset('images/logo-kki-dark.png') }}" alt="Logo KKI" class="h-10 w-10 object-contain">
             <div><span class="text-lg font-bold tracking-tight text-white">PP KKI</span><p class="mt-1 text-[10px] text-slate-400">Pengurus Pusat KKI</p></div>
         </a>
         <button type="button" @click="sidebarOpen = false" class="rounded-lg p-2 text-slate-400 lg:hidden" aria-label="Tutup navigasi">&times;</button>
@@ -71,7 +71,7 @@
         @endif
 
         @if ($isStruktural)
-            <details class="sidebar-group" @if($activeOfficials || $activeDojos) open @endif>
+            <details name="kki-sidebar-menu" class="sidebar-group" @if($activeOfficials || $activeDojos) open @endif>
                 <summary><x-sidebar-icon name="organization" /><span>Organisasi</span><span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>
                 <div class="sidebar-group-items">
                     <a href="{{ route('admin.officials.index') }}" class="sidebar-link {{ $activeOfficials ? 'is-active' : '' }}" @if($activeOfficials) aria-current="page" @endif><x-sidebar-icon name="people" /><span>Pengurus</span></a>
@@ -81,7 +81,7 @@
         @endif
 
         @if ($canViewMembers || $canVerifyMembers)
-            <details class="sidebar-group" @if($activeMembers || request()->routeIs('admin.verifications.*')) open @endif>
+            <details name="kki-sidebar-menu" class="sidebar-group" @if($activeMembers || request()->routeIs('admin.verifications.*')) open @endif>
                 <summary><x-sidebar-icon name="membership" /><span>Keanggotaan</span>@if($pendingMemberVerifications > 0)<span class="sidebar-notification-badge" aria-label="{{ $pendingMemberVerifications }} pengajuan keanggotaan menunggu verifikasi">{{ $pendingMemberVerifications }}</span>@endif<span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>
                 <div class="sidebar-group-items">
                     @if ($canViewMembers)<a href="{{ route('admin.members.index') }}" class="sidebar-link {{ $activeMembers ? 'is-active' : '' }}" @if($activeMembers) aria-current="page" @endif><x-sidebar-icon name="people" /><span>Anggota</span></a>@endif
@@ -91,7 +91,7 @@
         @endif
 
         @if ($canOpenExams || $canOpenExamReviews || $hasRole(['pb', 'dewan_guru_pusat']))
-            <details class="sidebar-group" @if(($activeExams && !$activeExamFees) || request()->routeIs('admin.exam-reviews.*', 'admin.oversight')) open @endif>
+            <details name="kki-sidebar-menu" class="sidebar-group" @if(($activeExams && !$activeExamFees) || request()->routeIs('admin.exam-reviews.*', 'admin.oversight')) open @endif>
                 <summary><x-sidebar-icon name="exam-cert" /><span>Ujian & Sertifikasi</span><span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>
                 <div class="sidebar-group-items">
                     @if ($canOpenExams)<a href="{{ route('admin.exams.index') }}" class="sidebar-link {{ $activeExams && !$activeExamFees ? 'is-active' : '' }}" @if($activeExams && !$activeExamFees) aria-current="page" @endif><x-sidebar-icon name="exam" /><span>Jadwal & Peserta Ujian</span></a>@endif
@@ -102,7 +102,7 @@
         @endif
 
         @if ($canViewFinance)
-            <details class="sidebar-group" @if($activeFinance) open @endif>
+            <details name="kki-sidebar-menu" class="sidebar-group" @if($activeFinance) open @endif>
                 <summary><x-sidebar-icon name="wallet" /><span>Keuangan</span><span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>
                 <div class="sidebar-group-items">
                     <a href="{{ route('admin.finance.index') }}" class="sidebar-link {{ $activeFinance ? 'is-active' : '' }}" @if($activeFinance) aria-current="page" @endif><x-sidebar-icon name="receipt" /><span>Ringkasan & Transaksi</span></a>
@@ -111,7 +111,7 @@
         @endif
 
         @if ($isSistemAdmin || $canManageTemplates)
-            <details class="sidebar-group" @if($activeSystem) open @endif>
+            <details name="kki-sidebar-menu" class="sidebar-group" @if($activeSystem) open @endif>
                 <summary><x-sidebar-icon name="settings" /><span>Pengaturan Sistem</span><span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>
                 <div class="sidebar-group-items">
                     @if($hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov']))<p class="sidebar-section-label">Wilayah</p>@endif

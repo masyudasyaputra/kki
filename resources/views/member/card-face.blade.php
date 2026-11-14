@@ -1,0 +1,13 @@
+<div id="member-card-{{ $side }}" class="kki-id-card kki-id-{{ $side }}">
+    <img class="kki-id-watermark" src="{{ asset('images/logo-kki-dark.png') }}" alt="" aria-hidden="true" width="1024" height="1024">
+    @if ($side === 'front')
+        <div class="kki-id-brand"><img src="{{ asset('images/logo-kki-dark.png') }}" alt="Logo KKI" width="64" height="64"><div><strong>KKI</strong><span>KUSHIN RYU M. KARATE-DO INDONESIA</span><small>KARAKTER · KEHORMATAN · INTEGRITAS</small></div><span class="kki-id-type">KARTU<br>ANGGOTA</span></div>
+        <div class="kki-id-front-body"><div class="kki-id-fields"><div><span>NOMOR ANGGOTA</span><p class="kki-id-number">{{ $user->member_number ?: 'Belum diterbitkan' }}</p></div><div><span>NAMA KARATEKA</span><h3>{{ $user->name }}</h3></div><div class="kki-id-bottom-fields"><div><span>DOJO</span><p>{{ $user->dojo?->name ?? 'Belum dipilih' }}</p></div><div><span>TINGKATAN</span><p>{{ $user->beltLevel?->display_name ?? 'Belum ditentukan' }}</p></div></div></div><div class="kki-id-photo"><span>{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}</span>@if($user->photo)<img src="{{ url('storage/'.$user->photo) }}" alt="Pasfoto {{ $user->name }}" width="90" height="120">@endif</div></div>
+        <div class="kki-id-footer"><span>OFFICIAL MEMBERSHIP CARD</span><span>PP KKI • INDONESIA</span></div>
+    @else
+        <div class="kki-id-magnetic" aria-hidden="true"></div>
+        <div class="kki-id-back-body"><div class="kki-id-qr-column"><span>IDENTITAS DIGITAL</span><div class="kki-id-qr"><img src="data:image/svg+xml;base64,{{ $qrPngBase64 }}" alt="QR identitas anggota" width="120" height="120"></div><small>PINDAI NOMOR ANGGOTA</small></div><div class="kki-id-values"><h3>SATU KELUARGA.<br><span>SATU SEMANGAT.</span></h3><p><x-sidebar-icon name="audit" />Menjunjung tinggi kehormatan</p><p><x-sidebar-icon name="belt" />Disiplin dalam setiap latihan</p><p><x-sidebar-icon name="people" />Tumbuh bersama keluarga KKI</p></div></div>
+        <div class="kki-id-back-footer"><p>Kartu ini adalah identitas pribadi anggota KKI dan tidak dapat dipindahtangankan.</p><strong>KUSHIN RYU M. KARATE-DO INDONESIA</strong></div>
+    @endif
+    <div class="kki-id-gold-line" aria-hidden="true"></div>
+</div>

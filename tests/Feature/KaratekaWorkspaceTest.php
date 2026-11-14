@@ -111,6 +111,20 @@ class KaratekaWorkspaceTest extends TestCase
         $this->get(route('member.exams'))->assertOk()->assertViewHas('myExams', fn ($exams) => $exams->total() === 1);
     }
 
+    public function test_dashboard_uses_the_members_belt_color_and_gold_only_for_striped_belts(): void
+    {
+        Schema::table('belt_levels', fn (Blueprint $table) => $table->string('kyu_dan')->nullable());
+        $member = User::create(['name' => 'Karateka', 'email' => 'belt@example.test', 'password' => 'password', 'role' => 'member']);
+        foreach ([['Hitam', 'DAN IV', '#111214', false], ['Putih', 'Kyu 7', '#f5f3ee', false], ['Kuning', 'Kyu 6', '#e7b914', false], ['Biru Strip', 'Kyu 4', '#163d80', true], ['Coklat Strip', 'Kyu 2', '#583621', true]] as $index => [$name, $rank, $color, $striped]) {
+            DB::table('belt_levels')->insert(['id' => $index + 1, 'name' => $name, 'kyu_dan' => $rank]);
+            DB::table('users')->where('id', $member->id)->update(['belt_level_id' => $index + 1]);
+            $response = $this->actingAs($member->fresh())->get(route('member.dashboard'));
+            $response->assertOk()->assertSee('--rank-base:'.$color, false)->assertSee('<h2>'.$name.'</h2>', false)->assertSee($rank)->assertDontSee('<svg class="kd-current-belt"', false);
+            if ($striped) $response->assertSee('Strip emas')->assertSee('class="kd-belt-stripe"', false);
+            else $response->assertDontSee('class="kd-belt-stripe"', false);
+        }
+    }
+
     public function test_guests_cannot_open_the_member_workspace(): void
     {
         foreach (['dashboard', 'card', 'exams', 'payments', 'certificates'] as $section) {
@@ -180,8 +194,9 @@ class KaratekaWorkspaceTest extends TestCase
             ->assertSessionHasNoErrors()->assertRedirect(route('profile.edit'));
         $oldPhoto = $member->fresh()->photo;
         Storage::disk('public')->assertExists($oldPhoto);
-        $this->get(route('profile.edit'))->assertOk()->assertSee(asset('storage/'.$oldPhoto));
-        $this->get(route('member.card'))->assertOk()->assertSee(asset('storage/'.$oldPhoto));
+        foreach (['profile.edit', 'member.card', 'member.dashboard'] as $route) {
+            $this->get(route($route))->assertOk()->assertSee(url('storage/'.$oldPhoto));
+        }
         $this->patch(route('profile.update'), $data + ['photo' => UploadedFile::fake()->image('baru.png', 300, 400)])->assertSessionHasNoErrors();
         Storage::disk('public')->assertMissing($oldPhoto);
         $newPhoto = $member->fresh()->photo;

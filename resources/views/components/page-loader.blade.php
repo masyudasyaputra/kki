@@ -4,7 +4,7 @@
     <div class="kki-loader-content">
         <div class="kki-loader-emblem" aria-hidden="true">
             <span class="kki-loader-ring"></span>
-            <img src="{{ asset('images/logo-kki.png') }}" alt="" width="72" height="72" fetchpriority="high">
+            <img src="{{ asset($variant === 'public' ? 'images/logo-kki-dark.png' : 'images/logo-kki.png') }}" alt="" width="72" height="72" fetchpriority="high">
         </div>
         <p class="kki-loader-title">PP KKI</p>
         <p class="kki-loader-message">{{ $variant === 'public' ? 'Menyiapkan halaman KKI...' : 'Memuat halaman...' }}</p>

@@ -9,7 +9,7 @@
     <x-slot name="header"><h1 class="page-title">{{ $isMember ? 'Profil Saya' : 'Profil Akun' }}</h1><p class="page-subtitle">Kelola identitas, kontak, dan keamanan akun Anda.</p></x-slot>
     <div class="profile-workspace mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
         <section class="profile-summary">
-            <div class="profile-avatar overflow-hidden">@if($user->photo)<img src="{{ asset('storage/'.$user->photo) }}" alt="Pasfoto {{ $user->name }}" class="h-full w-full object-cover">@else{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}@endif</div>
+            <div class="profile-avatar overflow-hidden">@if($user->photo)<img src="{{ url('storage/'.$user->photo) }}" alt="Pasfoto {{ $user->name }}" class="h-full w-full object-cover">@else{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}@endif</div>
             <div class="min-w-0 flex-1"><p class="profile-kicker">{{ $isMember ? 'Karateka KKI' : 'Akun KKI' }}</p><h2 class="break-words text-2xl font-bold">{{ $user->name }}</h2><p class="mt-1 break-all text-sm text-slate-500">{{ $user->email }}</p><div class="mt-3 flex flex-wrap gap-2">@foreach($user->allRoles() as $role)<span class="profile-chip">{{ \App\Services\RoleAccess::POSITIONS[$role] ?? \App\Services\RoleAccess::PERMISSIONS[$role] ?? str_replace('_', ' ', $role) }}</span>@endforeach @if($isMember)<x-verification-status :status="$user->verification_status" />@endif<span class="profile-chip {{ $user->is_active ? 'profile-chip-success' : '' }}">{{ $user->is_active ? 'Anggota aktif' : 'Belum aktif' }}</span></div></div>
             @if($isMember)<a href="{{ route('member.card') }}" class="btn btn-secondary"><x-sidebar-icon name="membership" />Kartu anggota</a>@endif
         </section>

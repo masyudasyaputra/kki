@@ -10,7 +10,7 @@
 <div class="toolbar"><button type="button" onclick="window.print()">Cetak / Simpan sebagai PDF</button><p>{{ $draft ? 'DRAF — belum diterbitkan' : $data['number'] }} · {{ $data['name'] }}</p><span class="print-hint">A4 lanskap · 2 halaman · skala 100% · nonaktifkan header/footer browser</span></div>
 <main>
     <section class="sheet">
-        @if(!empty($t['background']))<img src="{{ asset('storage/'.$t['background']) }}" class="bg-image" alt="">@else<div class="border"></div><div class="bottom-ornament">❦ ❧ ❦</div><div class="watermark">@for($i=0;$i<108;$i++)<span>KUSHIN RYU M KARATE-DO INDONESIA</span>@endfor</div>@endif
+        @if(!empty($t['background']))<img src="{{ url('storage/'.$t['background']) }}" class="bg-image" alt="">@else<div class="border"></div><div class="bottom-ornament">❦ ❧ ❦</div><div class="watermark">@for($i=0;$i<108;$i++)<span>KUSHIN RYU M KARATE-DO INDONESIA</span>@endfor</div>@endif
         @if($draft)<div class="draft">DRAF</div>@endif
         <div class="front-content">
             <img class="logo" src="{{ asset('images/logo-kki.png') }}" alt="KKI">
@@ -20,14 +20,14 @@
             <p class="award">Telah berhak menyandang tingkat</p><p class="rank">{{ $data['rank'] ?: 'Tingkat belum ditentukan' }} · {{ $data['belt'] }}</p><p style="margin:2mm 0;font-size:12pt">Dalam ilmu beladiri <strong>{{ $t['organization'] }}</strong></p>
             <p class="issued">Dikeluarkan di <strong>{{ $data['issue_place'] }}</strong> · Pada tanggal <strong>{{ $formatDate($data['issue_date']) }}</strong></p>
             <div class="signature-row">
-                <div class="signature"><div>{{ $t['signer_left_title'] }}</div><div class="signature-space">@if(!empty($t['signature_left']))<img src="{{ asset('storage/'.$t['signature_left']) }}" alt="Tanda tangan">@endif</div><p class="signature-name">{{ $t['signer_left_name'] ?: 'Nama penandatangan' }}</p><div class="signature-rank">{{ $t['signer_left_rank'] }}</div></div>
-                <div>@if(!empty($data['photo']))<img class="photo" src="{{ asset('storage/'.$data['photo']) }}" alt="Foto peserta">@else<div class="photo-placeholder">Foto 3 × 4</div>@endif</div>
-                <div class="signature"><div>{{ $t['signer_right_title'] }}</div><div class="signature-space">@if(!empty($t['signature_right']))<img src="{{ asset('storage/'.$t['signature_right']) }}" alt="Tanda tangan">@endif</div><p class="signature-name">{{ $t['signer_right_name'] ?: 'Nama penandatangan' }}</p><div class="signature-rank">{{ $t['signer_right_rank'] }}</div></div>
+                <div class="signature"><div>{{ $t['signer_left_title'] }}</div><div class="signature-space">@if(!empty($t['signature_left']))<img src="{{ url('storage/'.$t['signature_left']) }}" alt="Tanda tangan">@endif</div><p class="signature-name">{{ $t['signer_left_name'] ?: 'Nama penandatangan' }}</p><div class="signature-rank">{{ $t['signer_left_rank'] }}</div></div>
+                <div>@if(!empty($data['photo']))<img class="photo" src="{{ url('storage/'.$data['photo']) }}" alt="Foto peserta">@else<div class="photo-placeholder">Foto 3 × 4</div>@endif</div>
+                <div class="signature"><div>{{ $t['signer_right_title'] }}</div><div class="signature-space">@if(!empty($t['signature_right']))<img src="{{ url('storage/'.$t['signature_right']) }}" alt="Tanda tangan">@endif</div><p class="signature-name">{{ $t['signer_right_name'] ?: 'Nama penandatangan' }}</p><div class="signature-rank">{{ $t['signer_right_rank'] }}</div></div>
             </div>
         </div>
     </section>
     <section class="sheet back">
-        @if(!empty($t['back_background']))<img class="bg-image" src="{{ asset('storage/'.$t['back_background']) }}" alt="">@else<div class="border"></div><img class="bg-image" src="{{ asset('images/logo-kki.png') }}" alt="" style="object-fit:contain;padding:45mm;opacity:.05">@endif
+        @if(!empty($t['back_background']))<img class="bg-image" src="{{ url('storage/'.$t['back_background']) }}" alt="">@else<div class="border"></div><img class="bg-image" src="{{ asset('images/logo-kki.png') }}" alt="" style="object-fit:contain;padding:45mm;opacity:.05">@endif
         @if($draft)<div class="draft">DRAF</div>@endif
         <h1>HASIL UJIAN {{ strtoupper($data['type']) }}</h1><p class="back-intro">NAMA: <strong>{{ $data['name'] }}</strong> · RANTING: <strong>{{ $data['dojo'] ?: '—' }}</strong><br>Hasil: <strong>{{ $data['result'] }}</strong> dalam ujian beladiri {{ $t['organization'] }}<br>Diselenggarakan pada {{ $formatDate($data['exam_date']) }} di {{ $data['location'] }}<br>Berdasarkan Surat Keputusan Nomor {{ $data['decision_number'] ?: '—' }} tanggal {{ $formatDate($data['decision_date']) }}</p>
         <table class="scores"><thead><tr><th>MATERI</th><th>NILAI</th><th>TERBILANG / KATEGORI</th></tr></thead><tbody>
@@ -37,6 +37,6 @@
                 <tr><td>{{ $row['label'] }}</td><td>{{ $row['value'] === null || $row['value'] === '' ? '—' : (is_numeric($row['value']) ? rtrim(rtrim(number_format((float) $row['value'], 2, '.', ''), '0'), '.') : $row['value']) }}</td><td>{{ $row['words'] }}</td></tr>
             @endforeach
         </tbody></table>
-        <div class="back-footer"><div class="examiner"><strong>TIM PENGUJI</strong><p>{{ $data['examiner'] ?: '—' }}</p><p>{{ $data['number'] ?? 'DRAF' }}</p><p>ID Anggota: {{ $data['member_number'] }}</p></div><div class="back-signature"><p>{{ $data['issue_place'] }}, {{ $formatDate($data['issue_date']) }}</p><p>{{ $t['signer_right_title'] }}</p><div class="signature-space">@if(!empty($t['signature_right']))<img src="{{ asset('storage/'.$t['signature_right']) }}" alt="Tanda tangan">@endif</div><strong>{{ $t['signer_right_name'] }}</strong><p>{{ $t['signer_right_rank'] }}</p></div></div>
+        <div class="back-footer"><div class="examiner"><strong>TIM PENGUJI</strong><p>{{ $data['examiner'] ?: '—' }}</p><p>{{ $data['number'] ?? 'DRAF' }}</p><p>ID Anggota: {{ $data['member_number'] }}</p></div><div class="back-signature"><p>{{ $data['issue_place'] }}, {{ $formatDate($data['issue_date']) }}</p><p>{{ $t['signer_right_title'] }}</p><div class="signature-space">@if(!empty($t['signature_right']))<img src="{{ url('storage/'.$t['signature_right']) }}" alt="Tanda tangan">@endif</div><strong>{{ $t['signer_right_name'] }}</strong><p>{{ $t['signer_right_rank'] }}</p></div></div>
     </section>
 </main></body></html>

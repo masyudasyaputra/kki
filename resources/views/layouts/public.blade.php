@@ -16,7 +16,7 @@
 <header class="pp-header">
     <div class="pp-wrap pp-header-inner">
         <a href="{{ url('/') }}" class="pp-brand" aria-label="PP KKI - Beranda">
-            <img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" width="46" height="46">
+            <img src="{{ asset('images/logo-kki-dark.png') }}" alt="Logo KKI" width="46" height="46">
             <span><strong>PP KKI</strong><small>Pengurus Pusat</small></span>
         </a>
         <nav class="pp-nav" aria-label="Navigasi utama">
@@ -44,7 +44,7 @@
 <footer class="pp-footer">
     <div class="pp-wrap">
         <div class="pp-footer-top">
-            <a href="{{ url('/') }}" class="pp-brand"><img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" width="46" height="46" loading="lazy"><span><strong>PP KKI</strong><small>Pengurus Pusat</small></span></a>
+            <a href="{{ url('/') }}" class="pp-brand"><img src="{{ asset('images/logo-kki-dark.png') }}" alt="Logo KKI" width="46" height="46" loading="lazy"><span><strong>PP KKI</strong><small>Pengurus Pusat</small></span></a>
             <nav class="pp-footer-links" aria-label="Navigasi footer">
                 <a href="{{ route('public.agenda') }}">Agenda UKT</a>
                 <a href="{{ route('public.dojos') }}">Direktori dojo</a>

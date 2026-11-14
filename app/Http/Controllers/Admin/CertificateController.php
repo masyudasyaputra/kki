@@ -95,7 +95,7 @@ class CertificateController extends Controller
 
     private function pdfView(array $data, bool $draft)
     {
-        $pdfConfig = ['pdfUrl' => asset('storage/'.$data['template']['pdf_path']), 'layout' => $data['template']['pdf_layout'] ?? [],
+        $pdfConfig = ['pdfUrl' => url('storage/'.$data['template']['pdf_path']), 'layout' => $data['template']['pdf_layout'] ?? [],
             'values' => \App\Services\CertificatePdfLayout::values($data), 'draft' => $draft,
             'filename' => ($draft ? 'DRAF-' : '').preg_replace('/[^a-zA-Z0-9_-]/', '-', $data['number'] ?? $data['name']).'.pdf'];
         return view('admin.certificates.pdf', compact('pdfConfig', 'data', 'draft'));

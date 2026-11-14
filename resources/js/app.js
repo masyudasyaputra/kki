@@ -2,6 +2,9 @@ import './bootstrap';
 
 import Alpine from 'alpinejs';
 import profileRegion from './profile-region';
+import { downloadMemberCard } from './member-card-export';
+
+window.downloadKkiMemberCard = downloadMemberCard;
 
 window.Alpine = Alpine;
 

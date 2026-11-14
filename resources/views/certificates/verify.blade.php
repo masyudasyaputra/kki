@@ -13,7 +13,7 @@
     <main class="mx-auto max-w-2xl">
         <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="bg-gradient-to-r from-[#4a1421] via-[#6e1d31] to-[#87283c] px-6 py-7 text-white sm:px-8">
-                <div class="flex items-center gap-4"><img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" class="h-12 w-12 rounded-lg bg-white p-1.5"><div><p class="text-xs font-semibold uppercase tracking-widest text-rose-100/80">Pengurus Pusat KKI</p><h1 class="mt-1 text-xl font-bold">Verifikasi sertifikat</h1></div></div>
+                <div class="flex items-center gap-4"><img src="{{ asset('images/logo-kki-dark.png') }}" alt="Logo KKI" class="h-12 w-12 object-contain"><div><p class="text-xs font-semibold uppercase tracking-widest text-rose-100/80">Pengurus Pusat KKI</p><h1 class="mt-1 text-xl font-bold">Verifikasi sertifikat</h1></div></div>
             </div>
             <div class="p-6 sm:p-8">
                 <div class="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-900"><span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold" aria-hidden="true">✓</span><div><h2 class="font-semibold">Sertifikat terdaftar</h2><p class="mt-1 text-sm leading-5 text-emerald-800">Data sertifikat ini cocok dengan catatan penerbitan KKI.</p></div></div>
