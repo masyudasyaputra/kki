@@ -88,6 +88,14 @@ Route::middleware(['auth'])->get('/dashboard', function () {
     return redirect()->to(\App\Support\DashboardDestination::url(auth()->user()));
 })->name('dashboard');
 
+Route::middleware('auth')->group(function () {
+    Route::get('/panduan', \App\Http\Controllers\GuideController::class)->name('guide');
+    Route::get('/profile/{member}/belt-diploma', [ProfileController::class, 'beltDiploma'])->name('profile.belt-diploma');
+    Route::get('/kompetensi-wasit-juri', [\App\Http\Controllers\QualificationController::class, 'index'])->name('qualifications.index');
+    Route::post('/kompetensi-wasit-juri', [\App\Http\Controllers\QualificationController::class, 'store'])->name('qualifications.store');
+    Route::get('/kompetensi-wasit-juri/{qualification}/dokumen', [\App\Http\Controllers\QualificationController::class, 'document'])->name('qualifications.document');
+});
+
 // ============================
 // DASHBOARD MEMBER (KHUSUS MEMBER)
 // ============================
@@ -108,9 +116,17 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
+        Route::middleware('role:pb,super_admin,pengprov,admin_pengprov,pengcab,admin_pengcab')->group(function () {
+            Route::get('/wasit-juri', [\App\Http\Controllers\Admin\QualificationReviewController::class, 'index'])->name('qualifications.index');
+            Route::get('/wasit-juri/{qualification}/edit', [\App\Http\Controllers\Admin\QualificationReviewController::class, 'show'])->name('qualifications.show');
+            Route::post('/wasit-juri/{qualification}', [\App\Http\Controllers\Admin\QualificationReviewController::class, 'store'])->name('qualifications.store');
+        });
         Route::get('/sk-documents/{entity}/{id}', [\App\Http\Controllers\Admin\SkDocumentController::class, 'show'])->name('sk-documents.show');
 
         Route::middleware('role:super_admin')->group(function () {
+            Route::get('/nomor-id/pengurus', [\App\Http\Controllers\Admin\OfficialNumberController::class, 'index'])->name('official-numbers.index');
+            Route::get('/nomor-id/pengurus/{official}/edit', [\App\Http\Controllers\Admin\OfficialNumberController::class, 'edit'])->name('official-numbers.edit');
+            Route::put('/nomor-id/pengurus/{official}', [\App\Http\Controllers\Admin\OfficialNumberController::class, 'update'])->name('official-numbers.update');
             Route::get('/nomor-id', [\App\Http\Controllers\Admin\MemberNumberController::class, 'index'])->name('member-numbers.index');
             Route::get('/nomor-id/{member}/edit', [\App\Http\Controllers\Admin\MemberNumberController::class, 'edit'])->name('member-numbers.edit');
             Route::put('/nomor-id/{member}', [\App\Http\Controllers\Admin\MemberNumberController::class, 'update'])->name('member-numbers.update');
@@ -122,6 +138,9 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
         });
 
         Route::middleware('role:pb,super_admin,pengprov,admin_pengprov')->group(function () {
+            Route::get('/official-verifications', [\App\Http\Controllers\Admin\OfficialVerificationController::class, 'index'])->name('official-verifications.index');
+            Route::get('/official-verifications/{user}', [\App\Http\Controllers\Admin\OfficialVerificationController::class, 'show'])->name('official-verifications.show');
+            Route::post('/users/{user}/appointment', [UserController::class, 'appoint'])->name('users.appoint');
             Route::resource('users', UserController::class)->except('show');
         });
         Route::middleware('role:pb,super_admin')->group(function () {
@@ -138,9 +157,9 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
         Route::middleware('role:pb,super_admin,dewan_guru_pusat,verifikator_ujian_pb,pengelola_sertifikat_pb,panitia_ujian,penguji,pengprov,admin_pengprov,pengcab,admin_pengcab')->group(function () {
             Route::get('/exam-reviews', [\App\Http\Controllers\Admin\ExamReviewController::class, 'index'])->name('exam-reviews.index');
             Route::get('/exam-reviews/{exam}', [\App\Http\Controllers\Admin\ExamReviewController::class, 'show'])->name('exam-reviews.show');
-            Route::post('/exam-reviews/{exam}', [\App\Http\Controllers\Admin\ExamReviewController::class, 'store'])->middleware('role:verifikator_ujian_pb')->name('exam-reviews.store');
+            Route::post('/exam-reviews/{exam}', [\App\Http\Controllers\Admin\ExamReviewController::class, 'store'])->middleware('role:pb,super_admin,verifikator_ujian_pb,pengprov,admin_pengprov,pengcab,admin_pengcab')->name('exam-reviews.store');
         });
-        Route::middleware('role:super_admin,pengelola_sertifikat_pb')->group(function () {
+        Route::middleware('role:super_admin,pengelola_sertifikat_pb,pengprov,admin_pengprov,pengcab,admin_pengcab')->group(function () {
             Route::get('/certificate-signers', [\App\Http\Controllers\Admin\CertificateSignerController::class, 'index'])->name('certificate-signers.index');
             Route::put('/certificate-signers/{template}', [\App\Http\Controllers\Admin\CertificateSignerController::class, 'update'])->name('certificate-signers.update');
             Route::get('/certificate-templates', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'index'])->name('certificate-templates.index');
@@ -150,7 +169,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
             Route::post('/certificate-templates/{template}/layout', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'saveLayout'])->name('certificate-templates.layout.save');
         });
 
-        Route::middleware('role:super_admin,verifikator_anggota_pb,verifikator_pengprov,verifikator_pengcab')->group(function () {
+        Route::middleware('role:pb,super_admin,verifikator_anggota_pb,verifikator_pengprov,verifikator_pengcab')->group(function () {
             Route::get('/verifikasi-anggota', [\App\Http\Controllers\Admin\MembershipVerificationController::class, 'index'])->name('verifications.index');
             Route::get('/verifikasi-anggota/{member}', [\App\Http\Controllers\Admin\MembershipVerificationController::class, 'show'])->name('verifications.show');
             Route::post('/verifikasi-anggota/{member}', [\App\Http\Controllers\Admin\MembershipVerificationController::class, 'store'])->name('verifications.store');

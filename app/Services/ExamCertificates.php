@@ -78,6 +78,9 @@ class ExamCertificates
 
     public function authorize(User $actor, Exam $exam, bool $write = false): void
     {
+        if ($write && app(ExamAuthority::class)->isDan($exam) && !$actor->hasRole(['pb', 'super_admin'])) {
+            abort_unless($actor->hasRole('panitia_ujian') && $exam->examiners()->where('users.id', $actor->id)->exists(), 403, 'Pengelolaan UKT DAN ditangani PP.');
+        }
         if (!$write && RoleAccess::nationalExamReader($actor)) return;
         if (!$write && $actor->hasRole('verifikator_ujian_pb') && $exam->reviewers()->where('users.id', $actor->id)->exists()) return;
         if ($actor->hasRole(['pb', 'super_admin'])) return;
@@ -87,7 +90,7 @@ class ExamCertificates
         if ($actor->hasRole(['pengprov', 'admin_pengprov']) && $actor->province_id && (int) $exam->province_id === (int) $actor->province_id) return;
         if ($actor->hasRole(['pengcab', 'admin_pengcab']) && $actor->province_id && $actor->city_id
             && (int) $exam->province_id === (int) $actor->province_id
-            && $exam->participants()->whereHas('user', fn ($q) => $q->where('city_id', $actor->city_id))->exists()) return;
+            && ((int) $exam->city_id === (int) $actor->city_id || $exam->participants()->whereHas('user', fn ($q) => $q->where('city_id', $actor->city_id))->exists())) return;
         if (!$write && $actor->hasRole('penguji') && $exam->examiners()->where('users.id', $actor->id)->exists()) return;
         abort(403);
     }
@@ -101,6 +104,7 @@ class ExamCertificates
             if ($actor->hasRole(['pengprov', 'admin_pengprov']) && $actor->province_id) $q->orWhere('province_id', $actor->province_id);
             if ($actor->hasRole(['pengcab', 'admin_pengcab']) && $actor->province_id && $actor->city_id) {
                 $q->orWhere(fn ($r) => $r->where('province_id', $actor->province_id)->whereHas('participants.user', fn ($u) => $u->where('province_id', $actor->province_id)->where('city_id', $actor->city_id)));
+                if ((new Exam)->getConnection()->getSchemaBuilder()->hasColumn('exams', 'city_id')) $q->orWhere(fn ($r) => $r->where('province_id', $actor->province_id)->where('city_id', $actor->city_id));
             }
             if ($actor->hasRole('admin_dojo') && $actor->dojo_id) $q->orWhereHas('participants', fn ($p) => $p->where('dojo_id', $actor->dojo_id));
             if ($actor->hasRole(['panitia_ujian', 'penguji'])) $q->orWhereHas('examiners', fn ($u) => $u->where('users.id', $actor->id));
@@ -132,17 +136,27 @@ class ExamCertificates
     public function templates(User $actor)
     {
         $this->authorizeTemplates($actor);
-        return CertificateTemplate::query();
+        $query = CertificateTemplate::query();
+        if (RoleAccess::certificates($actor)) return $query;
+        $query->where(function ($q) use ($actor) {
+            $q->whereRaw('1 = 0');
+            if (RoleAccess::certificates($actor)) $q->orWhere(fn ($r) => $r->where('exam_type', 'dan')->whereNull('province_id')->whereNull('city_id'));
+            if ($actor->hasRole(ExamAuthority::REGIONAL) && $actor->province_id) $q->orWhere(function ($r) use ($actor) {
+                $r->where('exam_type', 'kyu')->where('province_id', $actor->province_id);
+                if (!$actor->hasRole(['pengprov', 'admin_pengprov'])) $r->where('city_id', $actor->city_id ?: 0);
+            });
+        });
+        return $query;
     }
 
     public function authorizeTemplates(User $actor): void
     {
-        abort_unless(RoleAccess::certificates($actor), 403, 'Template dan sertifikat dikelola Pengurus Pusat.');
+        abort_unless(RoleAccess::certificateTemplates($actor), 403);
     }
 
     public function authorizeIssuance(User $actor, Exam $exam): void
     {
-        $this->authorizeTemplates($actor);
+        abort_unless(app(ExamAuthority::class)->canIssue($actor, $exam), 403, 'Sertifikat DAN diterbitkan PP; KYU oleh Pengprov/Pengcab sesuai wilayah.');
     }
 
     public function canScore(User $actor, Exam $exam): bool
@@ -205,7 +219,7 @@ class ExamCertificates
             if ($errors) throw ValidationException::withMessages(['certificate' => $errors]);
         }
         $settings = $exam->certificate_settings ?? [];
-        return ['type' => $exam->exam_type, 'template' => array_merge($templateSettings, ['heading' => 'PENGURUS PUSAT']),
+        return ['type' => $exam->exam_type, 'template' => array_merge($templateSettings, ['heading' => $exam->exam_type === 'dan' ? 'PENGURUS PUSAT' : ($exam->city_id ? 'PENGURUS KABUPATEN / KOTA' : 'PENGURUS PROVINSI')]),
             'name' => $participant->user->name, 'member_number' => $participant->user->member_number,
             'no_id_msh' => $identity['no_id_msh'] ?? '',
             'birth_place' => $identity['birth_place'] ?? '', 'birth_date' => $identity['birth_date'] ?? '',

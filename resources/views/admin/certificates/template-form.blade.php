@@ -6,6 +6,7 @@
 @endphp
 <form method="post" enctype="multipart/form-data" action="{{ route('admin.certificate-templates.store') }}" class="cert-template-form" x-data="{ renderMode: @js($formValue('render_mode', $templateSettings['render_mode'] ?? 'pdf')) }">
     @csrf
+    @if(!$editingTemplate && \App\Services\RoleAccess::certificates(auth()->user()))<div class="p-5"><label>Provinsi penerbit (wajib untuk template KYU)<select name="province_id"><option value="">Nasional / pilih provinsi</option>@foreach(\App\Models\Province::orderBy('name')->get() as $province)<option value="{{ $province->id }}" @selected(old('province_id') == $province->id)>{{ $province->name }}</option>@endforeach</select></label></div>@endif
     <input type="hidden" name="_template_form" value="{{ $formKey }}">
     @if($editingTemplate)<input type="hidden" name="template_id" value="{{ $editingTemplate->id }}">@endif
     <div class="cert-template-form-body">
@@ -15,7 +16,7 @@
             <h3>1. Identitas template</h3>
             <div class="grid gap-4 sm:grid-cols-2">
                 <label class="sm:col-span-2">Nama template <span class="text-rose-700">*</span><input name="name" value="{{ $formValue('name', $editingTemplate?->name) }}" required maxlength="255" placeholder="Contoh: Sertifikat KKI 343 × 223 mm"></label>
-                <label>Jenis sertifikat<select name="exam_type"><option value="dan" @selected($formValue('exam_type', $editingTemplate?->exam_type ?? ($exam?->exam_type ?? 'dan')) === 'dan')>Sertifikat DAN</option><option value="kyu" @selected($formValue('exam_type', $editingTemplate?->exam_type ?? ($exam?->exam_type ?? 'dan')) === 'kyu')>Sertifikat Kyu</option></select></label>
+                <label>Jenis sertifikat<select name="exam_type">@if(\App\Services\RoleAccess::certificates(auth()->user()))<option value="dan" @selected($formValue('exam_type', $editingTemplate?->exam_type ?? ($exam?->exam_type ?? 'dan')) === 'dan')>Sertifikat DAN</option>@endif<option value="kyu" @selected($formValue('exam_type', $editingTemplate?->exam_type ?? ($exam?->exam_type ?? 'dan')) === 'kyu')>Sertifikat Kyu</option></select></label>
                 <label>Sumber desain<select name="render_mode" x-model="renderMode"><option value="pdf">PDF template unggahan</option><option value="builtin">Desain bawaan KKI</option></select></label>
             </div>
         </section>

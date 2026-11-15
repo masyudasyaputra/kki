@@ -1,4 +1,4 @@
-<div class="membership-studio" data-card="{{ json_encode(['name' => $user->name, 'number' => $user->member_number ?: 'Belum diterbitkan', 'dojo' => $user->dojo?->name ?? 'Belum dipilih', 'rank' => $user->beltLevel?->display_name ?? 'Belum ditentukan', 'logo' => asset('images/logo-kki-dark.png'), 'photo' => $user->photo ? url('storage/'.$user->photo) : null, 'qr' => 'data:image/svg+xml;base64,'.$qrPngBase64], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }}" x-data="{
+<div class="membership-studio" data-card="{{ json_encode(['name' => $user->name, 'theme' => \App\Support\MemberCardTheme::forBelt($user->beltLevel?->name), 'qualification' => $cardQualificationLabel ?? null, 'number' => $user->member_number ?: 'Belum diterbitkan', 'dojo' => $user->dojo?->name ?? 'Belum dipilih', 'rank' => $user->beltLevel?->display_name ?? 'Belum ditentukan', 'logo' => asset('images/logo-kki-dark.png'), 'photo' => $user->photo ? url('storage/'.$user->photo) : null, 'qr' => 'data:image/svg+xml;base64,'.$qrPngBase64], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }}" x-data="{
     isDownloading: false,
     async downloadCard(side) {
         if (this.isDownloading) return;
@@ -12,7 +12,7 @@
         }
     }
 }">
-    <div class="membership-heading"><div><p>KUSHIN RYU M. KARATE-DO INDONESIA</p><h2>Kartu Anggota <span>KKI</span></h2><p>Identitas karateka. Satu keluarga, satu semangat.</p></div><span class="membership-edition">BLACK & GOLD</span></div>
+    <div class="membership-heading"><div><p>KUSHIN RYU M. KARATE-DO INDONESIA</p><h2>Kartu Anggota <span>KKI</span></h2><p>Identitas karateka. Satu keluarga, satu semangat.</p></div><span class="membership-edition">{{ $user->beltLevel?->display_name ?? 'KARATEKA KKI' }}</span></div>
     <div class="membership-cards">
         @foreach (['front' => 'Sisi depan', 'back' => 'Sisi belakang'] as $side => $sideLabel)
             <section class="membership-side" aria-label="{{ $sideLabel }} kartu anggota">

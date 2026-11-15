@@ -37,7 +37,13 @@ class ProfileController extends Controller
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $user->fill($request->safe()->except('photo'));
+        $user->fill($request->safe()->except(['photo', 'belt_level_id', 'belt_diploma']));
+        $newDiploma = null;
+        if ($request->user()->role === 'member' && $request->hasFile('belt_diploma')) {
+            $newDiploma = $request->file('belt_diploma')->store('belt-diplomas/'.$user->id, 'local');
+            $user->forceFill(['requested_belt_level_id' => $request->input('belt_level_id', $user->requested_belt_level_id ?? $user->belt_level_id),
+                'belt_diploma_path' => $newDiploma, 'verification_status' => 'pending']);
+        }
         $previousPhoto = $user->photo;
         $newPhoto = null;
         if ($request->hasFile('photo')) {
@@ -55,6 +61,7 @@ class ProfileController extends Controller
         try {
             $user->save();
         } catch (\Throwable $exception) {
+            if ($newDiploma) Storage::disk('local')->delete($newDiploma);
             if ($newPhoto) Storage::disk('public')->delete($newPhoto);
             throw $exception;
         }
@@ -84,5 +91,14 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    public function beltDiploma(Request $request, \App\Models\User $member)
+    {
+        if ($request->user()->id !== $member->id) {
+            abort_unless(app(\App\Services\MembershipReview::class)->members($request->user())->whereKey($member->id)->exists(), 403);
+        }
+        abort_unless($member->belt_diploma_path && Storage::disk('local')->exists($member->belt_diploma_path), 404);
+        return response()->file(Storage::disk('local')->path($member->belt_diploma_path), ['X-Content-Type-Options' => 'nosniff']);
     }
 }

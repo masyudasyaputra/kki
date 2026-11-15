@@ -52,7 +52,12 @@ class CertificateDelivery
             // An older certificate may be delivered later; preserve any newer exam promotion.
             $hasNewerPromotion = DB::table('belt_histories')->join('exams', 'exams.id', '=', 'belt_histories.exam_id')
                 ->where('belt_histories.user_id', $member->id)->where('exams.execution_date', '>', $exam->execution_date)->exists();
-            if (!$hasNewerPromotion) $member->update(['belt_level_id' => $currentBelt->id]);
+            $promotionRecorded = BeltHistory::where('user_id', $member->id)->where('exam_id', $exam->id)->exists();
+            // Sending a certificate must not reapply a promotion already finalized by review.
+            if (!$hasNewerPromotion && !$promotionRecorded) {
+                $member->update(['belt_level_id' => $currentBelt->id]);
+                app(MemberNumbers::class)->confirmBlackBelt($member, $actor);
+            }
             BeltHistory::updateOrCreate(['user_id' => $member->id, 'exam_id' => $exam->id], [
                 'belt_level_id' => $belt->id, 'achieved_at' => $exam->execution_date,
                 'description' => 'Lulus ujian '.$exam->name.' · Sertifikat '.$certificate->number,

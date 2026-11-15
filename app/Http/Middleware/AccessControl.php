@@ -11,11 +11,18 @@ class AccessControl
     public function handle(Request $request, Closure $next)
     {
         $actor = $request->user();
-        if ($request->routeIs('admin.certificate-templates.*') ||
-            ($request->routeIs('admin.exams.certificates.*') && !$request->routeIs('admin.exams.certificates.index', 'admin.exams.certificates.print'))) {
-            abort_unless(RoleAccess::certificates($actor), 403, 'Penerbitan sertifikat hanya untuk Pengelola Sertifikat PB.');
+        if ($request->routeIs('admin.certificate-templates.*', 'admin.certificate-signers.*')) {
+            abort_unless(RoleAccess::certificateTemplates($actor), 403);
         }
-        if ($request->routeIs('admin.members.*', 'admin.dashboard', 'admin.payments.*')) {
+        if ($request->routeIs('admin.exams.certificates.*') && !$request->routeIs('admin.exams.certificates.index', 'admin.exams.certificates.print')) {
+            $exam = $request->route('exam');
+            $exam = $exam instanceof \App\Models\Exam ? $exam : \App\Models\Exam::findOrFail($exam);
+            app(\App\Services\ExamCertificates::class)->authorizeIssuance($actor, $exam);
+        }
+        if ($request->routeIs('admin.dashboard')) {
+            abort_unless($actor->hasRole(['super_admin', 'pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo']), 403);
+        }
+        if ($request->routeIs('admin.members.*', 'admin.payments.*')) {
             abort_unless($actor->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo']), 403);
         }
         if ($request->routeIs('admin.exams.register-member', 'admin.exams.remove-member', 'admin.exams.bulk-remove-member', 'admin.exams.bulk-payment')) {

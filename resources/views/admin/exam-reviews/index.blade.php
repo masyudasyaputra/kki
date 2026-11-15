@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <div>
-            <h1 class="page-title">Pengajuan Hasil Ujian ke Pusat</h1>
+            <h1 class="page-title">Pengesahan Hasil Ujian</h1>
             <p class="page-subtitle">Pantau status pengajuan dan tindak lanjuti hasil ujian dari wilayah Anda.</p>
         </div>
     </x-slot>
@@ -27,7 +27,7 @@
                     ['label' => 'Semua pengajuan', 'value' => $totalCount, 'status' => null, 'tone' => 'slate'],
                     ['label' => 'Menunggu verifikasi', 'value' => $statusCounts->get('submitted', 0), 'status' => 'submitted', 'tone' => 'amber'],
                     ['label' => 'Perlu perbaikan', 'value' => $statusCounts->get('revision', 0), 'status' => 'revision', 'tone' => 'rose'],
-                    ['label' => 'Disetujui pusat', 'value' => $statusCounts->get('approved', 0), 'status' => 'approved', 'tone' => 'emerald'],
+                    ['label' => 'Disahkan', 'value' => $statusCounts->get('approved', 0), 'status' => 'approved', 'tone' => 'emerald'],
                 ];
             @endphp
             @foreach($reviewStats as $stat)
@@ -62,7 +62,7 @@
                         <option value="">Semua status</option>
                         <option value="submitted" @selected(request('status') === 'submitted')>Menunggu verifikasi</option>
                         <option value="revision" @selected(request('status') === 'revision')>Perlu perbaikan</option>
-                        <option value="approved" @selected(request('status') === 'approved')>Disetujui pusat</option>
+                        <option value="approved" @selected(request('status') === 'approved')>Disahkan</option>
                         <option value="draft" @selected(request('status') === 'draft')>Belum dikirim</option>
                     </select>
                     <button type="submit" class="inline-flex items-center justify-center gap-2 rounded-lg bg-[#641b2d] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#4a1421] focus:outline-none focus:ring-2 focus:ring-[#762137] focus:ring-offset-2">
@@ -78,7 +78,7 @@
                             $statusLabel = match($exam->review_status) {
                                 'submitted' => 'Menunggu verifikasi',
                                 'revision' => 'Perlu perbaikan',
-                                'approved' => 'Disetujui pusat',
+                                'approved' => 'Disahkan',
                                 default => 'Belum dikirim',
                             };
                             $statusClass = match($exam->review_status) {

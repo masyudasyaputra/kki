@@ -62,6 +62,10 @@ class CertificateSignerController extends Controller
     private function eligibleSigners()
     {
         return User::query()
+            ->when(!\App\Services\RoleAccess::certificates(auth()->user()), function ($query) {
+                $query->where('province_id', auth()->user()->province_id ?: 0);
+                if (!auth()->user()->hasRole(['pengprov', 'admin_pengprov'])) $query->where('city_id', auth()->user()->city_id ?: 0);
+            })
             ->where('is_active', true)
             ->whereHas('beltLevel', fn ($query) => $query->whereRaw('LOWER(kyu_dan) LIKE ?', ['%dan%']))
             ->with('beltLevel')

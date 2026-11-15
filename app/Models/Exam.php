@@ -22,6 +22,7 @@ class Exam extends Model
         'execution_date',
         'location',
         'province_id',
+        'city_id',
         'status'
     ];
 

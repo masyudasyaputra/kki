@@ -23,6 +23,7 @@ class MembershipVerificationTest extends TestCase
             $table->json('roles')->nullable();
             foreach (['province_id', 'city_id', 'dojo_id', 'belt_level_id'] as $column) $table->integer($column)->nullable();
             $table->string('verification_status')->default('pending');
+            $table->string('registration_type')->default('karateka');
             $table->boolean('is_active')->default(false);
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamps();
@@ -39,6 +40,9 @@ class MembershipVerificationTest extends TestCase
             $table->id(); $table->integer('member_id'); $table->integer('reviewer_id')->nullable();
             $table->string('reviewer_level'); $table->string('status');
             $table->text('notes')->nullable(); $table->json('snapshot'); $table->timestamps();
+        });
+        Schema::create('officials', function (Blueprint $table) {
+            $table->id(); $table->integer('user_id')->nullable()->unique();
         });
         Schema::create('exams', function (Blueprint $t) { $t->id(); });
         (require database_path('migrations/2026_11_09_000002_restructure_roles_and_exam_assignments.php'))->up();
@@ -60,6 +64,24 @@ class MembershipVerificationTest extends TestCase
             'province_id' => $province, 'city_id' => $city, 'district' => 'Medan Johor'])->fresh();
     }
 
+    public function test_official_applications_are_excluded_from_membership_list_badge_detail_and_approval(): void
+    {
+        $karateka = $this->member();
+        $official = $this->member();
+        $official->update(['registration_type' => 'official', 'name' => 'Calon Pengurus Non Karateka']);
+        $this->actingAs($this->actor('verifikator_anggota_pb'));
+        $this->get(route('admin.verifications.index'))->assertOk()
+            ->assertSee($karateka->name)->assertDontSee('Calon Pengurus Non Karateka')
+            ->assertSee('aria-label="1 pengajuan menunggu verifikasi"', false);
+        $this->get(route('admin.verifications.show', $official))->assertNotFound();
+        $this->post(route('admin.verifications.store', $official), [
+            'status' => 'approved', 'checked' => MembershipReview::FIELDS,
+            'fingerprint' => app(MembershipReview::class)->fingerprint($official),
+        ])->assertNotFound();
+        $this->assertDatabaseCount('membership_verifications', 0);
+        $this->assertSame('pending', $official->fresh()->verification_status);
+    }
+
     public function test_verification_list_and_detail_display_the_members_photo(): void
     {
         $member = $this->member();
@@ -74,6 +96,20 @@ class MembershipVerificationTest extends TestCase
     {
         return array_replace(['status' => 'approved', 'checked' => MembershipReview::FIELDS,
             'fingerprint' => app(MembershipReview::class)->fingerprint($member)], $overrides);
+    }
+
+    public function test_approval_of_black_belt_adds_msh_without_changing_the_existing_number(): void
+    {
+        (require database_path('migrations/2026_11_14_000001_add_member_number_management.php'))->up();
+        DB::table('belt_levels')->insert(['id' => 1, 'name' => 'Hitam', 'is_active' => true]);
+        $member = $this->member();
+        $before = $member->member_number;
+        $member->update(['belt_level_id' => 1]);
+        $this->assertSame($before, $member->fresh()->member_number);
+        $this->actingAs($actor = $this->actor('verifikator_anggota_pb'))
+            ->post(route('admin.verifications.store', $member), $this->decision($member->fresh()))->assertSessionHasNoErrors();
+        $this->assertSame('MSH-'.$before, $member->fresh()->member_number);
+        $this->assertDatabaseHas('member_number_changes', ['member_id' => $member->id, 'actor_id' => $actor->id, 'before_number' => $before, 'after_number' => 'MSH-'.$before]);
     }
 
     public function test_sidebar_badge_counts_only_pending_members_in_the_verifiers_scope(): void
@@ -159,7 +195,7 @@ class MembershipVerificationTest extends TestCase
         $this->get(route('admin.verifications.show', $otherCity))->assertNotFound();
         $this->post(route('admin.verifications.store', $outside), $this->decision($outside) + ['province_id' => 2, 'city_id' => 3])->assertNotFound();
         $regional->update(['positions' => ['pb']]);
-        $this->assertSame(2, app(MembershipReview::class)->members($regional)->count());
+        $this->assertSame(4, app(MembershipReview::class)->members($regional)->count());
         $regional->update(['roles' => ['verifikator_anggota_pb']]);
         $this->assertSame(4, app(MembershipReview::class)->members($regional)->count());
         $this->get(route('admin.verifications.show', $outside))->assertOk();
@@ -256,7 +292,7 @@ class MembershipVerificationTest extends TestCase
     {
         $admin = $this->actor('pb', null, null);
         $admin->update(['roles' => ['pb', 'super_admin', 'verifikator_anggota_pb']]);
-        $this->actingAs($admin)->get(route('admin.users.edit', $admin))->assertOk()->assertSee('Pengurus PB');
+        $this->actingAs($admin)->get(route('admin.users.edit', $admin))->assertOk()->assertSee('Pengurus Pusat');
         $this->put(route('admin.users.update', $admin), [
             'name' => $admin->name, 'email' => $admin->email, 'is_active' => 1,
             'positions' => ['pb', 'super_admin'], 'roles' => ['verifikator_anggota_pb'],
@@ -266,6 +302,6 @@ class MembershipVerificationTest extends TestCase
         $this->assertTrue($admin->hasRole(['pb']));
         $this->assertContains('super_admin', $admin->positions);
         $this->actingAs($admin)->get(route('admin.users.edit', $admin))->assertOk();
-        $this->get('/dashboard')->assertRedirect(route('admin.users.index'));
+        $this->get('/dashboard')->assertRedirect(route('admin.dashboard'));
     }
 }

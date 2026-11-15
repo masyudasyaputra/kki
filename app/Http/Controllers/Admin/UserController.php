@@ -8,6 +8,8 @@ use App\Services\RoleAccess;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{DB, Hash};
 use Illuminate\Validation\Rule;
+use App\Models\Official;
+use Illuminate\Support\Facades\Storage;
 
 class UserController extends Controller
 {
@@ -44,7 +46,9 @@ class UserController extends Controller
     public function edit(User $user)
     {
         $this->authorizeTarget($user);
+        $user->load('official');
         return view('admin.users.edit', $this->formData() + ['user' => $user,
+            'appointmentCities' => City::when(!RoleAccess::managesUsers(auth()->user()), fn ($q) => $q->where('province_id', auth()->user()->province_id))->orderBy('name')->get(['id', 'name', 'province_id']),
             'cities' => City::where('province_id', $user->province_id)->orderBy('name')->get(),
             'dojos' => Dojo::where('city_id', $user->city_id)->orderBy('name')->get()]);
     }
@@ -57,6 +61,65 @@ class UserController extends Controller
             AccessAudit::record('user.created', $request->user(), $user, [], $this->accessData($user));
         });
         return redirect()->route('admin.users.index')->with('success', 'Akun, jabatan, dan hak akses disimpan.');
+    }
+
+    public function appoint(Request $request, User $user)
+    {
+        $this->authorizeTarget($user);
+        abort_if($user->hasRole(RoleAccess::NATIONAL), 403, 'Gunakan pengaturan akses untuk akun tingkat pusat.');
+        $national = RoleAccess::managesUsers($request->user());
+        $data = $request->validate([
+            'level' => ['required', Rule::in($national ? ['provinsi', 'pengcab'] : ['pengcab'])],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
+            'phone_number' => ['nullable', 'string', 'max:20'],
+            'position' => ['required', 'string', 'max:255'],
+            'province_id' => ['required', 'integer', 'exists:provinces,id'],
+            'city_id' => ['nullable', 'required_if:level,pengcab', 'integer', Rule::exists('cities', 'id')->where('province_id', $request->province_id)],
+            'sk_number' => ['required', 'string', 'max:100'],
+            'sk_expiry_date' => ['required', 'date', 'after_or_equal:today'],
+            'sk_document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
+        ]);
+        abort_unless($national || (int) $data['province_id'] === (int) $request->user()->province_id, 403);
+        $newPath = $request->file('sk_document')?->store('sk-documents/officials', 'local');
+        $oldPath = null;
+        try {
+            DB::transaction(function () use ($request, $user, $data, $newPath, &$oldPath) {
+                $user = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
+                $this->authorizeTarget($user);
+                abort_if($user->hasRole(RoleAccess::NATIONAL), 403);
+                $official = $user->official;
+                $before = $this->accessData($user) + ['official' => $official?->toArray()];
+                $oldPath = $official?->sk_document_path;
+                $role = $data['level'] === 'provinsi' ? 'pengprov' : 'pengcab';
+                $positions = array_values(array_diff($user->positions ?? [], ['pengprov', 'pengcab', 'admin_dojo']));
+                $positions[] = $role;
+                if ($user->registration_type === 'official') $positions = [$role];
+                $user->update([
+                    'name' => $data['name'] ?? $user->name,
+                    'role' => $role, 'positions' => array_values(array_unique($positions)),
+                    'province_id' => $data['province_id'],
+                    'city_id' => $data['level'] === 'pengcab' ? $data['city_id'] : null,
+                    'dojo_id' => null, 'is_active' => true,
+                ]);
+                $official = Official::updateOrCreate(['user_id' => $user->id], [
+                    'name' => $user->name, 'phone_number' => $data['phone_number'] ?? $user->whatsapp,
+                    'position' => $data['position'], 'level' => $data['level'],
+                    'province_id' => $user->province_id, 'city_id' => $user->city_id,
+                    'sk_number' => $data['sk_number'], 'sk_expiry_date' => $data['sk_expiry_date'],
+                    'sk_document_path' => $newPath ?? $oldPath,
+                ]);
+                AccessAudit::record('official.appointed', $request->user(), $user, $before,
+                    $this->accessData($user) + ['official' => $official->toArray()]);
+            });
+        } catch (\Throwable $exception) {
+            if ($newPath) Storage::disk('local')->delete($newPath);
+            throw $exception;
+        }
+        if ($newPath && $oldPath) Storage::disk('local')->delete($oldPath);
+        if ($request->input('return_to') === 'officials') {
+            return redirect()->route('admin.officials.index')->with('success', 'Pengurus ditetapkan. Akun aktif, akses wilayah, dan data SK tersimpan sekaligus.');
+        }
+        return redirect()->route($request->input('return_to') === 'official-verifications' ? 'admin.official-verifications.show' : 'admin.users.edit', $user)->with('success', 'Pengurus ditetapkan. Akun aktif, akses wilayah, dan data SK tersimpan sekaligus.');
     }
 
     public function update(Request $request, User $user)

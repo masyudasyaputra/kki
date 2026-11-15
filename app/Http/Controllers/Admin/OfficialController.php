@@ -8,6 +8,8 @@ use App\Models\Province;
 use App\Models\City; // Tambahkan ini agar bisa pilih kota saat edit
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use App\Models\User;
+use App\Services\RoleAccess;
 
 class OfficialController extends Controller
 {
@@ -38,10 +40,31 @@ class OfficialController extends Controller
         return view('admin.officials.index', compact('officials'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
-        $provinces = Province::orderBy('name')->get();
-        return view('admin.officials.create', compact('provinces'));
+        $national = RoleAccess::managesUsers($request->user());
+        $canAppoint = $request->user()->hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov']);
+        $candidates = collect();
+        $candidate = null;
+        if ($canAppoint) {
+            $query = User::where('registration_type', 'official');
+            if (!$national) {
+                $query->where('province_id', $request->user()->province_id ?: 0);
+            }
+            foreach (RoleAccess::NATIONAL as $role) {
+                $query->where('role', '!=', $role)
+                    ->where(fn ($q) => $q->whereNull('roles')->orWhereJsonDoesntContain('roles', $role))
+                    ->where(fn ($q) => $q->whereNull('positions')->orWhereJsonDoesntContain('positions', $role));
+            }
+            if ($request->filled('user_id')) {
+                $candidate = (clone $query)->with('official')->findOrFail($request->integer('user_id'));
+            }
+            $candidates = $query->whereDoesntHave('official')->orderBy('name')->get();
+        } else {
+            abort_if($request->filled('user_id'), 403);
+        }
+        $provinces = Province::when(!$national, fn ($q) => $q->whereKey($request->user()->province_id))->orderBy('name')->get();
+        return view('admin.officials.create', compact('provinces', 'candidates', 'candidate', 'canAppoint', 'national'));
     }
 
     public function store(Request $request)
@@ -71,6 +94,9 @@ class OfficialController extends Controller
      */
     public function edit(Official $official)
     {
+        if ($official->user_id) {
+            return redirect()->route('admin.users.edit', $official->user_id);
+        }
         $provinces = Province::orderBy('name')->get();
         // Ambil data kota berdasarkan provinsi yang sedang dipilih si pengurus
         $cities = City::where('province_id', $official->province_id)->get();
@@ -83,6 +109,10 @@ class OfficialController extends Controller
      */
     public function update(Request $request, Official $official)
     {
+        if ($official->user_id) {
+            return redirect()->route('admin.users.edit', $official->user_id)
+                ->with('success', 'Perbarui pengurus melalui formulir penetapan agar data akun dan wilayah tersimpan bersama.');
+        }
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'level' => 'required|in:provinsi,pengcab',

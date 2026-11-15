@@ -18,6 +18,9 @@ class MemberNumberController extends Controller
             'mode' => ['nullable', Rule::in(['auto', 'manual'])],
         ]);
         $query = User::where('role', 'member')->with(['province', 'beltLevel']);
+        if ($query->getModel()->getConnection()->getSchemaBuilder()->hasColumn('users', 'registration_type')) {
+            $query->where(fn ($q) => $q->whereNull('registration_type')->orWhere('registration_type', '!=', 'official'));
+        }
         $total = (clone $query)->count();
         $manual = (clone $query)->where('member_number_manual', true)->count();
         if ($search = trim($filters['search'] ?? '')) {

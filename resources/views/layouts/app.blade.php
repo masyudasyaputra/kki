@@ -2,6 +2,7 @@
     $errors = $errors ?? new \Illuminate\Support\ViewErrorBag();
     $embeddedForm = request()->boolean('_form_modal') || request()->header('Sec-Fetch-Dest') === 'iframe';
     $memberWorkspace = auth()->user()?->role === 'member';
+    $officialWorkspace = !$memberWorkspace && auth()->user()?->hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo']);
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full">
@@ -60,18 +61,18 @@
             {{ $slot }}
         </main>
     @else
-    <div class="{{ $memberWorkspace ? 'member-shell' : '' }} min-h-screen flex flex-col lg:pl-[240px]">
+    <div class="{{ $memberWorkspace ? 'member-shell' : ($officialWorkspace ? 'official-shell' : '') }} min-h-screen flex flex-col lg:pl-[240px]">
 
         @include('layouts.navigation')
 
         <header class="page-header">
-            <div class="mx-auto flex min-h-[72px] max-w-7xl items-center justify-between gap-3 py-3 pl-16 pr-4 sm:gap-5 sm:pr-6 lg:px-8">
+            <div class="page-header-layout mx-auto flex min-h-[72px] max-w-7xl items-center justify-between gap-3 py-3 pl-16 pr-4 sm:gap-5 sm:pr-6 lg:px-8">
                 <div class="page-header-content min-w-0 flex-1">
                     @isset($header)
                         {{ $header }}
                     @endisset
                 </div>
-                <div class="flex shrink-0 items-center gap-2 sm:gap-4">
+                <div class="page-header-account flex shrink-0 items-center gap-2 sm:gap-4">
                 <a href="{{ route('profile.edit') }}" class="flex min-w-0 items-center gap-2 rounded-xl p-1 text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500" aria-label="Profil akun {{ auth()->user()->name }}">
                     <x-member-avatar :member="auth()->user()" class="account-avatar" />
                     <div class="min-w-0 text-right sm:text-left">
@@ -112,6 +113,8 @@
         </footer>
         @if ($memberWorkspace)
             @include('member.bottom-navigation')
+        @elseif ($officialWorkspace)
+            @include('admin.bottom-navigation')
         @endif
     </div>
     @endif

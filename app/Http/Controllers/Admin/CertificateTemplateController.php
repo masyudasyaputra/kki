@@ -25,6 +25,8 @@ class CertificateTemplateController extends Controller
         $request->merge(['render_mode' => $request->input('render_mode', 'builtin')]);
         $data = $request->validate(['template_id' => ['nullable', 'integer'], 'name' => ['required', 'string', 'max:255'],
             'exam_type' => ['required', Rule::in(['dan', 'kyu'])],
+            'province_id' => ['nullable', 'integer', 'exists:provinces,id'],
+            'city_id' => ['nullable', 'integer', Rule::exists('cities', 'id')->where('province_id', $request->input('province_id'))],
             'render_mode' => ['required', Rule::in(['builtin', 'pdf'])],
             'template_pdf' => ['nullable', 'file', 'mimes:pdf', 'max:20480'],
             'heading' => ['required_unless:render_mode,pdf', 'nullable', 'string', 'max:255'], 'organization' => ['required_unless:render_mode,pdf', 'nullable', 'string', 'max:255'],
@@ -36,11 +38,17 @@ class CertificateTemplateController extends Controller
             'signature_right' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048'],
         ]);
         $template = !empty($data['template_id']) ? $service->templates($request->user())->findOrFail($data['template_id']) : new CertificateTemplate;
+        if ($data['exam_type'] === 'dan') {
+            abort_unless(\App\Services\RoleAccess::certificates($request->user()), 403);
+        } else {
+            abort_unless($request->user()->hasRole(\App\Services\ExamAuthority::REGIONAL) || \App\Services\RoleAccess::certificates($request->user()), 403);
+            if (!$template->exists && !$request->user()->province_id && empty($data['province_id'])) throw \Illuminate\Validation\ValidationException::withMessages(['province_id' => 'Pilih provinsi untuk template KYU.']);
+        }
         if ($data['render_mode'] === 'pdf' && !$request->hasFile('template_pdf') && empty($template->settings['pdf_path'])) {
             throw \Illuminate\Validation\ValidationException::withMessages(['template_pdf' => 'Unggah desain PDF untuk template ini.']);
         }
         $settings = array_merge(ExamCertificates::defaults($data['exam_type']), $template->settings ?? [], collect($data)->except(['template_id', 'name', 'exam_type', 'template_pdf', 'background', 'back_background', 'signature_left', 'signature_center', 'signature_right'])->all());
-        $settings['heading'] = 'PENGURUS PUSAT';
+        $settings['heading'] = $data['exam_type'] === 'dan' ? 'PENGURUS PUSAT' : ($request->user()->hasRole(['pengcab', 'admin_pengcab']) ? 'PENGURUS KABUPATEN / KOTA' : 'PENGURUS PROVINSI');
         if ($request->hasFile('template_pdf')) {
             $settings['pdf_path'] = $request->file('template_pdf')->store('certificates/pdf-templates', 'public');
             $settings['pdf_layout'] = [];
@@ -50,8 +58,12 @@ class CertificateTemplateController extends Controller
             if ($request->hasFile($field)) $settings[$field] = $request->file($field)->store('certificates/templates', 'public');
         }
         $template->fill(['name' => $data['name'], 'exam_type' => $data['exam_type'], 'settings' => $settings]);
-        $template->province_id = null;
-        $template->city_id = null;
+        if ($data['exam_type'] === 'dan') { $template->province_id = null; $template->city_id = null; }
+        elseif (!$template->exists) {
+            $central = \App\Services\RoleAccess::certificates($request->user());
+            $template->province_id = $central ? ($data['province_id'] ?? $request->user()->province_id) : $request->user()->province_id;
+            $template->city_id = $central ? ($data['city_id'] ?? null) : ($request->user()->hasRole(['pengprov', 'admin_pengprov']) ? null : $request->user()->city_id);
+        }
         $template->save();
         if ($settings['render_mode'] === 'pdf') return redirect()->route('admin.certificate-templates.layout', $template);
         return redirect()->route('admin.certificate-templates.index')->with('success', 'Template sertifikat disimpan.');

@@ -1,9 +1,9 @@
 <x-app-layout>
-    <x-slot name="header"><h1 class="page-title">{{ $exam->name }} — Verifikasi Pusat</h1></x-slot>
+    <x-slot name="header"><h1 class="page-title">{{ $exam->name }} — Pengesahan {{ app(\App\Services\ExamAuthority::class)->destination($exam) }}</h1></x-slot>
     <div class="mx-auto max-w-7xl space-y-5 p-6">
         @if(session('success'))<p role="status">{{ session('success') }}</p>@endif
         @if($errors->any())<ul class="text-red-600">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>@endif
-        <p>Status: {{ ['draft' => 'Belum dikirim', 'submitted' => 'Menunggu verifikasi pusat', 'revision' => 'Perlu perbaikan', 'approved' => 'Disetujui pusat'][$exam->review_status] ?? $exam->review_status }}</p>
+        <p>Status: {{ ['draft' => 'Belum dikirim', 'submitted' => 'Menunggu pengesahan', 'revision' => 'Perlu perbaikan', 'approved' => 'Disahkan'][$exam->review_status] ?? $exam->review_status }}</p>
         @if(!auth()->user()->hasRole('super_admin') || \App\Services\RoleAccess::nationalExamReader(auth()->user()))<div class="flex gap-3"><a class="btn btn-secondary" href="{{ route('admin.exams.show', $exam) }}">Data peserta & sertifikat</a><a class="btn btn-secondary" href="{{ route('admin.exams.scoring', $exam) }}">{{ app(\App\Services\ExamCertificates::class)->canScore(auth()->user(), $exam) ? 'Input nilai ujian' : 'Lihat nilai ujian' }}</a></div>@endif
         @if($canAssign && $exam->review_status !== 'approved')
             <form method="post" action="{{ route('admin.exam-reviews.assign', $exam) }}" class="space-y-3 rounded-xl bg-white p-5">@csrf @method('put')

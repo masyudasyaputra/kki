@@ -126,18 +126,23 @@
         content.replaceChildren(template.content.cloneNode(true));
         showFeedback('');
         fitViewport();
-        requestAnimationFrame(() => content.querySelector('input:not([type="hidden"]):not([disabled])')?.focus({ preventScroll: true }));
+        requestAnimationFrame(() => {
+            fitViewport();
+            if (!window.matchMedia('(pointer: coarse)').matches) {
+                content.querySelector('input:not([type="hidden"]):not([disabled])')?.focus({ preventScroll: true });
+            }
+        });
     };
     document.addEventListener('click', event => {
         if (!(event.target instanceof Element)) return;
         const link = event.target.closest('a[href]');
-        if (!link || event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        if (!link || event.defaultPrevented || (event.button !== undefined && event.button !== 0) || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
         const url = new URL(link.href, location.href), mode = modeFor(url);
         if (!mode || url.origin !== location.origin || !document.querySelector(`template[data-auth-form="${mode}"]`)) return;
         if (mode === 'forgot-password' && !dialog?.contains(link)) return;
         event.preventDefault();
         open(url.href, mode, dialog?.contains(link) ? opener : link);
-    });
+    }, true);
     const current = new URL(location.href), mode = current.searchParams.get('auth');
     if (mode === 'login' || mode === 'register') {
         open(new URL(mode, new URL('.', location.href)).href, mode, null);

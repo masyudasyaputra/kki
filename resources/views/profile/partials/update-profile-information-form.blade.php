@@ -27,11 +27,20 @@
                 @endif
                 <div><x-input-label for="district" value="Kecamatan" /><input id="district" name="district" type="text" x-model="district" list="profile-districts" maxlength="150" autocomplete="address-level3" placeholder="Ketik atau pilih kecamatan" :disabled="!city || loadingDojos"><datalist id="profile-districts"><template x-for="item in districts" :key="item.id"><option :value="item.name"></option></template></datalist><p class="profile-field-help">Boleh diketik jika belum tersedia dalam daftar.</p><x-input-error :messages="$errors->get('district')" class="mt-2" /></div>
                 <div><x-input-label for="dojo_id" value="Nama dojo" /><select id="dojo_id" name="dojo_id" x-model="dojo" :disabled="!city || loadingDojos"><option value="" x-text="loadingDojos ? 'Memuat dojo...' : 'Belum dipilih'"></option><template x-for="item in dojos" :key="item.id"><option :value="String(item.id)" :selected="String(item.id) === dojo" x-text="item.name"></option></template></select><p x-show="city && !loadingDojos && !dojos.length" x-cloak class="profile-field-help">Belum ada dojo di wilayah ini. Data dapat dilengkapi kemudian.</p><x-input-error :messages="$errors->get('dojo_id')" class="mt-2" /></div>
-                @if($isMember)<div><x-input-label for="belt_level_id" value="Tingkat sabuk" /><select id="belt_level_id" name="belt_level_id"><option value="">Belum dipilih</option>@foreach($beltLevels as $belt)<option value="{{ $belt->id }}" @selected((string)old('belt_level_id', $user->belt_level_id) === (string)$belt->id)>{{ $belt->name }} {{ $belt->kyu_dan }}</option>@endforeach</select><x-input-error :messages="$errors->get('belt_level_id')" class="mt-2" /></div>@endif
+                @if($isMember)<div><x-input-label for="belt_level_id" value="Tingkat sabuk" /><select id="belt_level_id" name="belt_level_id"><option value="">Belum dipilih</option>@foreach($beltLevels as $belt)<option value="{{ $belt->id }}" @selected((string)old('belt_level_id', $user->requested_belt_level_id ?? $user->belt_level_id) === (string)$belt->id)>{{ $belt->name }} {{ $belt->kyu_dan }}</option>@endforeach</select><x-input-error :messages="$errors->get('belt_level_id')" class="mt-2" /></div>@endif
                 <div><x-input-label for="first_coach" value="Pelatih awal" /><x-text-input id="first_coach" name="first_coach" type="text" :value="old('first_coach', $user->first_coach)" maxlength="255" placeholder="Nama pelatih pertama Anda" /><x-input-error :messages="$errors->get('first_coach')" class="mt-2" /></div>
             </div>
             <div x-show="regionError" x-cloak role="alert" class="mt-3 text-sm text-red-700"><span x-text="regionError"></span> <button type="button" @click="retry()" class="font-semibold underline">Coba lagi</button></div>
         </fieldset>
+        @if($isMember)
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <x-input-label for="belt_diploma" value="Ijazah bukti tingkat sabuk" />
+                <input id="belt_diploma" name="belt_diploma" type="file" accept=".pdf,.jpg,.jpeg,.png" class="mt-2 block w-full text-sm">
+                <p class="profile-field-help">Wajib unggah ijazah setiap mengajukan perubahan sabuk. PDF, JPG, atau PNG maksimal 10 MB. Sabuk pada kartu tetap memakai data yang sudah disahkan sampai verifikasi selesai.</p>
+                <x-input-error :messages="$errors->get('belt_diploma')" class="mt-2" />
+                @if($user->requested_belt_level_id)<p class="mt-3 text-sm text-amber-900">Pengajuan sabuk {{ $user->requestedBelt?->display_name }} menunggu pemeriksaan. Sabuk tercatat: {{ $user->beltLevel?->display_name ?? 'Belum diisi' }}.</p><a class="mt-2 inline-block text-sm underline" href="{{ route('profile.belt-diploma', $user) }}" target="_blank" rel="noopener">Lihat ijazah yang diajukan</a>@endif
+            </div>
+        @endif
         <div class="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-5"><p class="text-xs text-slate-500">Pastikan data sudah sesuai sebelum menyimpan.</p><button class="btn btn-primary" type="submit" :disabled="loadingCities || loadingDojos || !!regionError">Simpan perubahan</button></div>
     </form>
 </section>

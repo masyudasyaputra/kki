@@ -240,7 +240,8 @@
                             class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all">
                     </div>
 
-                    <div><label for="exam_type" class="block text-xs font-semibold">Jenis Ujian</label><select name="exam_type" id="exam_type" required class="mt-1 w-full rounded-lg border-slate-200"><option value="kyu">Ujian KYU</option><option value="dan">Ujian DAN</option></select></div>
+                    <div><label for="exam_type" class="block text-xs font-semibold">Jenis Ujian</label><select name="exam_type" id="exam_type" required class="mt-1 w-full rounded-lg border-slate-200"><option value="kyu">Ujian KYU</option>@if(auth()->user()->hasRole(['pb', 'super_admin']))<option value="dan">Ujian DAN</option>@endif</select></div>
+                    @if(auth()->user()->hasRole(['pb', 'super_admin']))<div><label for="exam-province" class="block text-xs font-semibold">Provinsi penyelenggara (wajib untuk KYU)</label><select id="exam-province" name="province_id" class="mt-1 w-full rounded-lg border-slate-200"><option value="">Nasional / pilih provinsi</option>@foreach(\App\Models\Province::orderBy('name')->get() as $province)<option value="{{ $province->id }}">{{ $province->name }}</option>@endforeach</select></div>@endif
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
@@ -315,7 +316,7 @@
                             class="w-full h-10 px-3.5 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all">
                     </div>
 
-                    <div><label for="edit_exam_type" class="block text-xs font-semibold">Jenis Ujian</label><select name="exam_type" id="edit_exam_type" required class="mt-1 w-full rounded-lg border-slate-200"><option value="kyu">Ujian KYU</option><option value="dan">Ujian DAN</option></select></div>
+                    <div><label for="edit_exam_type" class="block text-xs font-semibold">Jenis Ujian</label><select name="exam_type" id="edit_exam_type" required class="mt-1 w-full rounded-lg border-slate-200"><option value="kyu">Ujian KYU</option>@if(auth()->user()->hasRole(['pb', 'super_admin']))<option value="dan">Ujian DAN</option>@endif</select></div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>

@@ -69,6 +69,7 @@ class GoogleAuthController extends Controller
             return redirect()->route('profile.edit')->with('status', 'google-connected');
         }
         if (Auth::check()) {
+            $request->session()->forget('url.intended');
             return new \Illuminate\Http\RedirectResponse(\App\Support\DashboardDestination::url($request->user()));
         }
         if ($linked) {

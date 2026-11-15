@@ -30,7 +30,11 @@ class RoleAccess
 
     public static function certificates(User $user): bool
     {
-        return $user->hasRole(['super_admin', 'pengelola_sertifikat_pb']);
+        return $user->hasRole(['super_admin', 'pb', 'pengelola_sertifikat_pb']);
+    }
+    public static function certificateTemplates(User $user): bool
+    {
+        return self::certificates($user) || $user->hasRole(ExamAuthority::REGIONAL);
     }
 
     public static function nationalExamReader(User $user): bool

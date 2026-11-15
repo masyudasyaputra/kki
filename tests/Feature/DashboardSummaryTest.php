@@ -191,7 +191,18 @@ class DashboardSummaryTest extends TestCase
         DB::table('users')->where('id', 3)->update(['photo' => 'member-photos/3/outside.jpg']);
         $this->actingAs(User::findOrFail(1))->get(route('admin.members.index'))->assertOk()
             ->assertSee(asset('storage/member-photos/2/own.jpg'))->assertDontSee('outside.jpg');
-        $this->get(route('admin.dashboard'))->assertOk()->assertSee(asset('storage/member-photos/2/own.jpg'))->assertDontSee('outside.jpg');
+        $this->get(route('admin.dashboard'))->assertOk()->assertViewIs('admin.official-dashboard')
+            ->assertSee('PENGABDIAN UNTUK KKI')->assertSee('Organisasi dalam cakupan Anda')
+            ->assertSee('Agenda UKT mendatang')->assertSee('Ruang kerja pengurus')
+            ->assertSee(asset('storage/member-photos/2/own.jpg'))->assertDontSee('outside.jpg');
+    }
+
+    public function test_super_admin_can_open_the_dashboard_selected_after_login(): void
+    {
+        Schema::table('users', fn (Blueprint $table) => $table->string('verification_status')->default('pending'));
+        DB::table('users')->where('id', 1)->update(['role' => 'super_admin']);
+        $admin = User::findOrFail(1);
+        $this->actingAs($admin)->get(\App\Support\DashboardDestination::url($admin))->assertOk()->assertViewIs('admin.official-dashboard');
     }
 
     public function test_finance_union_keeps_member_photos_and_exam_names_in_the_right_columns(): void

@@ -42,12 +42,18 @@ class ExamController extends Controller
             'execution_date' => 'required|date',
             'location' => 'required|string|max:255',
             'status' => 'required|in:open,draft',
+            'province_id' => ['nullable', \Illuminate\Validation\Rule::requiredIf($request->input('exam_type') === 'kyu' && Auth::user()->hasRole(['pb', 'super_admin'])), 'integer', 'exists:provinces,id'],
         ]);
+        abort_unless(Auth::user()->hasRole(['pb', 'super_admin']) || $validated['exam_type'] === 'kyu', 403, 'UKT DAN diselenggarakan PP.');
 
         try {
             if (!Auth::user()->hasRole(['pb', 'super_admin'])) {
                 abort_unless(Auth::user()->province_id, 403);
                 $validated['province_id'] = Auth::user()->province_id;
+                if (Auth::user()->hasRole(['pengcab', 'admin_pengcab']) && !Auth::user()->hasRole(['pengprov', 'admin_pengprov'])) {
+                    abort_unless(Auth::user()->city_id, 403);
+                    $validated['city_id'] = Auth::user()->city_id;
+                }
             }
 
             Exam::create($validated);
@@ -64,6 +70,7 @@ class ExamController extends Controller
      */
     public function update(Request $request, Exam $exam): RedirectResponse
     {
+        abort_if($request->input('exam_type') === 'dan' && !auth()->user()->hasRole(['pb', 'super_admin']), 403);
         app(\App\Services\ExamCertificates::class)->authorizeSessionChange(auth()->user(), $exam);
         app(\App\Services\ExamReviewWorkflow::class)->assertEditable($exam);
         $validated = $request->validate([
@@ -148,9 +155,12 @@ class ExamController extends Controller
         $members = $memberQuery->orderBy('name')->get();
 
         $certificateService = app(\App\Services\ExamCertificates::class);
-        $canSendCertificates = \App\Services\RoleAccess::certificates($user);
+        $canSendCertificates = app(\App\Services\ExamAuthority::class)->canIssue($user, $exam);
         $canManageParticipants = $user->hasRole(['super_admin', 'pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo', 'panitia_ujian'])
             && !in_array($exam->review_status, ['submitted', 'approved']) && $exam->status !== 'completed';
+        if (app(\App\Services\ExamAuthority::class)->isDan($exam) && !$user->hasRole(['pb', 'super_admin'])) {
+            $canManageParticipants = $canManageParticipants && $user->hasRole('panitia_ujian') && $exam->examiners()->where('users.id', $user->id)->exists();
+        }
         if ($canSendCertificates) $certificateService->authorizeIssuance($user, $exam);
         $certificateTemplates = $canSendCertificates ? $certificateService->templates($user)->orderBy('name')->get() : collect();
         $examCertificates = \App\Models\ExamCertificate::whereIn('exam_participant_id', $exam->participants->pluck('id'))->get()->keyBy('exam_participant_id');

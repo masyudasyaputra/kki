@@ -21,7 +21,7 @@
 <body class="pp" x-data="{ menuOpen: false }">
 <x-page-loader variant="public" />
 @php
-$entryUrl = auth()->check() ? route('dashboard') : route('login');
+$entryUrl = auth()->check() ? route('dashboard') : route('login', [], false);
 $navigation = [
  ['label' => 'Layanan', 'href' => '#layanan'],
  ['label' => 'Alur anggota', 'href' => '#alur'],
@@ -68,7 +68,7 @@ $faqs = [
 @foreach($navigation as $item)<a href="{{ $item['href'] }}">{{ $item['label'] }}</a>
 @endforeach
 <a href="{{ $entryUrl }}">{{ auth()->check() ? 'Dashboard' : 'Masuk portal' }}</a>
-@guest<a href="{{ route('register') }}" class="pp-btn pp-red">Daftar anggota ↗</a>
+@guest<a href="{{ route('register', [], false) }}" class="pp-btn pp-red">Daftar anggota ↗</a>
 @endguest
 </nav>
 <button class="pp-toggle" type="button" @click="menuOpen = !menuOpen" :aria-expanded="menuOpen.toString()" aria-controls="pp-mobile" :aria-label="menuOpen ? 'Tutup navigasi' : 'Buka navigasi'">
@@ -79,7 +79,7 @@ $faqs = [
 @foreach($navigation as $item)<a href="{{ $item['href'] }}" @click="menuOpen = false">{{ $item['label'] }}</a>
 @endforeach
 <a href="{{ $entryUrl }}" @click="menuOpen = false">{{ auth()->check() ? 'Dashboard' : 'Masuk portal' }}</a>
-@guest<a href="{{ route('register') }}" @click="menuOpen = false">Daftar anggota ↗</a>
+@guest<a href="{{ route('register', [], false) }}" @click="menuOpen = false">Daftar anggota ↗</a>
 @endguest
 </nav>
 </header>
@@ -146,7 +146,7 @@ $faqs = [
 <p class="pp-eyebrow">Perjalanan anggota</p>
 <h2 class="pp-display pp-title">Dari langkah pertama,<br>sampai tingkat berikutnya.</h2>
 <p class="pp-copy">Latihan membentuk kemampuan. Pencatatan yang tertib membantu menjaga perjalanan keanggotaan dan kenaikan tingkat Anda.</p>
-@guest<a href="{{ route('register') }}" class="pp-btn pp-red">Mulai pendaftaran ↗</a>
+@guest<a href="{{ route('register', [], false) }}" class="pp-btn pp-red">Mulai pendaftaran ↗</a>
 @else<a href="{{ route('dashboard') }}" class="pp-btn pp-red">Lihat data saya ↗</a>
 @endguest
 </div>

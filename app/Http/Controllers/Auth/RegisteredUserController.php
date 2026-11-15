@@ -43,6 +43,11 @@ class RegisteredUserController extends Controller
 
     public function store(Request $request)
     {
+        $request->merge(['registration_type' => $request->input('registration_type', 'karateka')]);
+        $isOfficial = $request->input('registration_type') === 'official';
+        if ($isOfficial) {
+            $request->merge(['parent_name' => null, 'first_coach' => null, 'dojo_id' => null, 'belt_level_id' => null]);
+        }
         $identity = $this->googleIdentity($request);
         if ($identity) {
             $request->merge(['email' => $identity['email']]);
@@ -58,6 +63,8 @@ class RegisteredUserController extends Controller
             $request->merge(['whatsapp' => $phone]);
         }
         $data = $request->validate([
+            'registration_type' => ['required', Rule::in(['karateka', 'official'])],
+            'requested_position' => [Rule::requiredIf($isOfficial), 'nullable', 'string', 'max:255'],
             'first_coach' => ['nullable', 'string', 'max:255'],
             'name' => ['required', 'string', 'max:255'],
             'parent_name' => ['nullable', 'string', 'max:255'],
@@ -78,6 +85,8 @@ class RegisteredUserController extends Controller
         ]);
         $user = DB::transaction(function () use ($data, $identity) {
             $user = User::create([
+                'registration_type' => $data['registration_type'],
+                'requested_position' => $data['registration_type'] === 'official' ? $data['requested_position'] : null,
                 'name' => $data['name'], 'email' => $data['email'], 'parent_name' => $data['parent_name'] ?? null,
                 'whatsapp' => $data['whatsapp'] ?? null, 'password' => Hash::make($data['password'] ?? Str::random(64)),
                 'province_id' => $data['province_id'] ?? null, 'city_id' => $data['city_id'] ?? null,
@@ -97,9 +106,11 @@ class RegisteredUserController extends Controller
         event(new Registered($user));
         Auth::login($user);
         $request->session()->regenerate();
+        $request->session()->forget('url.intended');
+        $destination = \App\Support\DashboardDestination::url($user);
 
         return $request->expectsJson()
-            ? response()->json(['redirect' => route('member.dashboard', [], false)], 201)
-            : redirect()->route('member.dashboard');
+            ? response()->json(['redirect' => $destination], 201)
+            : new \Illuminate\Http\RedirectResponse($destination);
     }
 }

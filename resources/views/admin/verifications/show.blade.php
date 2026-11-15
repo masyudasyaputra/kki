@@ -19,6 +19,9 @@
             <section class="vr-data-panel">
                 <div class="vr-panel-heading"><div><h2>Data pendaftaran</h2><p>{{ $pending ? 'Periksa dan centang setiap data sebelum menyetujui.' : 'Data anggota saat ini. Keputusan sebelumnya tersimpan di riwayat.' }}</p></div>@if($pending)<span class="vr-check-count" aria-live="polite"><strong x-text="checked.length">{{ count(old('checked', [])) }}</strong>/{{ count($fields) }} diperiksa</span>@else<span class="vr-field-count">{{ count($fields) }} data</span>@endif</div>
                 <div class="vr-data-grid">
+                    @if($member->requested_belt_level_id && $member->belt_diploma_path)
+                        <div class="p-4"><p class="text-sm">Sabuk tercatat: {{ $member->beltLevel?->display_name ?? 'Belum diisi' }}</p><a href="{{ route('profile.belt-diploma', $member) }}" target="_blank" rel="noopener" class="btn btn-secondary mt-2">Buka ijazah sabuk</a></div>
+                    @endif
                     @foreach($fields as $key => [$label, $value])
                         <label class="vr-field {{ $key === 'address' ? 'vr-field-address' : '' }} {{ !$value ? 'vr-field-empty' : '' }}" @if($pending) :class="{ 'is-checked': checked.includes('{{ $key }}') }" @endif>
                             @if($pending)<input type="checkbox" name="checked[]" value="{{ $key }}" x-model="checked" @checked(in_array($key, old('checked', [])))>@endif

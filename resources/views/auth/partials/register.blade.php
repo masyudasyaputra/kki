@@ -1,5 +1,5 @@
 @php($googleIdentity = $googleIdentity ?? null)
-    <div class="auth-heading auth-heading-with-logo registration-heading"><img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" width="64" height="64" class="auth-heading-logo"><div><span class="auth-eyebrow">Bergabung bersama KKI</span><h1>Pendaftaran anggota</h1><p>Mulai perjalanan karate Anda bersama keluarga KKI.</p></div></div>
+    <div class="auth-heading auth-heading-with-logo registration-heading"><img src="{{ asset('images/logo-kki.png') }}" alt="Logo KKI" width="64" height="64" class="auth-heading-logo"><div><span class="auth-eyebrow">Bergabung bersama KKI</span><h1>Pendaftaran KKI</h1><p>Pilih jenis pendaftaran Anda untuk bergabung bersama KKI.</p></div></div>
     @if ($googleIdentity)
         <p class="auth-status">Google terverifikasi: {{ $googleIdentity['email'] }}. Lengkapi profil anggota di bawah ini.</p>
     @else
@@ -7,7 +7,8 @@
         <div class="auth-divider">atau daftar dengan email</div>
     @endif
     <p class="registration-hint"><span aria-hidden="true">*</span> Isian wajib. Data latihan dan wilayah boleh dilengkapi nanti.</p>
-    <form method="POST" action="{{ route('register', request()->boolean('_auth_modal') ? ['_auth_modal' => 1] : [], false) }}" data-auth-redirect="{{ route('member.dashboard', [], false) }}" class="auth-form registration-form" x-data="{
+    <form method="POST" action="{{ route('register', request()->boolean('_auth_modal') ? ['_auth_modal' => 1] : [], false) }}" data-auth-redirect="{{ route('dashboard', [], false) }}" class="auth-form registration-form" x-data="{
+        registrationType: @js(old('registration_type', 'karateka')),
         province: @js((string) old('province_id', '')), city: @js((string) old('city_id', '')), dojo: @js((string) old('dojo_id', '')),
         district: @js((string) old('district', '')), districtOpen: false, districtActiveIndex: -1,
         districts: [], cities: [], dojos: [], loadingCities: false, loadingDojos: false, regionError: '', visible: false,
@@ -46,18 +47,28 @@
         async init() { await this.loadCities(true); await this.loadDojos(true); }
     }">
         @csrf
+        <input type="hidden" name="registration_type" :value="registrationType">
+        <div class="registration-type-tabs" role="group" aria-label="Jenis pendaftaran">
+            <button type="button" :aria-pressed="registrationType === 'karateka'" @click="registrationType = 'karateka'">Karateka</button>
+            <button type="button" :aria-pressed="registrationType === 'official'" @click="registrationType = 'official'">Pengurus Non-Karateka</button>
+        </div>
+        <p x-show="registrationType === 'official'" x-cloak class="text-sm text-slate-500">Pendaftaran terbuka. Hak akses pengurus diberikan setelah pemeriksaan administrator.</p>
+        <div x-show="registrationType === 'official'" x-cloak>
+            <x-input-label for="requested_position" value="Jabatan yang diajukan *" />
+            <x-text-input id="requested_position" name="requested_position" type="text" :value="old('requested_position')" maxlength="255" x-bind:required="registrationType === 'official'" x-bind:disabled="registrationType !== 'official'" placeholder="Contoh: Sekretaris Pengcab" />
+        </div>
         @if ($errors->any())<div role="alert" class="auth-error-summary"><p class="font-semibold">Periksa kembali data Anda.</p><ul class="mt-1 list-inside list-disc">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
-        <fieldset class="auth-section registration-section"><legend><span class="registration-step">01</span> Identitas anggota</legend>
+        <fieldset class="auth-section registration-section"><legend><span class="registration-step">01</span> Identitas pendaftar</legend>
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <div><x-input-label for="name" value="Nama lengkap anggota *" /><x-text-input id="name" name="name" type="text" :value="old('name', $googleIdentity['name'] ?? '')" required autocomplete="name" placeholder="Nama lengkap" /></div>
-                <div><x-input-label for="parent_name" value="Nama orang tua / wali (opsional)" /><x-text-input id="parent_name" name="parent_name" type="text" :value="old('parent_name')" placeholder="Kosongkan jika tidak ada" /></div>
+                <div><x-input-label for="name" value="Nama lengkap *" /><x-text-input id="name" name="name" type="text" :value="old('name', $googleIdentity['name'] ?? '')" required autocomplete="name" placeholder="Nama lengkap" /></div>
+                <div x-show="registrationType === 'karateka'"><x-input-label for="parent_name" value="Nama orang tua / wali (opsional)" /><x-text-input x-bind:disabled="registrationType !== 'karateka'" id="parent_name" name="parent_name" type="text" :value="old('parent_name')" placeholder="Kosongkan jika tidak ada" /></div>
                 <div><x-input-label for="whatsapp" value="Nomor WhatsApp (opsional)" /><x-text-input id="whatsapp" name="whatsapp" type="tel" inputmode="tel" :value="old('whatsapp')" autocomplete="tel" placeholder="08xxxxxxxxxx" /></div>
                 <div><x-input-label for="email" value="Alamat email *" /><x-text-input id="email" name="email" type="email" :value="old('email', $googleIdentity['email'] ?? '')" :readonly="(bool) $googleIdentity" required autocomplete="email" placeholder="nama@email.com" /></div>
             </div>
         </fieldset>
         @php($expandTraining = collect(['province_id','city_id','district','dojo_id','belt_level_id','first_coach','address'])->contains(fn($key) => filled(old($key)) || $errors->has($key)))
         <details class="registration-optional" @if($expandTraining) open @endif>
-            <summary><span><span class="registration-step">02</span><span><strong>Wilayah & latihan</strong><small>Provinsi, dojo, sabuk, dan alamat</small></span></span><span class="registration-optional-label">Opsional <span class="registration-chevron" aria-hidden="true">⌄</span></span></summary>
+            <summary><span><span class="registration-step">02</span><span><strong x-text="registrationType === 'official' ? 'Wilayah tugas & alamat' : 'Wilayah & latihan'">Wilayah & latihan</strong><small x-text="registrationType === 'official' ? 'Provinsi, kabupaten / kota, dan alamat' : 'Provinsi, dojo, sabuk, dan alamat'">Provinsi, dojo, sabuk, dan alamat</small></span></span><span class="registration-optional-label">Opsional <span class="registration-chevron" aria-hidden="true">⌄</span></span></summary>
             <fieldset class="registration-training"><legend class="sr-only">Wilayah & dojo</legend>
             <p class="registration-section-help">Lengkapi sekarang jika sudah tahu. Data ini juga dapat diperbarui setelah mendaftar.</p>
             <div class="registration-training-grid">
@@ -91,9 +102,9 @@
                     <x-input-error :messages="$errors->get('district')" class="mt-1" />
                 </div>
 
-                <div><x-input-label for="dojo_id" value="Dojo" /><select id="dojo_id" name="dojo_id" x-model="dojo" :disabled="!city || loadingDojos"><option value="" x-text="loadingDojos ? 'Memuat dojo…' : (!city ? 'Pilih kota dahulu' : 'Pilih dojo / isi nanti')">Pilih kota dahulu</option><template x-for="item in dojos" :key="item.id"><option :value="String(item.id)" x-text="item.name"></option></template></select></div>
-                <div><x-input-label for="belt_level_id" value="Tingkat sabuk" /><select id="belt_level_id" name="belt_level_id"><option value="">Pilih tingkatan / isi nanti</option>@foreach($beltLevels as $belt)<option value="{{ $belt->id }}" @selected((string) old('belt_level_id') === (string) $belt->id)>{{ $belt->name }} {{ $belt->kyu_dan }}</option>@endforeach</select></div>
-                <div><x-input-label for="first_coach" value="Pelatih awal" /><x-text-input id="first_coach" name="first_coach" type="text" :value="old('first_coach')" maxlength="255" placeholder="Nama pelatih / isi nanti" /><x-input-error :messages="$errors->get('first_coach')" class="mt-1" /></div>
+                <div x-show="registrationType === 'karateka'"><x-input-label for="dojo_id" value="Dojo" /><select id="dojo_id" name="dojo_id" x-model="dojo" :disabled="registrationType !== 'karateka' || !city || loadingDojos"><option value="" x-text="loadingDojos ? 'Memuat dojo…' : (!city ? 'Pilih kota dahulu' : 'Pilih dojo / isi nanti')">Pilih kota dahulu</option><template x-for="item in dojos" :key="item.id"><option :value="String(item.id)" x-text="item.name"></option></template></select></div>
+                <div x-show="registrationType === 'karateka'"><x-input-label for="belt_level_id" value="Tingkat sabuk" /><select x-bind:disabled="registrationType !== 'karateka'" id="belt_level_id" name="belt_level_id"><option value="">Pilih tingkatan / isi nanti</option>@foreach($beltLevels as $belt)<option value="{{ $belt->id }}" @selected((string) old('belt_level_id') === (string) $belt->id)>{{ $belt->name }} {{ $belt->kyu_dan }}</option>@endforeach</select></div>
+                <div x-show="registrationType === 'karateka'"><x-input-label for="first_coach" value="Pelatih awal" /><x-text-input x-bind:disabled="registrationType !== 'karateka'" id="first_coach" name="first_coach" type="text" :value="old('first_coach')" maxlength="255" placeholder="Nama pelatih / isi nanti" /><x-input-error :messages="$errors->get('first_coach')" class="mt-1" /></div>
                 <div class="registration-address"><x-input-label for="address" value="Alamat" /><textarea id="address" name="address" rows="2" maxlength="2000" autocomplete="street-address" placeholder="Jalan, nomor rumah, RT/RW, dan kelurahan">{{ old('address') }}</textarea><x-input-error :messages="$errors->get('address')" class="mt-1" /></div>
             </div><p x-show="regionError" x-cloak x-text="regionError" role="alert" class="mt-2 text-xs text-red-600"></p>
             </fieldset>
@@ -105,5 +116,5 @@
                 <div><x-input-label for="password_confirmation" value="Konfirmasi kata sandi" /><x-text-input id="password_confirmation" name="password_confirmation" type="password" x-bind:type="visible ? 'text' : 'password'" :required="!$googleIdentity" autocomplete="new-password" placeholder="Ulangi kata sandi" /></div>
             </div><label class="mt-3 flex items-center gap-2 text-xs text-slate-600"><input type="checkbox" x-model="visible" class="rounded border-slate-300 text-red-600 focus:ring-red-500">Tampilkan kata sandi</label>
         </fieldset>
-        <div class="auth-submit-row registration-submit"><p class="text-xs text-slate-500">Sudah memiliki akun? <a href="{{ route('login') }}" class="auth-link">Masuk</a></p><button type="submit" class="btn btn-primary">Daftar anggota</button></div>
+        <div class="auth-submit-row registration-submit"><p class="text-xs text-slate-500">Sudah memiliki akun? <a href="{{ route('login', [], false) }}" class="auth-link">Masuk</a></p><button type="submit" class="btn btn-primary" x-text="registrationType === 'official' ? 'Daftar pengurus' : 'Daftar karateka'">Daftar karateka</button></div>
     </form>

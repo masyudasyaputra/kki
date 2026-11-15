@@ -24,7 +24,7 @@
 @endphp
 <div class="karateka-dashboard">
     <div class="kd-welcome">
-        <div class="kd-identity"><span class="kd-avatar">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}@if($user->photo)<img src="{{ url('storage/'.$user->photo) }}" alt="Pasfoto {{ $user->name }}" width="54" height="54" onerror="this.hidden = true">@endif</span><div><p>Selamat datang kembali</p><h2>Oss, {{ $user->name }}!</h2></div></div>
+        <div class="kd-identity"><span class="kd-avatar">{{ mb_strtoupper(mb_substr($user->name, 0, 1)) }}@if($user->photo)<img src="{{ url('storage/'.$user->photo) }}" alt="Pasfoto {{ $user->name }}" width="54" height="54" onerror="this.hidden = true">@endif</span><div><p>Selamat datang kembali</p><h2>Oss, {{ $user->name }}!</h2>@if(!empty($qualificationBadges))<div class="kd-qualification-badges">@foreach($qualificationBadges as $badge)<a href="{{ route('qualifications.index') }}" class="profile-chip profile-chip-success"><x-sidebar-icon name="certificate" />{{ $badge }}</a>@endforeach</div>@endif</div></div>
         <span class="kd-member-status"><i></i>{{ $user->is_active ? 'Anggota aktif' : 'Anggota belum aktif' }}</span>
     </div>
 

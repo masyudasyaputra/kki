@@ -25,6 +25,9 @@ class DashboardController extends Controller
 
         // 2. Inisialisasi Query Dasar (Hanya mengambil user dengan role member)
         $memberQuery = User::query()->where('role', 'member');
+        if ($user->getConnection()->getSchemaBuilder()->hasColumn('users', 'registration_type')) {
+            $memberQuery->where(fn ($q) => $q->whereNull('registration_type')->orWhere('registration_type', '!=', 'official'));
+        }
 
         /**
          * 3. Logika Scope Hierarki Role
@@ -182,7 +185,7 @@ class DashboardController extends Controller
         );
         $members = \App\Support\PageSize::paginate($memberQuery, $request, 10);
 
-        return view('admin.dashboard', compact(
+        return view('admin.official-dashboard', compact(
             'stats',
             'members',
             'title',

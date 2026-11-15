@@ -1,4 +1,7 @@
 <x-app-layout>
+    @if($user->registration_type === 'official')
+        <div class="mx-auto max-w-7xl px-6 pt-6 text-sm text-amber-900">Pendaftar pengurus non-karateka. Jabatan yang diajukan: <strong>{{ $user->requested_position }}</strong>. Periksa penugasan sebelum memberikan hak akses.</div>
+    @endif
     <x-slot name="header">
         <div class="flex items-center justify-between gap-3">
             <div>
@@ -15,6 +18,11 @@
             </a>
         </div>
     </x-slot>
+
+    @if(session('success'))<div class="mx-auto max-w-4xl px-6 pt-6 text-sm text-emerald-800" role="status">{{ session('success') }}</div>@endif
+    @unless($user->hasRole(\App\Services\RoleAccess::NATIONAL))
+        @include('admin.users.appointment')
+    @endunless
 
     <div class="py-6 sm:py-8">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

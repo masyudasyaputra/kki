@@ -21,6 +21,13 @@ class MemberObserver
      */
     public function updated(User $user)
     {
+        if ($user->wasChanged(['belt_level_id']) && $user->wasChanged('member_number_override') &&
+            preg_match('/(^|-)MSH(-|$)/i', $user->getRawOriginal('member_number_override') ?? '') &&
+            !$user->isBlackBelt() && $user->getConnection()->getSchemaBuilder()->hasTable('member_number_changes')) {
+            \App\Models\MemberNumberChange::create(['member_id' => $user->id, 'actor_id' => auth()->id(),
+                'before_number' => $user->getRawOriginal('member_number_override'), 'after_number' => $user->member_number,
+                'mode' => 'auto', 'reason' => 'Kode MSH dihapus karena koreksi tingkat sabuk menjadi non-hitam.']);
+        }
         if ($user->wasChanged('role')) app(\App\Services\MemberNumbers::class)->issue($user);
         // Jika kolom belt_level_id berubah (artinya naik sabuk)
         if ($user->isDirty('belt_level_id')) {

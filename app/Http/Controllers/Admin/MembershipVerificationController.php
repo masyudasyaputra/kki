@@ -47,7 +47,7 @@ class MembershipVerificationController extends Controller
             'status' => ['required', Rule::in(['approved', 'revision'])],
             'notes' => ['nullable', 'required_if:status,revision', 'string', 'max:5000'],
             'checked' => ['required_if:status,approved', 'array'],
-            'checked.*' => ['string', 'distinct', Rule::in(MembershipReview::FIELDS)],
+            'checked.*' => ['string', 'distinct', Rule::in(array_merge(MembershipReview::FIELDS, ['belt_diploma']))],
             'fingerprint' => ['required', 'string', 'size:64'],
         ]);
         if ($data['status'] === 'approved' && array_diff(MembershipReview::FIELDS, $data['checked'] ?? [])) {
@@ -62,13 +62,24 @@ class MembershipVerificationController extends Controller
                 throw ValidationException::withMessages(['status' => 'Pendaftaran ini sudah diperiksa. Muat ulang untuk melihat keputusan terbaru.']);
             }
             abort_if($member->id === $request->user()->id, 403);
+            if ($data['status'] === 'approved' && $member->requested_belt_level_id) {
+                if (!in_array('belt_diploma', $data['checked'] ?? []) || !$member->belt_diploma_path || !\Illuminate\Support\Facades\Storage::disk('local')->exists($member->belt_diploma_path)) {
+                    throw ValidationException::withMessages(['checked' => 'Buka dan periksa ijazah sabuk, lalu centang bukti ijazah sebelum menyetujui.']);
+                }
+            }
             $member->membershipVerifications()->create([
                 'reviewer_id' => $request->user()->id, 'reviewer_level' => $review->level($request->user()),
                 'status' => $data['status'], 'notes' => $data['notes'] ?? null,
-                'snapshot' => ['values' => $member->only(MembershipReview::FIELDS), 'fields' => $review->data($member), 'checked' => $data['checked'] ?? []],
+                'snapshot' => ['values' => $member->only(array_merge(MembershipReview::FIELDS, ['requested_belt_level_id', 'belt_diploma_path'])), 'fields' => $review->data($member), 'checked' => $data['checked'] ?? []],
             ]);
             $member->verification_status = $data['status'];
+            if ($data['status'] === 'approved' && $member->requested_belt_level_id) {
+                $member->belt_level_id = $member->requested_belt_level_id;
+                $member->requested_belt_level_id = null;
+            }
             $member->save();
+            if ($member->verification_status !== $data['status']) $member->forceFill(['verification_status' => $data['status']])->saveQuietly();
+            if ($data['status'] === 'approved') app(\App\Services\MemberNumbers::class)->confirmBlackBelt($member, $request->user());
         });
         return redirect()->route('admin.verifications.show', $member)->with('success', 'Keputusan verifikasi berhasil disimpan.');
     }

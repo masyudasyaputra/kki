@@ -6,7 +6,7 @@
     @php
         $exam = null;
         $selectedTemplate = null;
-        $canEditTemplate = fn ($template) => \App\Services\RoleAccess::certificates(auth()->user());
+        $canEditTemplate = fn ($template) => \App\Services\RoleAccess::certificateTemplates(auth()->user());
     @endphp
     <div class="certificate-management mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6 lg:px-8" x-data="{ search: '', type: 'all' }">
         @if(session('success'))<div class="cert-alert cert-alert-success" role="status">{{ session('success') }}</div>@endif

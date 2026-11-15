@@ -26,7 +26,7 @@
     </x-slot>
 
     @if($errors->any())<div role="alert" class="mx-6 mt-4 rounded-xl bg-red-50 p-4 text-red-700"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
-    @if(in_array($exam->review_status, ['submitted', 'approved']))<p class="mx-6 mt-4">Hasil dikunci: {{ $exam->review_status === 'approved' ? 'disetujui pusat' : 'menunggu verifikasi pusat' }}. <a class="underline" href="{{ route('admin.exam-reviews.show', $exam) }}">Lihat pengajuan</a></p>@endif
+    @if(in_array($exam->review_status, ['submitted', 'approved']))<p class="mx-6 mt-4">Hasil dikunci: {{ $exam->review_status === 'approved' ? 'hasil disahkan' : 'menunggu pengesahan' }}. <a class="underline" href="{{ route('admin.exam-reviews.show', $exam) }}">Lihat pengajuan</a></p>@endif
 
     @php
         $beltColors = [
@@ -394,9 +394,9 @@
                             @if ($canScore && $currentUser->hasRole('panitia_ujian'))
                         <form action="{{ route('admin.exams.scoring.finalize', $exam) }}" method="POST">
                             @csrf
-                            <button type="submit" onclick="return confirm('Kirim data peserta dan nilai ke verifikator pusat?')"
+                            <button type="submit" onclick="return confirm('Kirim data peserta dan nilai untuk pengesahan?')"
                                 class="btn btn-primary">
-                                Kirim Hasil ke Pusat
+                                Kirim Hasil untuk Pengesahan
                             </button>
                         </form>
                     @endif

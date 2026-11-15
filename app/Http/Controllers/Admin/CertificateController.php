@@ -19,6 +19,7 @@ class CertificateController extends Controller
 
     public function settings(Request $request, Exam $exam, ExamCertificates $service)
     {
+        abort_if($request->input('exam_type') !== $exam->exam_type, 422, 'Jenis sertifikat harus mengikuti jenis sesi ujian.');
         $service->authorizeIssuance($request->user(), $exam);
         $data = $request->validate(['exam_type' => ['required', Rule::in(['dan', 'kyu'])], 'template_id' => ['required', 'integer'],
             'issue_place' => ['required', 'string', 'max:255'], 'issue_date' => ['required', 'date'],

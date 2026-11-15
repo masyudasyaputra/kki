@@ -67,8 +67,8 @@ class SkDocumentController extends Controller
 
     private function examPath($actor, int $id): ?string
     {
-        abort_unless(RoleAccess::certificates($actor), 403);
         $exam = Exam::findOrFail($id);
+        app(\App\Services\ExamCertificates::class)->authorizeIssuance($actor, $exam);
 
         return $exam->certificate_settings['decision_document_path'] ?? null;
     }

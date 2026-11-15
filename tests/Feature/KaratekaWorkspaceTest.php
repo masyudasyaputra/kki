@@ -12,6 +12,23 @@ use Tests\TestCase;
 
 class KaratekaWorkspaceTest extends TestCase
 {
+    public function test_member_card_uses_belt_palette_and_shares_it_with_png_export(): void
+    {
+        $user = User::create(['name' => 'Karateka', 'email' => 'palette@example.test', 'password' => 'password', 'role' => 'member']);
+        foreach (['Putih' => '#f4f1ea', 'Kuning' => '#edc52d', 'Hijau' => '#145c36', 'Biru' => '#163d80', 'Coklat' => '#583621', 'Hitam' => '#111214', 'Ungu' => '#512777', 'Orange' => '#a94512', 'Biru Strip' => '#163d80'] as $name => $base) {
+            $id = DB::table('belt_levels')->insertGetId(['name' => $name, 'is_active' => true, 'order' => 1]);
+            $user->belt_level_id = $id;
+            $user->saveQuietly();
+            $this->actingAs($user)->get(route('member.card'))->assertOk()
+                ->assertSee('--card-base:'.$base, false)->assertSee('&quot;base&quot;:&quot;'.$base.'&quot;', false)
+                ->assertDontSee('BLACK &amp; GOLD', false);
+        }
+        $this->get(route('member.card'))->assertSee('kki-id-belt-stripe', false);
+        $white = \App\Support\MemberCardTheme::forBelt('Putih');
+        $this->assertSame('#25221c', $white['ink']);
+        $this->assertFalse($white['stripe']);
+    }
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -49,6 +66,7 @@ class KaratekaWorkspaceTest extends TestCase
                 }
             });
         }
+        (require database_path('migrations/2026_11_15_000006_add_belt_change_evidence.php'))->up();
         Schema::create('membership_verifications', function (Blueprint $table) {
             $table->id();
             $table->integer('member_id');
@@ -153,6 +171,7 @@ class KaratekaWorkspaceTest extends TestCase
             'parent_name' => 'Nama Wali', 'address' => 'Jalan Latihan 10', 'first_coach' => 'Sensei Pertama',
             'province_id' => 1, 'city_id' => 1, 'dojo_id' => 1, 'district' => 'Medan Tuntungan', 'belt_level_id' => 1,
             'role' => 'super_admin', 'is_active' => true,
+            'belt_diploma' => UploadedFile::fake()->create('ijazah.pdf', 20, 'application/pdf'),
         ])->assertSessionHasNoErrors()->assertRedirect(route('profile.edit'));
         $member->refresh();
         $this->assertSame('081234567890', $member->whatsapp);
@@ -162,6 +181,43 @@ class KaratekaWorkspaceTest extends TestCase
         $this->assertFalse($member->is_active);
         $this->assertSame('Jalan Latihan 10', $member->address);
         $this->assertEquals(1, $member->dojo_id);
+        $this->assertNull($member->belt_level_id);
+        $this->assertEquals(1, $member->requested_belt_level_id);
+    }
+
+    public function test_profile_belt_change_requires_private_diploma_and_only_approval_applies_rank(): void
+    {
+        Storage::fake('local');
+        DB::table('provinces')->insert(['id' => 1, 'name' => 'Sumatera Utara']);
+        DB::table('cities')->insert(['id' => 1, 'name' => 'Medan', 'province_id' => 1]);
+        DB::table('belt_levels')->insert([['id' => 1, 'name' => 'Coklat'], ['id' => 2, 'name' => 'Hitam']]);
+        (require database_path('migrations/2026_11_14_000001_add_member_number_management.php'))->up();
+        $member = User::create(['name' => 'Karateka', 'email' => 'diploma@example.test', 'password' => 'password', 'role' => 'member', 'province_id' => 1, 'city_id' => 1, 'belt_level_id' => 1]);
+        $originalNumber = $member->member_number;
+        $data = ['name' => $member->name, 'email' => $member->email, 'belt_level_id' => 2];
+        $this->actingAs($member)->patch(route('profile.update'), $data)->assertSessionHasErrors('belt_diploma');
+        $this->assertSame(1, $member->fresh()->belt_level_id);
+        $this->patch(route('profile.update'), $data + ['belt_diploma' => UploadedFile::fake()->create('ijazah.pdf', 20, 'application/pdf')])->assertSessionHasNoErrors();
+        $member->refresh();
+        $this->assertSame(1, $member->belt_level_id);
+        $this->assertSame($originalNumber, $member->member_number);
+        $this->assertEquals(2, $member->requested_belt_level_id);
+        Storage::disk('local')->assertExists($member->belt_diploma_path);
+        $this->get(route('profile.belt-diploma', $member))->assertOk();
+        $regional = User::create(['name' => 'Verifikator Daerah', 'email' => 'regional@example.test', 'password' => 'password', 'role' => 'verifikator_pengprov', 'province_id' => 1, 'city_id' => 1]);
+        $this->actingAs($regional)->get(route('admin.verifications.show', $member))->assertNotFound();
+        $other = User::create(['name' => 'Lain', 'email' => 'other@example.test', 'password' => 'password', 'role' => 'member']);
+        $this->actingAs($other)->get(route('profile.belt-diploma', $member))->assertForbidden();
+        $admin = User::create(['name' => 'Pemeriksa', 'email' => 'review@example.test', 'password' => 'password', 'role' => 'super_admin']);
+        $this->actingAs($admin)->get(route('admin.verifications.show', $member))->assertOk()->assertSee('Buka ijazah sabuk');
+        $decision = ['status' => 'approved', 'fingerprint' => app(\App\Services\MembershipReview::class)->fingerprint($member), 'checked' => \App\Services\MembershipReview::FIELDS];
+        $this->post(route('admin.verifications.store', $member), $decision)->assertSessionHasErrors('checked');
+        $decision['checked'][] = 'belt_diploma';
+        $this->post(route('admin.verifications.store', $member), $decision)->assertSessionHasNoErrors();
+        $this->assertSame(2, $member->fresh()->belt_level_id);
+        $this->assertNull($member->fresh()->requested_belt_level_id);
+        $this->assertSame('approved', $member->fresh()->verification_status);
+        $this->assertSame('MSH-'.$originalNumber, $member->fresh()->member_number);
     }
 
     public function test_profile_rejects_dojo_from_another_city_and_duplicate_phone(): void

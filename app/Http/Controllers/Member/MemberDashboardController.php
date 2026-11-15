@@ -14,6 +14,9 @@ class MemberDashboardController extends Controller
     public function index(Request $request)
     {
         $user = $request->user()->load(['beltLevel', 'province', 'city', 'dojo']);
+        if ($user->registration_type === 'official') {
+            return view('member.official-registration', compact('user'));
+        }
         $section = $request->route('section', 'overview');
         $latestVerification = $user->membershipVerifications()->latest('id')->first();
         $certificates = ExamCertificate::whereNotNull('sent_at')
@@ -33,6 +36,7 @@ class MemberDashboardController extends Controller
             ? base64_encode(QrCode::format('svg')->size(200)->errorCorrection('H')->generate((string) ($user->member_number ?: $user->id)))
             : null;
 
-        return view('member.dashboard', compact('user', 'section', 'latestVerification', 'summary', 'myCertificates', 'myExams', 'myPayments', 'qrPngBase64'));
+        return view('member.dashboard', compact('user', 'section', 'latestVerification', 'summary', 'myCertificates', 'myExams', 'myPayments', 'qrPngBase64')
+            + app(\App\Services\QualificationBadges::class)->forUser($user));
     }
 }

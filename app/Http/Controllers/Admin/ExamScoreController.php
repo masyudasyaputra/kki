@@ -151,6 +151,6 @@ class ExamScoreController extends Controller
     {
         app(\App\Services\ExamReviewWorkflow::class)->submit(auth()->user(), $exam);
         return redirect()->route('admin.exam-reviews.show', $exam)
-            ->with('success', 'Data peserta dan nilai dikirim ke verifikator pusat.');
+            ->with('success', 'Data peserta dan nilai dikirim untuk pengesahan '.app(\App\Services\ExamAuthority::class)->destination($exam).'.');
     }
 }

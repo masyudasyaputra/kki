@@ -35,6 +35,9 @@ class DashboardSummary
         $end = $start->addMonth();
         $users = $this->users($actor, $role);
         $members = (clone $users)->where('role', 'member');
+        if ($actor->getConnection()->getSchemaBuilder()->hasColumn('users', 'registration_type')) {
+            $members->where(fn ($q) => $q->whereNull('registration_type')->orWhere('registration_type', '!=', 'official'));
+        }
         $dojos = Dojo::query();
         $officials = Official::query();
         $exams = Exam::query();

@@ -21,6 +21,9 @@ class UserImpersonationTest extends TestCase
             $table->timestamp('email_verified_at')->nullable(); $table->rememberToken(); $table->timestamps();
         });
         foreach (['provinces', 'cities', 'dojos'] as $name) Schema::create($name, function (Blueprint $table) { $table->id(); $table->string('name'); });
+        Schema::create('belt_levels', function (Blueprint $table) {
+            $table->id(); $table->string('name'); $table->boolean('is_active')->default(true); $table->integer('order')->default(1);
+        });
         (require database_path('migrations/2026_11_01_000005_create_user_impersonations.php'))->up();
     }
 

@@ -6,7 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Official extends Model
 {
+    protected static function booted(): void
+    {
+        static::created(fn (Official $official) => app(\App\Services\OfficialNumbers::class)->issue($official));
+    }
+
     protected $fillable = [
+        'user_id',
         'name',
         'position',
         'phone_number',
@@ -21,6 +27,10 @@ class Official extends Model
     public function province()
     {
         return $this->belongsTo(Province::class);
+    }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
     public function city()
     {

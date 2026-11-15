@@ -12,9 +12,9 @@ class DashboardDestination
         $route = match (true) {
             $user->hasRole(['super_admin', 'pb']) => 'admin.dashboard',
             $user->hasRole('dewan_guru_pusat') => 'admin.oversight',
+            $user->hasRole(['pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo']) => 'admin.dashboard',
             $user->hasRole(['verifikator_ujian_pb', 'pengelola_sertifikat_pb', 'panitia_ujian', 'penguji']) => 'admin.exam-reviews.index',
             $user->hasRole(array_keys(MembershipReview::ROLES)) => 'admin.verifications.index',
-            $user->hasRole(['pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo']) => 'admin.dashboard',
             default => 'member.dashboard',
         };
 

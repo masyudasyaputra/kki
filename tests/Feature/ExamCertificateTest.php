@@ -55,6 +55,123 @@ class ExamCertificateTest extends TestCase
         return $actor;
     }
 
+    public function test_approved_black_belt_exam_promotes_rank_and_adds_msh_to_the_same_id(): void
+    {
+        (require database_path('migrations/2026_11_14_000001_add_member_number_management.php'))->up();
+        [$exam, $participant] = $this->fixture('dan', 'open');
+        $member = $participant->user;
+        $member->update(['belt_level_id' => 1]);
+        $before = $member->fresh()->member_number;
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertSessionHasNoErrors();
+        $this->assertSame($before, $member->fresh()->member_number);
+        $reviewer = $this->actor('verifikator_ujian_pb');
+        $exam->reviewers()->attach($reviewer);
+        $this->actingAs($reviewer)->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertSessionHasNoErrors();
+        $this->assertSame(2, $member->fresh()->belt_level_id);
+        $this->assertSame('MSH-'.$before, $member->fresh()->member_number);
+        $this->assertDatabaseHas('member_number_changes', ['member_id' => $member->id, 'before_number' => $before, 'after_number' => 'MSH-'.$before]);
+        $this->assertDatabaseHas('belt_histories', ['user_id' => $member->id, 'exam_id' => $exam->id, 'belt_level_id' => 2]);
+    }
+
+    public function test_colored_belt_promotes_on_approval_without_waiting_for_certificate(): void
+    {
+        [$exam, $participant] = $this->fixture('kyu', 'open');
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertSessionHasNoErrors();
+        $this->assertNull($participant->user->fresh()->belt_level_id);
+        $reviewer = $this->actor('verifikator_ujian_pb');
+        $exam->reviewers()->attach($reviewer);
+        $this->actingAs($reviewer)->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertSessionHasNoErrors();
+        $this->assertSame(1, $participant->user->fresh()->belt_level_id);
+        $this->assertDatabaseHas('belt_histories', ['user_id' => $participant->user_id, 'exam_id' => $exam->id, 'belt_level_id' => 1]);
+        $this->assertDatabaseCount('exam_certificates', 0);
+    }
+
+    public function test_kyu_is_approved_regionally_and_dan_is_restricted_to_pp(): void
+    {
+        [$exam, $participant] = $this->fixture('kyu', 'open');
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertSessionHasNoErrors();
+        $outside = $this->actor('pengprov', 2);
+        $this->actingAs($outside)->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertForbidden();
+        $regional = $this->actor('pengprov');
+        $this->actingAs($regional)->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertSessionHasNoErrors();
+        $this->assertSame('approved', $exam->fresh()->review_status);
+        $this->assertSame(1, $participant->user->fresh()->belt_level_id);
+        [$dan] = $this->fixture('dan', 'open');
+        $this->post(route('admin.exams.scoring.finalize', $dan))->assertSessionHasNoErrors();
+        $this->actingAs($regional)->post(route('admin.exam-reviews.store', $dan), ['status' => 'approved'])->assertForbidden();
+        $this->assertSame('submitted', $dan->fresh()->review_status);
+    }
+
+    public function test_pp_can_intervene_in_kyu_and_intervention_is_recorded(): void
+    {
+        [$exam] = $this->fixture('kyu', 'open');
+        $this->post(route('admin.exams.scoring.finalize', $exam))->assertSessionHasNoErrors();
+        $pp = $this->actor('pb', 2);
+        $this->actingAs($pp)->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved', 'notes' => 'Pemeriksaan PP'])->assertSessionHasNoErrors();
+        $this->assertSame('approved', $exam->fresh()->review_status);
+        $this->assertDatabaseHas('exam_reviews', ['exam_id' => $exam->id, 'actor_id' => $pp->id, 'notes' => '[Intervensi PP] Pemeriksaan PP']);
+    }
+
+    public function test_regional_certificate_authority_and_template_scope_do_not_extend_to_dan_or_other_regions(): void
+    {
+        [$kyu, , , $template] = $this->fixture('kyu');
+        $template->update(['province_id' => 1, 'city_id' => null]);
+        [$dan] = $this->fixture('dan');
+        $regional = $this->actor('pengprov'); $outside = $this->actor('pengprov', 2);
+        $authority = app(\App\Services\ExamAuthority::class);
+        $this->assertTrue($authority->canIssue($regional, $kyu));
+        $this->assertFalse($authority->canIssue($regional, $dan));
+        $this->assertFalse($authority->canIssue($outside, $kyu));
+        $service = app(\App\Services\ExamCertificates::class);
+        $this->assertTrue($service->templates($regional)->whereKey($template->id)->exists());
+        $this->assertFalse($service->templates($outside)->whereKey($template->id)->exists());
+        $this->assertTrue($authority->canIssue($this->actor('pb', 2), $kyu));
+    }
+
+    public function test_branch_cannot_approve_a_kyu_session_containing_other_branches(): void
+    {
+        [$exam] = $this->fixture('kyu', 'open');
+        $branch = $this->actor('pengcab');
+        $this->assertTrue(app(\App\Services\ExamAuthority::class)->regional($branch, $exam));
+        $other = $this->actor('member'); $other->update(['city_id' => 2]);
+        ExamParticipant::create(['exam_id' => $exam->id, 'user_id' => $other->id, 'target_belt_id' => 1]);
+        $this->assertFalse(app(\App\Services\ExamAuthority::class)->regional($branch, $exam));
+    }
+
+    public function test_regional_template_creation_is_kyu_only_and_scoped_to_the_actor(): void
+    {
+        $actor = $this->actor('pengprov');
+        $payload = ['name' => 'Template Wilayah', 'exam_type' => 'kyu', 'render_mode' => 'builtin', 'heading' => 'Pengprov', 'organization' => 'KKI', 'title' => 'Ijazah', 'color' => '#762137', 'province_id' => 2];
+        $this->actingAs($actor)->post(route('admin.certificate-templates.store'), $payload)->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('certificate_templates', ['name' => 'Template Wilayah', 'exam_type' => 'kyu', 'province_id' => 1, 'city_id' => null]);
+        $this->post(route('admin.certificate-templates.store'), array_replace($payload, ['exam_type' => 'dan']))->assertForbidden();
+        $template = CertificateTemplate::where('name', 'Template Wilayah')->firstOrFail();
+        $this->actingAs($this->actor('pengprov', 2))->post(route('admin.certificate-templates.store'), $payload + ['template_id' => $template->id])->assertNotFound();
+    }
+
+    public function test_branch_creates_kyu_in_own_region_and_cannot_create_dan(): void
+    {
+        (require database_path('migrations/2026_11_15_000007_add_exam_city_scope.php'))->up();
+        $actor = $this->actor('pengcab');
+        $payload = ['name' => 'UKT Cabang', 'exam_type' => 'kyu', 'execution_date' => '2026-12-01', 'location' => 'Medan', 'status' => 'draft', 'province_id' => 2];
+        $this->actingAs($actor)->post(route('admin.exams.store'), $payload)->assertSessionHasNoErrors();
+        $exam = Exam::where('name', 'UKT Cabang')->firstOrFail();
+        $this->assertEquals(1, $exam->province_id); $this->assertEquals(1, $exam->city_id);
+        $this->assertTrue(app(\App\Services\ExamAuthority::class)->regional($actor, $exam));
+        $this->post(route('admin.exams.store'), array_replace($payload, ['exam_type' => 'dan']))->assertForbidden();
+    }
+
+    public function test_black_belt_target_cannot_be_approved_regionally_under_a_kyu_label(): void
+    {
+        [$exam] = $this->fixture('dan');
+        $exam->update(['exam_type' => 'kyu']);
+        $actor = $this->actor('pengprov');
+        $authority = app(\App\Services\ExamAuthority::class);
+        $this->assertTrue($authority->isDan($exam));
+        $this->assertFalse($authority->canReview($actor, $exam));
+        $this->assertFalse($authority->canIssue($actor, $exam));
+    }
+
     private function fixture(string $type = 'dan', string $status = 'completed'): array
     {
         $actor = $this->actor(); $this->actingAs($actor);
@@ -161,7 +278,7 @@ class ExamCertificateTest extends TestCase
         $this->post(route('admin.certificate-templates.store'), $payload + ['template_id' => $template->id])->assertForbidden();
     }
 
-    public function test_admin_finalization_waits_for_certificate_delivery_before_updating_belt(): void
+    public function test_admin_finalization_updates_belt_on_approval_and_delivery_preserves_it(): void
     {
         [$exam, $participant] = $this->fixture('kyu', 'open');
         $this->post(route('admin.exams.scoring.finalize', $exam))->assertRedirect(route('admin.exam-reviews.show', $exam));
@@ -173,8 +290,8 @@ class ExamCertificateTest extends TestCase
         $this->post(route('admin.exam-reviews.store', $exam), ['status' => 'approved'])->assertSessionHasNoErrors();
         $this->actingAs($this->actor());
         $this->assertSame('completed', $exam->fresh()->status);
-        $this->assertNull($participant->user->fresh()->belt_level_id);
-        $this->assertDatabaseCount('belt_histories', 0);
+        $this->assertSame(1, $participant->user->fresh()->belt_level_id);
+        $this->assertDatabaseCount('belt_histories', 1);
         $this->post(route('admin.exams.certificates.issue', [$exam, $participant]), ['birth_place' => 'Medan', 'birth_date' => '2000-01-01'])->assertSessionHasNoErrors();
         $this->assertDatabaseCount('exam_certificates', 1);
         $this->post(route('admin.exams.certificates.send', [$exam, $participant]))->assertSessionHasNoErrors();

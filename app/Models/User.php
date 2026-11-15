@@ -13,6 +13,18 @@ class User extends Authenticatable
     protected static function booted(): void
     {
         static::updating(function (User $user) {
+            $number = $user->getAttribute('member_number_override');
+            if ($number && preg_match('/(^|-)MSH(-|$)/i', $number) && !$user->isBlackBelt()) {
+                if ($user->isDirty('belt_level_id') && !$user->isDirty('member_number_override')) {
+                    $corrected = preg_replace('/(^|-)MSH-?/i', '$1', $number);
+                    if (strlen($corrected) < 3 || static::where('member_number_override', $corrected)->whereKeyNot($user->id)->exists()) {
+                        throw \Illuminate\Validation\ValidationException::withMessages(['belt_level_id' => 'Nomor tanpa kode MSH sudah dipakai atau tidak valid. Atur Nomor ID anggota sebelum mengoreksi sabuk.']);
+                    }
+                    $user->setAttribute('member_number_override', $corrected);
+                } else {
+                    throw \Illuminate\Validation\ValidationException::withMessages(['member_number_override' => 'Kode MSH hanya boleh digunakan anggota yang sudah sabuk hitam.']);
+                }
+            }
             if (array_key_exists('verification_status', $user->getAttributes()) && $user->isDirty(\App\Services\MembershipReview::REQUIRES_VERIFICATION)) {
                 $user->verification_status = 'pending';
             }
@@ -25,6 +37,8 @@ class User extends Authenticatable
     }
 
     protected $fillable = [
+        'registration_type',
+        'requested_position',
         'name',
         'email',
         'google_id',
@@ -104,6 +118,18 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Province::class);
     }
+    public function official()
+    {
+        return $this->hasOne(Official::class);
+    }
+    public function qualifications()
+    {
+        return $this->hasMany(OfficialQualification::class);
+    }
+    public function requestedBelt()
+    {
+        return $this->belongsTo(BeltLevel::class, 'requested_belt_level_id');
+    }
 
     public function city()
     {
@@ -147,6 +173,12 @@ class User extends Authenticatable
         $prefix = str_contains(mb_strtolower($belt?->name ?? ''), 'hitam') ? 'MSH-' : '';
 
         return $prefix . ($this->province?->member_prefix ?? 'UNK') . '-' . str_pad((string) $this->id, 6, '0', STR_PAD_LEFT);
+    }
+
+    public function isBlackBelt(): bool
+    {
+        $belt = $this->isDirty('belt_level_id') ? BeltLevel::find($this->belt_level_id) : $this->beltLevel;
+        return str_contains(mb_strtolower($belt?->name ?? ''), 'hitam');
     }
 
     public function scopeWhereMemberNumber($query, string $number)

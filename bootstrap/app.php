@@ -11,6 +11,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(\App\Http\Middleware\UseBuiltAssetsForRemoteClients::class);
+        $middleware->redirectUsersTo(fn (\Illuminate\Http\Request $request) => \App\Support\DashboardDestination::url($request->user()));
         $middleware->alias([
         'role' => \App\Http\Middleware\RoleManager::class,
     ]);

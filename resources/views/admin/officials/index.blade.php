@@ -75,7 +75,7 @@
                                 <td class="px-8 py-6">
                                     <div class="flex flex-col">
                                         <span
-                                            class="font-black text-slate-900 text-sm uppercase group-hover:text-red-600 transition-colors">{{ $official->name }}</span>
+                                            class="font-black text-slate-900 text-sm uppercase group-hover:text-red-600 transition-colors">{{ $official->name }} <span class="block font-mono text-xs text-slate-500">{{ $official->official_number }}</span></span>
                                         <div class="inline-flex mt-1">
                                             <span
                                                 class="text-[9px] font-black bg-red-50 text-red-600 px-2 py-0.5 rounded uppercase tracking-widest border border-red-100">{{ $official->position }}</span>
@@ -132,7 +132,7 @@
                                 <div class="flex-1">
                                     <h4
                                         class="font-black text-slate-900 uppercase text-base leading-tight tracking-tight">
-                                        {{ $official->name }}
+                                        {{ $official->name }} <span class="block font-mono text-xs text-slate-500">{{ $official->official_number }}</span>
                                     </h4>
                                     <div class="flex items-center gap-2 mt-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>

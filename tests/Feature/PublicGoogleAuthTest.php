@@ -23,6 +23,8 @@ class PublicGoogleAuthTest extends TestCase
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('registration_type')->default('karateka');
+            $table->string('requested_position')->nullable();
             $table->string('email')->unique();
             $table->string('password');
             $table->string('google_id')->nullable()->unique();
@@ -136,9 +138,11 @@ class PublicGoogleAuthTest extends TestCase
     {
         foreach ([
             'member' => 'member.dashboard', 'super_admin' => 'admin.dashboard', 'pb' => 'admin.dashboard',
-            'pengprov' => 'admin.dashboard', 'admin_dojo' => 'admin.dashboard',
+            'pengprov' => 'admin.dashboard', 'admin_pengprov' => 'admin.dashboard', 'pengcab' => 'admin.dashboard', 'admin_pengcab' => 'admin.dashboard', 'admin_dojo' => 'admin.dashboard',
             'verifikator_pengprov' => 'admin.verifications.index', 'verifikator_anggota_pb' => 'admin.verifications.index',
             'dewan_guru_pusat' => 'admin.oversight', 'penguji' => 'admin.exam-reviews.index',
+            'panitia_ujian' => 'admin.exam-reviews.index', 'pengelola_sertifikat_pb' => 'admin.exam-reviews.index',
+            'verifikator_ujian_pb' => 'admin.exam-reviews.index', 'verifikator_pengcab' => 'admin.verifications.index',
         ] as $role => $destination) {
             User::create(['name' => $role, 'email' => $role.'@example.test', 'password' => 'Password123!', 'role' => $role]);
             $this->postJson('/login', ['login' => $role.'@example.test', 'password' => 'Password123!'])
@@ -153,6 +157,33 @@ class PublicGoogleAuthTest extends TestCase
         User::create(['name' => 'Member', 'email' => 'member@example.test', 'password' => 'Password123!', 'role' => 'member']);
         $this->postJson('/login', ['login' => 'member@example.test', 'password' => 'Password123!'])
             ->assertOk()->assertJsonPath('redirect', '/member/dashboard');
+    }
+
+    public function test_structural_account_with_extra_permissions_always_logs_into_its_dashboard(): void
+    {
+        $user = User::create(['name' => 'Pengurus', 'email' => 'multi@example.test', 'password' => 'Password123!',
+            'role' => 'pengprov', 'positions' => ['pengprov'], 'roles' => ['penguji', 'verifikator_pengprov']]);
+        $this->withSession(['url.intended' => '/admin/exams'])->post('/login', ['login' => $user->email, 'password' => 'Password123!'])
+            ->assertRedirect('/admin/dashboard')->assertSessionMissing('url.intended');
+        $this->get('/login')->assertRedirect('/admin/dashboard');
+        $this->get('/register')->assertRedirect('/admin/dashboard');
+    }
+
+    public function test_registration_json_redirects_directly_and_discards_stale_intended_page(): void
+    {
+        $this->withSession(['url.intended' => '/admin/exams'])->postJson('/register', [
+            'name' => 'Karateka', 'email' => 'fresh@example.test', 'password' => 'Password123!', 'password_confirmation' => 'Password123!',
+        ])->assertCreated()->assertJsonPath('redirect', '/member/dashboard')->assertSessionMissing('url.intended');
+    }
+
+    public function test_linked_google_structural_account_uses_the_same_dashboard_mapping(): void
+    {
+        $user = User::create(['name' => 'Pengurus Google', 'email' => 'new@example.com', 'password' => 'Password123!',
+            'role' => 'pengcab', 'roles' => ['penguji'], 'google_id' => 'google-123']);
+        $this->fakeGoogle();
+        $this->withSession(['google_oauth' => $this->flow(), 'url.intended' => '/admin/exams'])
+            ->get('/auth/google/callback?state=valid-state&code=code')->assertRedirect('/admin/dashboard')->assertSessionMissing('url.intended');
+        $this->assertAuthenticatedAs($user);
     }
 
     public function test_invalid_modal_submission_returns_field_errors_without_redirecting(): void

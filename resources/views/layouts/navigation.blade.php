@@ -14,7 +14,8 @@
     $isAdmin = $isSuperAdmin || $hasRole(['pb', 'pengprov', 'pengcab', 'admin_dojo', 'admin_pengprov', 'admin_pengcab']);
     $isStruktural = $isSuperAdmin || $hasRole(['pb', 'pengprov', 'pengcab']);
     $isSistemAdmin = $hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov']);
-    $canManageTemplates = \App\Services\RoleAccess::certificates($u);
+    $pendingOfficialVerifications = $isSistemAdmin ? app(\App\Services\OfficialReview::class)->pendingCount($u) : 0;
+    $canManageTemplates = \App\Services\RoleAccess::certificateTemplates($u);
 
     $homeHref = route('dashboard');
 
@@ -24,7 +25,7 @@
     $activeOfficials = request()->routeIs('admin.officials.*');
     $activeMembers = request()->routeIs('admin.members.*');
     $canViewMembers = $isSuperAdmin || $hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo']);
-    $canVerifyMembers = $isSuperAdmin || $hasRole(array_keys(\App\Services\MembershipReview::ROLES));
+    $canVerifyMembers = $hasRole(['pb', 'super_admin']) || $hasRole(array_keys(\App\Services\MembershipReview::ROLES));
     $pendingMemberVerifications = $canVerifyMembers
         ? app(\App\Services\MembershipReview::class)->members($u)->where('verification_status', 'pending')->count()
         : 0;
@@ -39,7 +40,7 @@
     $activeCertificateSigners = request()->routeIs('admin.certificate-signers.*');
     $activeSystem = $activeUsers || $activeProv || $activeFees || $activeExamFees
         || $activeBeltLevels || $activeCertificateSigners
-        || request()->routeIs('admin.regions.*', 'admin.access-audits.*', 'admin.certificate-templates.*', 'admin.member-numbers.*');
+        || request()->routeIs('admin.regions.*', 'admin.access-audits.*', 'admin.certificate-templates.*', 'admin.member-numbers.*', 'admin.official-numbers.*');
 
     $roleLabel = \App\Services\RoleAccess::POSITIONS[$u->role] ?? str_replace('_', ' ', $u->role ?? 'member');
     $canManageOrganization = $isStruktural || $hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov']);
@@ -65,17 +66,20 @@
             @foreach ([['member.card', 'membership', 'Kartu Anggota'], ['member.exams', 'exam', 'Ujian Saya'], ['member.payments', 'wallet', 'Pembayaran'], ['member.certificates', 'certificate', 'Sertifikat Saya'], ['profile.edit', 'user', 'Profil Saya']] as [$memberRoute, $memberIcon, $memberLabel])
                 <a href="{{ route($memberRoute) }}" class="sidebar-link {{ request()->routeIs($memberRoute) ? 'is-active' : '' }}" @if(request()->routeIs($memberRoute)) aria-current="page" @endif><x-sidebar-icon :name="$memberIcon" /><span>{{ $memberLabel }}</span></a>
             @endforeach
+            @if($u->registration_type !== 'official')<a href="{{ route('qualifications.index') }}" class="sidebar-link {{ request()->routeIs('qualifications.*') ? 'is-active' : '' }}"><x-sidebar-icon name="certificate" /><span>Kompetensi Wasit/Juri</span></a>@endif
             <p class="sidebar-section-label">Informasi KKI</p>
             <a href="{{ route('public.agenda') }}" class="sidebar-link"><x-sidebar-icon name="exam" /><span>Agenda UKT</span></a>
             <a href="{{ route('public.dojos') }}" class="sidebar-link"><x-sidebar-icon name="building" /><span>Direktori Dojo</span></a>
         @endif
 
-        @if ($isStruktural)
-            <details name="kki-sidebar-menu" class="sidebar-group" @if($activeOfficials || $activeDojos) open @endif>
-                <summary><x-sidebar-icon name="organization" /><span>Organisasi</span><span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>
+        @if ($isStruktural || $isSistemAdmin || $hasRole(\App\Services\QualificationReview::REVIEWERS))
+            <details name="kki-sidebar-menu" class="sidebar-group" @if($activeOfficials || $activeDojos || request()->routeIs('admin.official-verifications.*', 'admin.qualifications.*')) open @endif>
+                <summary><x-sidebar-icon name="organization" /><span>Organisasi</span>@if($pendingOfficialVerifications > 0)<span class="sidebar-notification-badge" aria-label="{{ $pendingOfficialVerifications }} pengajuan pengurus menunggu verifikasi">{{ $pendingOfficialVerifications }}</span>@endif<span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>
                 <div class="sidebar-group-items">
                     <a href="{{ route('admin.officials.index') }}" class="sidebar-link {{ $activeOfficials ? 'is-active' : '' }}" @if($activeOfficials) aria-current="page" @endif><x-sidebar-icon name="people" /><span>Pengurus</span></a>
+                    @if ($isSistemAdmin)<a href="{{ route('admin.official-verifications.index') }}" class="sidebar-link {{ request()->routeIs('admin.official-verifications.*') ? 'is-active' : '' }}" @if(request()->routeIs('admin.official-verifications.*')) aria-current="page" @endif><x-sidebar-icon name="people" /><span class="min-w-0 flex-1">Verifikasi Pengurus</span>@if($pendingOfficialVerifications > 0)<span class="sidebar-notification-badge" aria-label="{{ $pendingOfficialVerifications }} pengajuan pengurus menunggu verifikasi">{{ $pendingOfficialVerifications }}</span>@endif</a>@endif
                     <a href="{{ route('admin.dojos.index') }}" class="sidebar-link {{ $activeDojos ? 'is-active' : '' }}" @if($activeDojos) aria-current="page" @endif><x-sidebar-icon name="building" /><span>Dojo</span></a>
+                    @if($hasRole(\App\Services\QualificationReview::REVIEWERS))<a href="{{ route('admin.qualifications.index') }}" class="sidebar-link {{ request()->routeIs('admin.qualifications.*') ? 'is-active' : '' }}" @if(request()->routeIs('admin.qualifications.*')) aria-current="page" @endif><x-sidebar-icon name="certificate" /><span>Verifikasi Wasit/Juri</span></a>@endif
                 </div>
             </details>
         @endif
@@ -130,12 +134,13 @@
                     @endif
                     @if ($hasRole(['pb', 'super_admin']))
                         <p class="sidebar-section-label">Master Data & Audit</p>
-                        @if($isSuperAdmin)<a href="{{ route('admin.member-numbers.index') }}" class="sidebar-link {{ request()->routeIs('admin.member-numbers.*') ? 'is-active' : '' }}" @if(request()->routeIs('admin.member-numbers.*')) aria-current="page" @endif><x-sidebar-icon name="membership" /><span>Manajemen Nomor ID</span></a>@endif
+                        @if($isSuperAdmin)<a href="{{ route('admin.member-numbers.index') }}" class="sidebar-link {{ request()->routeIs('admin.member-numbers.*', 'admin.official-numbers.*') ? 'is-active' : '' }}" @if(request()->routeIs('admin.member-numbers.*', 'admin.official-numbers.*')) aria-current="page" @endif><x-sidebar-icon name="membership" /><span>Manajemen Nomor ID</span></a>@endif
                         <a href="{{ route('admin.belt-levels.index') }}" class="sidebar-link {{ $activeBeltLevels ? 'is-active' : '' }}" @if($activeBeltLevels) aria-current="page" @endif><x-sidebar-icon name="belt" /><span>Pengaturan Sabuk Kyu/DAN</span></a>
                         <a class="sidebar-link {{ request()->routeIs('admin.access-audits.*') ? 'is-active' : '' }}" href="{{ route('admin.access-audits.index') }}" @if(request()->routeIs('admin.access-audits.*')) aria-current="page" @endif><x-sidebar-icon name="audit" /><span>Riwayat Hak Akses</span></a>
                     @endif
                 </div>
             </details>
         @endif
+        <a href="{{ route('guide') }}" class="sidebar-link sidebar-standalone-link {{ request()->routeIs('guide') ? 'is-active' : '' }}" @if(request()->routeIs('guide')) aria-current="page" @endif><x-sidebar-icon name="exam-cert" /><span>Panduan Sistem</span></a>
     </nav>
 </aside>

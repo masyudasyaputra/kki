@@ -21,4 +21,4 @@
             </x-primary-button>
         </div>
     </form>
-    <p class="auth-switch"><a href="{{ route('login') }}" class="auth-link">Kembali ke Masuk</a></p>
+    <p class="auth-switch"><a href="{{ route('login', [], false) }}" class="auth-link">Kembali ke Masuk</a></p>

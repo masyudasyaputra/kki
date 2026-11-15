@@ -14,6 +14,7 @@
             @if($isMember)<a href="{{ route('member.card') }}" class="btn btn-secondary"><x-sidebar-icon name="membership" />Kartu anggota</a>@endif
         </section>
         @if(session('status') === 'profile-updated')<div class="profile-feedback" role="status">Profil berhasil disimpan. @if($isMember && $user->verification_status === 'pending')Data sabuk, wilayah, atau dojo yang berubah menunggu verifikasi pengurus provinsi atau Pusat.@endif</div>@endif
+        @include('profile.partials.qualifications')
         <nav class="profile-section-nav" aria-label="Bagian profil"><a href="#identitas">Identitas & kontak</a><a href="#wilayah">Wilayah & dojo</a><a href="#keamanan">Keamanan akun</a></nav>
         <div class="grid items-start gap-6 lg:grid-cols-3">
             <div class="min-w-0 space-y-6 lg:col-span-2">

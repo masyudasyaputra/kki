@@ -72,22 +72,7 @@
                                     required placeholder="Contoh: Dr. H. Ahmad Fauzi, M.Pd">
                             </div>
 
-                            <div>
-                                <label class="block text-xs font-semibold text-slate-700 mb-1.5">
-                                    Jabatan Organisasi <span class="text-red-500">*</span>
-                                </label>
-                                <select name="position" required
-                                    class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-800 focus:bg-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 shadow-sm transition-all">
-                                    @php
-                                        $jabatan = ['Ketua Umum', 'Sekretaris', 'Bendahara', 'Ketua Bidang Prestasi', 'Anggota'];
-                                    @endphp
-                                    @foreach ($jabatan as $j)
-                                        <option value="{{ $j }}" {{ old('position', $official->position) == $j ? 'selected' : '' }}>
-                                            {{ $j }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
+                            <x-official-position-field :value="$official->position" :options="['Ketua Umum', 'Sekretaris', 'Bendahara', 'Ketua Bidang Prestasi', 'Anggota']" />
 
                             <div>
                                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">

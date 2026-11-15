@@ -67,8 +67,7 @@ class ExamReviewController extends Controller
         $canAssign = RoleAccess::managesUsers($request->user());
         $assigned = $exam->reviewers()->pluck('users.id')->all();
         $reviewers = $canAssign ? $this->eligible($exam)->orderBy('name')->get() : collect();
-        $canReview = $request->user()->hasRole('verifikator_ujian_pb') && in_array($request->user()->id, $assigned)
-            && !$exam->examiners()->where('users.id', $request->user()->id)->exists();
+        $canReview = app(\App\Services\ExamAuthority::class)->canReview($request->user(), $exam);
         $participantPhotos = $submission
             ? User::whereIn('id', array_column($submission->snapshot['participants'], 'member_id'))->pluck('photo', 'id')
             : collect();
@@ -96,7 +95,7 @@ class ExamReviewController extends Controller
         abort_if($request->session()->has('impersonation'), 403, 'Kembali ke akun sendiri sebelum melakukan verifikasi.');
         $data = $request->validate(['status' => 'required|in:approved,revision', 'notes' => 'required_if:status,revision|nullable|string|max:5000']);
         $workflow->review($request->user(), $exam, $data['status'], $data['notes'] ?? null);
-        return back()->with('success', $data['status'] === 'approved' ? 'Hasil ujian disetujui pusat.' : 'Hasil dikembalikan kepada panitia untuk diperbaiki.');
+        return back()->with('success', $data['status'] === 'approved' ? 'Hasil ujian disetujui '.app(\App\Services\ExamAuthority::class)->destination($exam).'.' : 'Hasil dikembalikan kepada panitia untuk diperbaiki.');
     }
 
     private function eligible(Exam $exam)

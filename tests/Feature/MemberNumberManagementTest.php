@@ -40,6 +40,96 @@ class MemberNumberManagementTest extends TestCase
         return array_replace(['mode' => 'manual', 'number' => 'KKI-ARSIP-001', 'reason' => 'Penyesuaian arsip', 'expected_number' => $member->member_number], $overrides);
     }
 
+    public function test_non_karateka_registration_does_not_issue_a_member_number(): void
+    {
+        Schema::table('users', fn (Blueprint $t) => $t->string('registration_type')->default('karateka'));
+        $official = User::create(['name' => 'Pengurus', 'email' => 'pengurus@example.test', 'role' => 'member', 'registration_type' => 'official']);
+        $this->assertNull($official->fresh()->member_number_override);
+        $this->assertNotNull($this->user()->member_number_override);
+    }
+
+    public function test_non_black_members_cannot_receive_msh_manually_or_through_swap(): void
+    {
+        DB::table('belt_levels')->insert(['id' => 2, 'name' => 'Coklat', 'kyu_dan' => 'KYU I']);
+        $black = $this->user(); $colored = $this->user();
+        $colored->update(['belt_level_id' => 2]);
+        $this->assertStringNotContainsString('MSH-', $colored->fresh()->member_number);
+        $before = $colored->fresh()->member_number;
+        $this->actingAs($admin = $this->user('super_admin'));
+        $this->put(route('admin.member-numbers.update', $colored), $this->change($colored->fresh(), ['number' => 'MSH-SMT-008888']))->assertSessionHasErrors('number');
+        foreach ([[$colored->fresh(), $black->fresh()], [$black->fresh(), $colored->fresh()]] as [$first, $second]) {
+            $this->put(route('admin.member-numbers.update', $first), $this->change($first, ['mode' => 'swap', 'target_number' => $second->member_number]))->assertSessionHasErrors('target_number');
+        }
+        $this->assertSame($before, $colored->fresh()->member_number);
+        $this->assertStringStartsWith('MSH-', $black->fresh()->member_number);
+    }
+
+    public function test_belt_correction_removes_msh_and_keeps_an_audit_record(): void
+    {
+        DB::table('belt_levels')->insert(['id' => 2, 'name' => 'Putih', 'kyu_dan' => 'KYU VII']);
+        $member = $this->user(); $old = $member->member_number;
+        $member->load('beltLevel');
+        $member->update(['belt_level_id' => 2]);
+        $this->assertSame(substr($old, 4), $member->fresh()->member_number);
+        $this->assertDatabaseHas('member_number_changes', ['member_id' => $member->id, 'before_number' => $old, 'after_number' => substr($old, 4)]);
+    }
+
+    public function test_promotion_adds_msh_only_when_confirmed_preserves_base_number_and_is_idempotent(): void
+    {
+        DB::table('belt_levels')->insert(['id' => 2, 'name' => 'Coklat', 'kyu_dan' => 'KYU I']);
+        $member = $this->user();
+        $member->update(['belt_level_id' => 2]);
+        $before = $member->fresh()->member_number;
+        $member->update(['belt_level_id' => 1]);
+        $this->assertSame($before, $member->fresh()->member_number);
+        $this->assertSame('pending', $member->fresh()->verification_status);
+        $admin = $this->user('super_admin');
+        $numbers = app(\App\Services\MemberNumbers::class);
+        $numbers->confirmBlackBelt($member, $admin);
+        $numbers->confirmBlackBelt($member->fresh(), $admin);
+        $this->assertSame('MSH-'.$before, $member->fresh()->member_number);
+        $this->assertSame(1, \App\Models\MemberNumberChange::where('member_id', $member->id)->where('reason', 'Penambahan kode MSH setelah pengesahan sabuk hitam.')->count());
+    }
+
+    public function test_registration_claiming_black_belt_waits_for_verification_before_msh(): void
+    {
+        Schema::table('users', fn (Blueprint $t) => $t->dropColumn('verification_status'));
+        Schema::table('users', fn (Blueprint $t) => $t->string('verification_status')->default('pending'));
+        $member = User::create(['name' => 'Calon Hitam', 'email' => 'claim@example.test', 'role' => 'member', 'province_id' => 1, 'belt_level_id' => 1]);
+        $this->assertStringStartsWith('SMT-', $member->fresh()->member_number);
+    }
+
+    public function test_conflicting_msh_number_blocks_confirmation_without_overwriting_any_id(): void
+    {
+        $member = $this->user(); $other = $this->user(); $admin = $this->user('super_admin');
+        $originalMsh = $member->member_number;
+        $numbers = app(\App\Services\MemberNumbers::class);
+        $numbers->change($member, $admin, ['mode' => 'manual', 'number' => substr($originalMsh, 4), 'expected_number' => $originalMsh, 'reason' => 'Nomor awal']);
+        $numbers->change($other, $admin, ['mode' => 'manual', 'number' => $originalMsh, 'expected_number' => $other->member_number, 'reason' => 'Nomor arsip']);
+        try {
+            $numbers->confirmBlackBelt($member->fresh(), $admin);
+            $this->fail('Duplicate MSH should not be accepted');
+        } catch (\Illuminate\Validation\ValidationException $exception) {
+            $this->assertArrayHasKey('number', $exception->errors());
+        }
+        $this->assertSame(substr($originalMsh, 4), $member->fresh()->member_number);
+        $this->assertSame($originalMsh, $other->fresh()->member_number);
+        $this->assertDatabaseCount('member_number_changes', 2);
+    }
+
+    public function test_existing_invalid_msh_numbers_are_repaired_without_collisions(): void
+    {
+        DB::table('belt_levels')->insert(['id' => 2, 'name' => 'Hijau', 'kyu_dan' => 'KYU V']);
+        $member = $this->user(); $black = $this->user();
+        $oldBlack = $black->member_number;
+        DB::table('users')->where('id', $member->id)->update(['belt_level_id' => 2]);
+        DB::table('users')->where('id', $black->id)->update(['member_number_override' => substr($member->member_number, 4)]);
+        (require database_path('migrations/2026_11_15_000005_repair_non_black_msh_numbers.php'))->up();
+        $this->assertStringNotContainsString('MSH-', $member->fresh()->member_number);
+        $this->assertNotSame($member->fresh()->member_number, $black->fresh()->member_number);
+        $this->assertDatabaseHas('member_number_changes', ['member_id' => $member->id, 'reason' => 'Penyesuaian kode MSH: hanya untuk anggota sabuk hitam.']);
+    }
+
     public function test_only_super_admin_can_view_and_change_member_numbers(): void
     {
         $member = $this->user();

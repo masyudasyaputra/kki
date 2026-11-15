@@ -54,9 +54,12 @@ class ProfileUpdateRequest extends FormRequest
             ],
         ];
         if ($member) {
+            $beltChanged = $this->exists('belt_level_id') && (string) $this->input('belt_level_id') !== (string) ($this->user()->requested_belt_level_id ?? $this->user()->belt_level_id);
+            $rules['belt_diploma'] = [Rule::requiredIf($beltChanged), 'nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'];
             $rules['province_id'] = ['sometimes', 'nullable', 'required_with:city_id', 'integer', 'exists:provinces,id'];
             $rules['city_id'] = ['sometimes', 'nullable', 'required_with:dojo_id,district', 'integer', Rule::exists('cities', 'id')->where('province_id', $provinceId)];
             $rules['belt_level_id'] = ['sometimes', 'nullable', 'integer', Rule::exists('belt_levels', 'id')->where(fn ($query) => $query->where('is_active', true)->orWhere('id', $this->user()->belt_level_id))];
+            if ($beltChanged) $rules['belt_level_id'][] = 'required';
         }
 
         return $rules;

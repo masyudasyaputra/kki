@@ -24,8 +24,8 @@
             <a href="{{ route('public.dojos') }}" @if(request()->routeIs('public.dojos')) aria-current="page" @endif>Direktori dojo</a>
             <a href="{{ route('public.members') }}" @if(request()->routeIs('public.members')) aria-current="page" @endif>Direktori anggota</a>
             <a href="{{ url('/') }}#layanan">Layanan</a>
-            <a href="{{ auth()->check() ? route('dashboard') : route('login') }}">{{ auth()->check() ? 'Dashboard' : 'Masuk portal' }}</a>
-            @guest<a href="{{ route('register') }}" class="pp-btn pp-red">Daftar anggota <span aria-hidden="true">↗</span></a>@endguest
+            <a href="{{ auth()->check() ? route('dashboard') : route('login', [], false) }}">{{ auth()->check() ? 'Dashboard' : 'Masuk portal' }}</a>
+            @guest<a href="{{ route('register', [], false) }}" class="pp-btn pp-red">Daftar anggota <span aria-hidden="true">↗</span></a>@endguest
         </nav>
         <button class="pp-toggle" type="button" @click="menuOpen = !menuOpen" :aria-expanded="menuOpen.toString()" aria-controls="pp-mobile" :aria-label="menuOpen ? 'Tutup navigasi' : 'Buka navigasi'">
             <span x-text="menuOpen ? '×' : '☰'" aria-hidden="true">☰</span>
@@ -36,8 +36,8 @@
         <a href="{{ route('public.dojos') }}" @click="menuOpen = false">Direktori dojo</a>
         <a href="{{ route('public.members') }}" @click="menuOpen = false">Direktori anggota</a>
         <a href="{{ url('/') }}#layanan" @click="menuOpen = false">Layanan</a>
-        <a href="{{ auth()->check() ? route('dashboard') : route('login') }}" @click="menuOpen = false">{{ auth()->check() ? 'Dashboard' : 'Masuk portal' }}</a>
-        @guest<a href="{{ route('register') }}" @click="menuOpen = false">Daftar anggota ↗</a>@endguest
+        <a href="{{ auth()->check() ? route('dashboard') : route('login', [], false) }}" @click="menuOpen = false">{{ auth()->check() ? 'Dashboard' : 'Masuk portal' }}</a>
+        @guest<a href="{{ route('register', [], false) }}" @click="menuOpen = false">Daftar anggota ↗</a>@endguest
     </nav>
 </header>
 <main id="konten-utama">@yield('content')</main>

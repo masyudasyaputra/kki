@@ -143,6 +143,7 @@
                                             </div>
                                             <div class="text-[10px] text-slate-400 font-bold tracking-tight truncate">
                                                 {{ $user->email }}
+                                                @if($user->registration_type === 'official' && !$user->is_active)<span class="block text-amber-700">Pengajuan pengurus: {{ $user->requested_position }}</span>@endif
                                             </div>
                                         </div>
                                     </div>
@@ -234,6 +235,7 @@
                                         <span
                                             class="text-[9px] font-black text-slate-400 uppercase tracking-widest italic truncate">
                                             {{ $user->email }}
+                                                @if($user->registration_type === 'official' && !$user->is_active)<span class="block text-amber-700">Pengajuan pengurus: {{ $user->requested_position }}</span>@endif
                                         </span>
                                     </div>
                                 </div>
