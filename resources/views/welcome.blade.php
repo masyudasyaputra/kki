@@ -256,7 +256,7 @@ $faqs = [
 <p class="pp-copy">Direktori dojo aktif dalam jaringan PP KKI. Temukan lokasi berlatih dan informasi pelatih di wilayah Anda.</p>
 </div>
 @if($dojos->isNotEmpty())<div class="pp-search">
-<label for="pp-search">Cari dojo terdekat</label>
+<label for="pp-search">Temukan dojo di wilayah Anda</label>
 <input id="pp-search" type="search" x-model="query" @input="filterDojos()" placeholder="Nama dojo, pelatih, kota, atau provinsi…" aria-describedby="pp-search-hint">
 <small id="pp-search-hint">{{ $dojos->count() }} dojo aktif · {{ $dojoRegions->count() }} cabang kabupaten/kota. Buka wilayah untuk melihat detail.</small>
 </div>
@@ -270,13 +270,20 @@ $faqs = [
 </summary>
 <div class="pp-dojos">
 @foreach($regionDojos as $dojo)<article class="pp-dojo" data-dojo data-search="{{ mb_strtolower(implode(' ', [$region, $dojo->city?->province?->name, $dojo->name, $dojo->address, $dojo->sensei_name]), 'UTF-8') }}">
-<h4>{{ $dojo->name }}</h4>
-@if($dojo->city?->province)<p>{{ $dojo->city->province->name }}</p>
-@endif @if($dojo->sensei_name)<p>Pelatih: {{ $dojo->sensei_name }}</p>
-@endif
-<p>{{ $dojo->address ?: 'Alamat belum dilengkapi.' }}</p>
-@if($dojo->address)<a href="https://www.google.com/maps/search/?api=1&amp;query={{ urlencode($dojo->name.' '.$dojo->address.' '.$region) }}" target="_blank" rel="noopener noreferrer" class="pp-link">Lihat lokasi ↗</a>
-@endif
+<div class="pp-dojo-heading">
+<span class="pp-dojo-emblem" aria-hidden="true"><img src="{{ asset('images/logo-kki.png') }}" alt="" width="42" height="46" loading="lazy"></span>
+<div><span class="pp-dojo-kicker">Dojo KKI</span><h4>{{ $dojo->name }}</h4><p>{{ $region }}@if($dojo->city?->province) · {{ $dojo->city->province->name }}@endif</p></div>
+<span class="pp-dojo-active">Dojo aktif</span>
+</div>
+<dl class="pp-dojo-facts">
+<div><dt>Pelatih</dt><dd>{{ $dojo->sensei_name ?: 'Informasi pelatih belum tersedia' }}</dd></div>
+<div><dt>Alamat latihan</dt><dd>{{ $dojo->address ?: 'Alamat belum dilengkapi' }}</dd></div>
+</dl>
+<div class="pp-dojo-actions">
+@if($dojo->address)<a href="https://www.google.com/maps/search/?api=1&amp;query={{ urlencode($dojo->name.' '.$dojo->address.' '.$region) }}" target="_blank" rel="noopener noreferrer" class="pp-dojo-location" aria-label="Buka lokasi dojo {{ $dojo->name }} di Google Maps">Buka Google Maps <span aria-hidden="true">↗</span></a>
+<span>Lokasi berdasarkan alamat dojo</span>
+@else<span>Lokasi akan tersedia setelah alamat dilengkapi.</span>@endif
+</div>
 </article>
 @endforeach
 </div>

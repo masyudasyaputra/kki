@@ -661,31 +661,52 @@ a.pp-stat:focus-visible { outline: 2px solid white; outline-offset: 4px; }
 }
 .pp-dojos {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 1px;
-    background: var(--line);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 16px;
+    padding: 18px;
+    background: #faf9f8;
 }
 .pp-dojo {
     padding: 24px;
     background: white;
+    border: 1px solid #e6dfe0;
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
     align-items: start;
 }
 .pp-dojo h4 {
-    font-size: 17px;
+    font-size: 21px;
     font-weight: 700;
-    margin-bottom: 8px;
+    margin: 2px 0;
+    overflow-wrap: anywhere;
 }
 .pp-dojo p {
     font-size: 13px;
     color: var(--muted);
     margin: 4px 0;
 }
-.pp-dojo a {
-    margin-top: auto;
-    padding-top: 18px;
-    color: var(--red);
+.pp-dojo-heading { display: flex; align-items: center; gap: 14px; width: 100%; }
+.pp-dojo-heading > div { min-width: 0; flex: 1; }
+.pp-dojo-emblem { display: grid; place-items: center; width: 64px; height: 72px; flex-shrink: 0; border: 1px solid #eee6e7; border-radius: 10px; background: #fff; }
+.pp-dojo-emblem img { object-fit: contain; width: 42px; height: 46px; }
+.pp-dojo-kicker { font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: #762137; font-weight: 700; }
+.pp-dojo-active { align-self: flex-start; flex-shrink: 0; border-radius: 20px; padding: 5px 9px; background: #edf7f0; color: #286147; font-size: 10px; font-weight: 600; }
+.pp-dojo-facts { display: grid; grid-template-columns: 1fr 1.5fr; width: 100%; gap: 20px; margin: 22px 0; padding: 18px 0; border-top: 1px solid #eee8e9; border-bottom: 1px solid #eee8e9; }
+.pp-dojo-facts dt { font-size: 11px; color: #7c7476; margin-bottom: 6px; }
+.pp-dojo-facts dd { margin: 0; font-size: 14px; color: #343034; font-weight: 500; line-height: 1.6; overflow-wrap: anywhere; }
+.pp-dojo-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: auto; }
+.pp-dojo-location { display: inline-flex; align-items: center; gap: 12px; padding: 11px 16px; background: #762137; color: white; border-radius: 7px; font-size: 12px; font-weight: 600; }
+.pp-dojo-location:hover { background: #571728; }
+.pp-dojo-location:focus-visible { outline: 2px solid #762137; outline-offset: 3px; }
+.pp-dojo-actions > span { font-size: 11px; color: #7c7476; }
+@media (max-width: 600px) {
+    .pp-dojos { padding: 10px; }
+    .pp-dojo { padding: 17px; }
+    .pp-dojo-heading { gap: 10px; flex-wrap: wrap; }
+    .pp-dojo-active { margin-left: 74px; }
+    .pp-dojo-facts { grid-template-columns: 1fr; gap: 14px; }
+    .pp-dojo h4 { font-size: 19px; }
 }
 .pp-directory .pp-empty {
     margin-top: 30px;
