@@ -20,6 +20,7 @@
                 <a href="{{ route('admin.members.export', request()->except('page')) }}" class="btn btn-secondary">Export Excel</a>
                 <x-button-add href="{{ route('admin.members.create') }}">Tambah Anggota</x-button-add>
             </x-table-toolbar>
+            <p class="text-xs text-slate-500">Statistik dan direktori publik hanya menampilkan anggota terverifikasi. Status akun Aktif saja belum berarti verifikasi keanggotaan disetujui.</p>
             <div class="table-surface hidden md:block">
                 <table class="data-table" data-server-sort="true">
                     <thead><tr>
@@ -31,7 +32,7 @@
                                 <td><x-member-identity :member="$member"><p class="font-semibold text-slate-800">{{ $member->name }}</p><x-member-contact :member="$member" /></x-member-identity></td>
                                 <td>{{ $member->beltLevel?->display_name ?? 'Belum ditetapkan' }}</td><td>{{ $member->dojo?->name ?? '-' }}</td>
                                 <td>{{ $member->city?->name ?? '-' }}<p class="text-[11px] text-slate-500">Kec. {{ $member->district ?: '-' }}</p><p class="text-[11px] text-slate-500">{{ $member->province?->name ?? '-' }}</p></td>
-                                <td class="text-center"><span class="rounded-full px-2 py-1 text-[11px] {{ $member->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">{{ $member->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
+                                <td class="text-center"><span class="rounded-full px-2 py-1 text-[11px] {{ $member->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">{{ $member->is_active ? 'Aktif' : 'Nonaktif' }}</span><x-member-verification-status :member="$member" /></td>
                                 <td class="text-right"><x-action-button icon="view" label="Detail anggota" onclick="document.getElementById('member-detail-{{ $member->id }}').showModal()" /></td>
                             </tr>
                         @empty
@@ -45,6 +46,7 @@
                     <div class="min-w-0 rounded-xl border border-slate-200 bg-white p-3">
                         <x-member-identity :member="$member"><p class="break-words text-xs font-semibold text-slate-900">{{ $member->name }}</p><x-member-contact :member="$member" /></x-member-identity>
                         <p class="mt-2 break-words text-[11px] text-slate-600">{{ $member->dojo?->name ?? '-' }}</p><p class="text-[11px] text-slate-500">{{ $member->beltLevel?->display_name ?? 'Belum ditetapkan' }}</p>
+                        <x-member-verification-status :member="$member" />
                         <div class="mt-2 flex items-center justify-between gap-1"><span class="text-[10px] {{ $member->is_active ? 'text-emerald-700' : 'text-slate-400' }}">{{ $member->is_active ? 'Aktif' : 'Nonaktif' }}</span><x-action-button icon="view" label="Detail anggota" onclick="document.getElementById('member-detail-{{ $member->id }}').showModal()" /></div>
                     </div>
                 @empty
