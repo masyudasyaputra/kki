@@ -113,7 +113,7 @@ $faqs = [
 <a href="{{ route('public.members') }}" class="pp-stat pp-stat-member">
 <span class="pp-stat-label">Anggota terverifikasi</span>
 <strong data-stat-count="{{ $verifiedMemberCount }}" aria-label="{{ number_format($verifiedMemberCount, 0, ',', '.') }}">{{ number_format($verifiedMemberCount, 0, ',', '.') }}</strong>
-<span class="pp-stat-detail">Anggota aktif · Lihat direktori ↗</span>
+<span class="pp-stat-detail">Lihat direktori anggota ↗</span>
 </a>
 <a href="{{ route('public.dojos') }}" class="pp-stat">
 <span class="pp-stat-label">Dojo aktif</span>
@@ -127,7 +127,7 @@ $faqs = [
 </div>
 </div>
 <div class="pp-stat-footer">
-<p>Statistik anggota hanya mencakup anggota aktif yang telah disetujui melalui verifikasi keanggotaan.</p>
+<p>Statistik anggota hanya mencakup anggota yang telah disetujui melalui verifikasi keanggotaan.</p>
 <a href="#tentang" class="pp-link">Kenali perguruan ↗</a>
 </div>
 </div>

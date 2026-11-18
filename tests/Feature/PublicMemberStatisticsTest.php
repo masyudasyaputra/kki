@@ -43,7 +43,7 @@ class PublicMemberStatisticsTest extends TestCase
         });
     }
 
-    public function test_public_statistics_only_count_active_approved_members(): void
+    public function test_public_statistics_count_approved_members_regardless_of_active_status(): void
     {
         foreach ([
             ['member', 'approved', true], ['member', 'approved', true],
@@ -54,7 +54,7 @@ class PublicMemberStatisticsTest extends TestCase
             DB::table('users')->insert(['role' => $role, 'verification_status' => $status, 'is_active' => $active]);
         }
 
-        $this->get('/')->assertOk()->assertViewHas('verifiedMemberCount', 2)
+        $this->get('/')->assertOk()->assertViewHas('verifiedMemberCount', 3)
             ->assertSee('Anggota terverifikasi')->assertSee('verifikasi keanggotaan');
     }
 

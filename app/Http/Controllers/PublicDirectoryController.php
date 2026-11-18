@@ -90,7 +90,6 @@ class PublicDirectoryController extends Controller
         $query = User::query()
             ->where('role', 'member')
             ->where('verification_status', 'approved')
-            ->where('is_active', true)
             ->with(['province', 'city', 'dojo', 'beltLevel']);
 
         if (!empty($filters['province_id'])) {

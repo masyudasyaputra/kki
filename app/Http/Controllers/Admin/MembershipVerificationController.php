@@ -73,6 +73,7 @@ class MembershipVerificationController extends Controller
                 'snapshot' => ['values' => $member->only(array_merge(MembershipReview::FIELDS, ['requested_belt_level_id', 'belt_diploma_path'])), 'fields' => $review->data($member), 'checked' => $data['checked'] ?? []],
             ]);
             $member->verification_status = $data['status'];
+            if ($data['status'] === 'approved') $member->is_active = true;
             if ($data['status'] === 'approved' && $member->requested_belt_level_id) {
                 $member->belt_level_id = $member->requested_belt_level_id;
                 $member->requested_belt_level_id = null;

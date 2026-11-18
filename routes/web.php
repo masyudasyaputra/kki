@@ -50,7 +50,6 @@ Route::get('/', function () {
     $verifiedMemberCount = User::query()
         ->where('role', 'member')
         ->where('verification_status', 'approved')
-        ->where('is_active', true)
         ->count();
 
     return view('welcome', compact('dojos', 'dojoRegions', 'agendas', 'verifiedMemberCount'));

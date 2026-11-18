@@ -178,7 +178,7 @@ class MembershipVerificationTest extends TestCase
         $this->actingAs($actor)->post(route('admin.verifications.store', $member), $this->decision($member, ['checked' => ['name']]))->assertSessionHasErrors('checked');
         $this->post(route('admin.verifications.store', $member), $this->decision($member))->assertRedirect(route('admin.verifications.show', $member));
         $this->assertSame('approved', $member->fresh()->verification_status);
-        $this->assertFalse($member->fresh()->is_active);
+        $this->assertTrue($member->fresh()->is_active);
         $entry = $member->membershipVerifications()->firstOrFail();
         $this->assertSame($actor->id, $entry->reviewer_id);
         $this->assertSame('Medan Johor', $entry->snapshot['values']['district']);
@@ -208,6 +208,7 @@ class MembershipVerificationTest extends TestCase
         $this->post(route('admin.verifications.store', $member), $payload)->assertSessionHasErrors('notes');
         $this->post(route('admin.verifications.store', $member), $payload + ['notes' => 'Perbaiki nama kecamatan'])->assertRedirect();
         $this->assertSame('revision', $member->fresh()->verification_status);
+        $this->assertFalse($member->fresh()->is_active);
         $member = $member->fresh(); $member->district = 'Medan Baru'; $member->save();
         $this->assertSame('pending', $member->fresh()->verification_status);
         $this->assertSame(1, $member->membershipVerifications()->count());
