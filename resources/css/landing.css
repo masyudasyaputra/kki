@@ -230,18 +230,30 @@ html {
     width: 100%;
 }
 .pp-emblem-card {
+    position: relative;
+    isolation: isolate;
     padding: 24px;
-    background: white;
-    border-radius: 16px;
-    transform: rotate(3deg);
-    box-shadow: 0 25px 60px #0005;
+}
+.pp-emblem-card::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: 10%;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, #a7293933, transparent 70%);
+    filter: blur(22px);
 }
 .pp-emblem img {
     display: block;
     width: 100%;
-    aspect-ratio: 1;
+    aspect-ratio: 342 / 380;
     object-fit: contain;
-    transform: rotate(-3deg);
+    filter: drop-shadow(0 14px 20px #0005);
+    animation: pp-emblem-float 6s ease-in-out infinite;
+}
+@keyframes pp-emblem-float {
+    0%, 100% { transform: translateY(0) rotate(-1deg); }
+    50% { transform: translateY(-12px) rotate(1deg); }
 }
 .pp-emblem-label {
     display: flex;
@@ -1046,6 +1058,7 @@ a.pp-stat:focus-visible { outline: 2px solid white; outline-offset: 4px; }
     .pp * {
         transition: none !important;
     }
+    .pp-emblem img { animation: none; transform: none; }
     .pp-btn:hover,
     .pp-service:hover {
         transform: none;

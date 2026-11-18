@@ -100,7 +100,7 @@ $faqs = [
 </div>
 <div class="pp-emblem">
 <div class="pp-emblem-card">
-<img src="{{ asset('images/logo-kki.png') }}" alt="Lambang Kushin Ryu M Karate-Do Indonesia" width="342" height="342" fetchpriority="high">
+<img src="{{ asset('images/logo-kki-dark.png') }}" alt="Lambang Kushin Ryu M Karate-Do Indonesia" width="342" height="380" fetchpriority="high">
 </div>
 <p class="pp-emblem-label">
 <span>Kushin Ryu</span>
