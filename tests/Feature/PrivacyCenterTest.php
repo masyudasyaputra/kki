@@ -85,6 +85,20 @@ class PrivacyCenterTest extends TestCase
         $this->actingAs($owner)->get(route('privacy.index'))->assertOk()->assertSee('Tindakan yang diminta telah dilaksanakan.');
     }
 
+    public function test_initial_data_update_preserves_explicit_refusal(): void
+    {
+        $initial = $this->user('initial'); $refused = $this->user('refused');
+        DB::table('privacy_events')->insert(['user_id' => $refused->id, 'directory_consent' => false,
+            'policy_version' => '2026-11-18', 'created_at' => now()]);
+        $migration = require database_path('migrations/2026_11_18_000003_enable_initial_member_directory.php');
+        $migration->up();
+        $this->assertTrue($initial->fresh()->public_directory_consent);
+        $this->assertFalse($refused->fresh()->public_directory_consent);
+        $this->assertDatabaseHas('privacy_events', ['user_id' => $initial->id, 'policy_version' => 'initial-data-admin-2026-11-18']);
+        $migration->up();
+        $this->assertDatabaseCount('privacy_events', 2);
+    }
+
     public function test_directory_requires_verification_and_consent_without_affecting_total(): void
     {
         $hidden = $this->user('Hidden'); $shown = $this->user('Shown'); $pending = $this->user('Pending');

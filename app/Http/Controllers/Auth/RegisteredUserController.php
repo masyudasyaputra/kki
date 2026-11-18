@@ -63,6 +63,7 @@ class RegisteredUserController extends Controller
             $request->merge(['whatsapp' => $phone]);
         }
         $data = $request->validate([
+            'directory_consent' => ['nullable', 'boolean'],
             'registration_type' => ['required', Rule::in(['karateka', 'official'])],
             'requested_position' => [Rule::requiredIf($isOfficial), 'nullable', 'string', 'max:255'],
             'first_coach' => ['nullable', 'string', 'max:255'],
@@ -99,6 +100,11 @@ class RegisteredUserController extends Controller
             if ($identity) {
                 $user->forceFill(['email_verified_at' => now()])->save();
             }
+
+            $consent = (bool) ($data['directory_consent'] ?? false);
+            $user->forceFill(['public_directory_consent' => $consent])->save();
+            DB::table('privacy_events')->insert(['user_id' => $user->id, 'directory_consent' => $consent,
+                'policy_version' => \App\Http\Controllers\PrivacyController::VERSION, 'created_at' => now()]);
 
             return $user;
         });

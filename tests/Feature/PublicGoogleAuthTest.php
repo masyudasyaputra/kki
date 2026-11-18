@@ -67,6 +67,7 @@ class PublicGoogleAuthTest extends TestCase
             $table->string('name');
             $table->integer('order');
         });
+        (require database_path('migrations/2026_11_18_000002_add_privacy_center.php'))->up();
     }
 
     public function test_member_registration_saves_city_and_district(): void

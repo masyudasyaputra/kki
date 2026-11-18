@@ -8,7 +8,7 @@
         <p class="pp-eyebrow">Keluarga besar KKI</p>
         <h1 class="pp-display">Direktori Anggota</h1>
         <p>Temukan karateka KKI berdasarkan nama, dojo, wilayah, dan tingkat sabuk.</p>
-        <div class="pp-page-stat"><strong>{{ number_format($members->total()) }}</strong><span>anggota terverifikasi</span></div>
+        <div class="pp-page-stat"><strong>{{ number_format($members->total()) }}</strong><span>profil publik sesuai pencarian</span></div>
     </div>
 </section>
 
@@ -41,7 +41,7 @@
             </div>
             <x-pagination :paginator="$members" label="anggota" />
         @else
-            <div class="pp-empty pp-page-empty"><span class="pp-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm7-3h6m-3-3v6"/></svg></span><div><h2>Belum ada anggota yang sesuai.</h2><p>Coba ubah kata kunci atau filter. Anggota akan muncul setelah proses verifikasi selesai.</p></div></div>
+            <div class="pp-empty pp-page-empty"><span class="pp-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm7-3h6m-3-3v6"/></svg></span><div><h2>Belum ada profil publik yang sesuai.</h2><p>Coba ubah kata kunci atau filter. Profil hanya tampil setelah anggota terverifikasi dan menyetujui publikasi direktori.</p><p>Anggota dapat mengatur persetujuan melalui menu Privasi &amp; PDP.</p><a class="pp-link" href="{{ route('privacy.index') }}">Atur publikasi profil</a></div></div>
         @endif
     </div>
 </section>

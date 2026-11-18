@@ -8,7 +8,8 @@ Rujukan: https://jdih.komdigi.go.id/produk_hukum/view/id/832/t/undangundang%20no
 - `/kebijakan-privasi`: pemberitahuan publik dan kontak WhatsApp yang ditetapkan pengguna.
 - `/privasi`: preferensi publikasi dan permintaan milik akun sendiri, tersedia bagi semua akun login termasuk yang nonaktif.
 - `/admin/privasi`: antrean khusus Super Admin, jawaban wajib, pencatatan penanggung jawab dan waktu, penutupan final.
-- Publikasi direktori nonaktif secara default untuk akun lama maupun baru. Verifikasi dan status aktif tidak memberikan persetujuan publikasi.
+- Pendaftaran baru mencatat pilihan checkbox publikasi secara terpisah. Tidak dicentang berarti tidak dipublikasikan. Verifikasi dan status aktif tidak memberikan persetujuan publikasi.
+- Sesuai instruksi pengelola, migrasi `2026_11_18_000003_enable_initial_member_directory.php` mengaktifkan publikasi data awal yang belum memiliki catatan pilihan. Sumbernya ditandai `initial-data-admin-2026-11-18`, bukan bukti persetujuan individual. Pilihan penolakan/penarikan yang sudah tercatat dipertahankan. Pengelola tetap perlu memastikan dasar publikasi data awal dan memberi pemberitahuan kepada anggota.
 - Pilihan direktori dicatat dengan versi kebijakan dan waktu di `privacy_events`. Penarikan langsung mengubah filter direktori; jumlah agregat terverifikasi tidak berubah.
 - Isi permintaan dan jawaban terenkripsi memakai APP_KEY. Cadangkan kunci secara aman; kehilangan kunci membuat isi tak dapat dibaca.
 - Penghapusan, akses/salinan data lengkap, koreksi, dan pembatasan di sistem terkait masih dilaksanakan pengurus setelah pemeriksaan; perubahan status tiket tidak menjalankan tindakan tersebut secara otomatis.

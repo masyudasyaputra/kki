@@ -63,6 +63,7 @@ class RegistrationTest extends TestCase
             $table->string('name');
             $table->integer('order');
         });
+        (require database_path('migrations/2026_11_18_000002_add_privacy_center.php'))->up();
     }
 
 
@@ -73,6 +74,22 @@ class RegistrationTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('Pengurus Non-Karateka');
+    }
+
+    public function test_registration_records_directory_permission(): void
+    {
+        $this->post('/register', ['name' => 'Consent Member', 'email' => 'consent@example.test',
+            'password' => 'Password123!', 'password_confirmation' => 'Password123!', 'directory_consent' => 1])->assertSessionHasNoErrors();
+        $user = \App\Models\User::where('email', 'consent@example.test')->firstOrFail();
+        $this->assertTrue($user->public_directory_consent);
+        $this->assertDatabaseHas('privacy_events', ['user_id' => $user->id, 'directory_consent' => true]);
+    }
+
+    public function test_registration_without_permission_keeps_directory_hidden(): void
+    {
+        $this->post('/register', ['name' => 'Private Member', 'email' => 'private@example.test',
+            'password' => 'Password123!', 'password_confirmation' => 'Password123!'])->assertSessionHasNoErrors();
+        $this->assertFalse(\App\Models\User::where('email', 'private@example.test')->firstOrFail()->public_directory_consent);
     }
 
     public function test_new_users_can_register(): void
