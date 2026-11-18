@@ -69,7 +69,11 @@ class MemberController extends Controller
         $member = app(\App\Services\Dashboard\DashboardSummary::class)->users($actor, $role)->members()
             ->with(['province', 'city', 'dojo', 'beltLevel'])->findOrFail($member);
 
-        return response()->view('admin.members.show', compact('member'))->header('Cache-Control', 'private, no-store');
+        $qrPngBase64 = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(200)
+            ->errorCorrection('H')->generate((string) ($member->member_number ?: $member->id)));
+
+        return response()->view('admin.members.show', compact('member', 'qrPngBase64')
+            + app(\App\Services\QualificationBadges::class)->forUser($member))->header('Cache-Control', 'private, no-store');
     }
 
     public function export(Request $request)

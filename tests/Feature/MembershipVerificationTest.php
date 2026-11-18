@@ -96,7 +96,9 @@ class MembershipVerificationTest extends TestCase
     {
         $local = $this->member(1, 1); $outside = $this->member(2, 3);
         $this->actingAs($this->actor('super_admin'))->get(route('admin.members.show', $outside))
-            ->assertOk()->assertSee('Alamat dan kontak')->assertSee($outside->name);
+            ->assertOk()->assertSee('Alamat dan kontak')->assertSee($outside->name)
+            ->assertSee('Kartu anggota')->assertSee('Unduh Sisi depan (PNG)')->assertSee('Unduh Sisi belakang (PNG)')
+            ->assertSee('data:image/svg+xml;base64,', false)->assertSee($outside->member_number);
         $this->get(route('admin.members.index'))->assertOk()->assertSee(route('admin.members.show', $outside));
         $this->actingAs($this->actor('pengcab'))->get(route('admin.members.show', $local))->assertOk();
         $this->get(route('admin.members.show', $outside))->assertNotFound();

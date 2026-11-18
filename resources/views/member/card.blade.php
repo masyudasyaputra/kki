@@ -23,9 +23,11 @@
         @endforeach
     </div>
     <p class="membership-download-note">Unduh kedua sisi untuk menyimpan kartu digital Anda. QR berisi nomor anggota atau ID akun jika nomor belum diterbitkan.</p>
+    @if($showMemberDetails ?? true)
     <section class="membership-details"><div class="membership-details-heading"><h2>Data anggota</h2><a href="{{ route('profile.edit') }}">Perbarui profil <x-solid-arrow /></a></div><dl>
         @foreach (['Nama karateka' => $user->name, 'Nomor anggota' => $user->member_number ?: 'Belum diterbitkan', 'Tingkatan' => $user->beltLevel?->display_name ?? 'Belum ditentukan', 'Dojo' => $user->dojo?->name ?? 'Belum dipilih', 'Kabupaten / kota' => $user->city?->name ?? 'Belum diisi', 'Kecamatan' => $user->district ?: 'Belum diisi', 'WhatsApp' => $user->whatsapp ?: 'Belum diisi', 'Nama orang tua' => $user->parent_name ?: 'Belum diisi'] as $label => $value)
             <div><dt>{{ $label }}</dt><dd>{{ $value }}</dd></div>
         @endforeach
     </dl></section>
+    @endif
 </div>

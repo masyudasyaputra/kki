@@ -10,7 +10,7 @@
             <div class="member-detail-actions"><a href="{{ route('admin.members.index') }}" class="btn btn-secondary">Kembali ke daftar</a>@if(auth()->user()->hasRole('super_admin'))<a href="{{ route('admin.users.edit', $member) }}" class="btn btn-primary">Edit anggota</a>@endif</div>
         </section>
         <div class="member-detail-tabs" role="tablist" aria-label="Informasi anggota">
-            @foreach(['personal' => 'Data pribadi', 'membership' => 'Keanggotaan', 'privacy' => 'Status & privasi'] as $key => $label)
+            @foreach(['personal' => 'Data pribadi', 'membership' => 'Keanggotaan', 'card' => 'Kartu anggota', 'privacy' => 'Status & privasi'] as $key => $label)
                 <button type="button" role="tab" id="tab-{{ $key }}" aria-controls="panel-{{ $key }}" :aria-selected="(tab === '{{ $key }}').toString()" @click="tab = '{{ $key }}'">{{ $label }}</button>
             @endforeach
         </div>
@@ -22,6 +22,9 @@
         <div id="panel-membership" role="tabpanel" aria-labelledby="tab-membership" x-show="tab === 'membership'" x-cloak class="member-detail-grid">
             <x-member-detail-section title="Data keanggotaan" :items="['Nomor anggota' => $member->member_number, 'Dojo' => $member->dojo?->name, 'Tingkat sabuk' => $member->beltLevel?->display_name, 'Pelatih awal' => $member->first_coach, 'Tanggal terdaftar' => $member->created_at?->format('d/m/Y')]" />
             <x-member-detail-section title="Wilayah keanggotaan" :items="['Provinsi' => $member->province?->name, 'Kabupaten / kota' => $member->city?->name, 'Kecamatan' => $member->district]" />
+        </div>
+        <div id="panel-card" role="tabpanel" aria-labelledby="tab-card" x-show="tab === 'card'" x-cloak class="member-detail-card-panel">
+            @include('member.card', ['user' => $member, 'showMemberDetails' => false])
         </div>
         <div id="panel-privacy" role="tabpanel" aria-labelledby="tab-privacy" x-show="tab === 'privacy'" x-cloak class="member-detail-grid">
             <x-member-detail-section title="Status akun dan verifikasi" :items="['Status akun' => $member->is_active ? 'Aktif' : 'Nonaktif', 'Verifikasi anggota' => ['approved' => 'Terverifikasi', 'revision' => 'Perlu perbaikan', 'pending' => 'Menunggu verifikasi'][$member->verification_status ?? 'pending'] ?? 'Menunggu verifikasi', 'Email terverifikasi' => $member->email_verified_at ? 'Sudah' : 'Belum']" />
