@@ -47,7 +47,13 @@ Route::get('/', function () {
         ->limit(6)
         ->get();
 
-    return view('welcome', compact('dojos', 'dojoRegions', 'agendas'));
+    $verifiedMemberCount = User::query()
+        ->where('role', 'member')
+        ->where('verification_status', 'approved')
+        ->where('is_active', true)
+        ->count();
+
+    return view('welcome', compact('dojos', 'dojoRegions', 'agendas', 'verifiedMemberCount'));
 });
 
 Route::get('/agenda-ukt', [PublicDirectoryController::class, 'agenda'])->name('public.agenda');

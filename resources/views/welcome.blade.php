@@ -109,11 +109,27 @@ $faqs = [
 </div>
 </div>
 <div class="pp-wrap pp-stats">
-<span>
-<strong>{{ $dojos->count() }}</strong> Dojo aktif dalam direktori</span>
-<span>
-<strong>{{ $dojoRegions->count() }}</strong> Cabang kabupaten/kota</span>
+<div class="pp-stat-grid" aria-label="Statistik publik KKI">
+<a href="{{ route('public.members') }}" class="pp-stat pp-stat-member">
+<span class="pp-stat-label">Anggota terverifikasi</span>
+<strong data-stat-count="{{ $verifiedMemberCount }}" aria-label="{{ number_format($verifiedMemberCount, 0, ',', '.') }}">{{ number_format($verifiedMemberCount, 0, ',', '.') }}</strong>
+<span class="pp-stat-detail">Anggota aktif · Lihat direktori ↗</span>
+</a>
+<a href="{{ route('public.dojos') }}" class="pp-stat">
+<span class="pp-stat-label">Dojo aktif</span>
+<strong data-stat-count="{{ $dojos->count() }}" aria-label="{{ number_format($dojos->count(), 0, ',', '.') }}">{{ number_format($dojos->count(), 0, ',', '.') }}</strong>
+<span class="pp-stat-detail">Terdaftar dalam direktori ↗</span>
+</a>
+<div class="pp-stat">
+<span class="pp-stat-label">Kabupaten/kota</span>
+<strong data-stat-count="{{ $dojoRegions->count() }}" aria-label="{{ number_format($dojoRegions->count(), 0, ',', '.') }}">{{ number_format($dojoRegions->count(), 0, ',', '.') }}</strong>
+<span class="pp-stat-detail">Wilayah dojo dalam direktori</span>
+</div>
+</div>
+<div class="pp-stat-footer">
+<p>Statistik anggota hanya mencakup anggota aktif yang telah disetujui melalui verifikasi keanggotaan.</p>
 <a href="#tentang" class="pp-link">Kenali perguruan ↗</a>
+</div>
 </div>
 </section>
 <section id="layanan" class="pp-section pp-white">

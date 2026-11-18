@@ -18,3 +18,5 @@ import './create-form-modal';
 import './auth-modal';
 
 import './page-loader';
+
+import './public-statistics';
