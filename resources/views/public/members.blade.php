@@ -21,14 +21,14 @@
                 <label for="member-belt">Tingkat sabuk<select id="member-belt" name="belt_level_id"><option value="">Semua tingkat</option>@foreach($beltLevels as $belt)<option value="{{ $belt->id }}" @selected((string) ($filters['belt_level_id'] ?? '') === (string) $belt->id)>{{ $belt->name }} ({{ $belt->kyu_dan }})</option>@endforeach</select></label>
                 <div class="pp-filter-actions"><button class="pp-btn pp-red" type="submit">Cari anggota</button><a class="pp-btn pp-outline-dark" href="{{ route('public.members') }}">Reset</a></div>
             </div>
-            <p class="pp-filter-note">Direktori hanya menampilkan nama dan informasi keanggotaan anggota yang telah disetujui. Kontak pribadi tidak ditampilkan.</p>
+            <p class="pp-filter-note">Direktori hanya menampilkan anggota terverifikasi yang menyetujui publikasi profil. Kontak pribadi tidak ditampilkan. <a href="{{ route('privacy.policy') }}">Kebijakan Privasi</a></p>
         </form>
 
         @if($members->isNotEmpty())
             <div class="pp-member-directory-grid">
                 @foreach($members as $member)
                     <article class="pp-member-directory-card">
-                        <x-member-avatar :member="$member" />
+                        <span class="pp-icon" aria-hidden="true">{{ mb_substr($member->name, 0, 1) }}</span>
                         <div class="pp-member-card-main">
                             <span class="pp-member-number">{{ $member->member_number }}</span>
                             <h2>{{ $member->name }}</h2>

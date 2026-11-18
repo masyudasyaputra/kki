@@ -49,6 +49,7 @@
                 <a href="{{ route('public.agenda') }}">Agenda UKT</a>
                 <a href="{{ route('public.dojos') }}">Direktori dojo</a>
                 <a href="{{ route('public.members') }}">Direktori anggota</a>
+                <a href="{{ route('privacy.policy') }}">Privasi & PDP</a>
                 <a href="{{ url('/') }}#tentang">Tentang KKI</a>
             </nav>
         </div>

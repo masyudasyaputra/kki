@@ -58,6 +58,14 @@ Route::get('/', function () {
 Route::get('/agenda-ukt', [PublicDirectoryController::class, 'agenda'])->name('public.agenda');
 Route::get('/direktori-dojo', [PublicDirectoryController::class, 'dojos'])->name('public.dojos');
 Route::get('/direktori-anggota', [PublicDirectoryController::class, 'members'])->name('public.members');
+Route::view('/kebijakan-privasi', 'privacy.policy')->name('privacy.policy');
+Route::middleware('auth')->group(function () {
+    Route::get('/privasi', [\App\Http\Controllers\PrivacyController::class, 'index'])->name('privacy.index');
+    Route::put('/privasi/direktori', [\App\Http\Controllers\PrivacyController::class, 'consent'])->middleware('throttle:10,1')->name('privacy.consent');
+    Route::post('/privasi/permintaan', [\App\Http\Controllers\PrivacyController::class, 'store'])->middleware('throttle:5,60')->name('privacy.store');
+    Route::get('/admin/privasi', [\App\Http\Controllers\PrivacyController::class, 'admin'])->name('privacy.admin');
+    Route::put('/admin/privasi/{privacyRequest}', [\App\Http\Controllers\PrivacyController::class, 'update'])->name('privacy.update');
+});
 
 // ============================
 // API DROPDOWN & VALIDASI

@@ -109,6 +109,7 @@
             </div><p x-show="regionError" x-cloak x-text="regionError" role="alert" class="mt-2 text-xs text-red-600"></p>
             </fieldset>
         </details>
+        <p class="text-xs text-slate-500">Data digunakan untuk layanan keanggotaan sesuai <a href="{{ route('privacy.policy') }}" target="_blank" rel="noopener" class="underline">Kebijakan Privasi</a>. Publikasi direktori bersifat opsional dan diatur terpisah di Pusat Privasi setelah masuk.</p>
         <fieldset class="auth-section registration-section"><legend><span class="registration-step">03</span> Keamanan akun</legend>
             @if ($googleIdentity)<p class="mb-3 text-xs text-slate-500">Kata sandi opsional karena Anda menggunakan Google. Isi jika juga ingin masuk dengan email dan sandi.</p>@else<p class="mb-3 text-xs text-slate-500">Kata sandi dan konfirmasi wajib diisi, minimal 8 karakter.</p>@endif
             <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">

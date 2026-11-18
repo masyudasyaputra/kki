@@ -355,6 +355,7 @@ $faqs = [
 <a href="{{ route('public.dojos') }}">Direktori dojo</a>
 <a href="{{ route('public.members') }}">Direktori anggota</a>
 <a href="#bantuan">Bantuan</a>
+<a href="{{ route('privacy.policy') }}">Privasi & PDP</a>
 </nav>
 </div>
 <div class="pp-footer-bottom">

@@ -105,6 +105,8 @@
             </details>
         @endif
 
+        <a class="sidebar-link {{ request()->routeIs('privacy.index') ? 'is-active' : '' }}" href="{{ route('privacy.index') }}"><x-sidebar-icon name="settings" /><span>Privasi & PDP</span></a>
+        @if($isSuperAdmin)<a class="sidebar-link {{ request()->routeIs('privacy.admin') ? 'is-active' : '' }}" href="{{ route('privacy.admin') }}"><x-sidebar-icon name="settings" /><span>Permintaan PDP</span></a>@endif
         @if ($canViewFinance)
             <details name="kki-sidebar-menu" class="sidebar-group" @if($activeFinance) open @endif>
                 <summary><x-sidebar-icon name="wallet" /><span>Keuangan</span><span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>

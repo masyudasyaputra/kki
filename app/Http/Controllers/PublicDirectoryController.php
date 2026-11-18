@@ -90,6 +90,7 @@ class PublicDirectoryController extends Controller
         $query = User::query()
             ->members()
             ->where('verification_status', 'approved')
+            ->where('public_directory_consent', true)
             ->with(['province', 'city', 'dojo', 'beltLevel']);
 
         if (!empty($filters['province_id'])) {
@@ -111,6 +112,7 @@ class PublicDirectoryController extends Controller
         $provinces = Province::query()->orderBy('name')->get(['id', 'name']);
         $beltLevels = BeltLevel::query()->orderBy('order')->get(['id', 'name', 'kyu_dan']);
 
-        return view('public.members', compact('members', 'provinces', 'beltLevels', 'filters'));
+        return response()->view('public.members', compact('members', 'provinces', 'beltLevels', 'filters'))
+            ->header('Cache-Control', 'private, no-store');
     }
 }
