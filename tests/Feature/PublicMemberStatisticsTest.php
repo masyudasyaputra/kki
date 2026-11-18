@@ -27,6 +27,8 @@ class PublicMemberStatisticsTest extends TestCase
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('role');
+            $table->json('positions')->nullable();
+            $table->json('roles')->nullable();
             $table->string('verification_status')->nullable();
             $table->boolean('is_active');
         });
@@ -62,5 +64,18 @@ class PublicMemberStatisticsTest extends TestCase
     {
         $this->get('/')->assertOk()->assertViewHas('verifiedMemberCount', 0)
             ->assertSee('Anggota terverifikasi');
+    }
+
+    public function test_verified_members_with_additional_roles_are_counted_once(): void
+    {
+        foreach ([['member'], ['member', 'pb']] as $positions) {
+            DB::table('users')->insert(['role' => 'super_admin', 'positions' => json_encode($positions),
+                'roles' => json_encode(['member']), 'verification_status' => 'approved', 'is_active' => true]);
+        }
+        DB::table('users')->insert(['role' => 'super_admin', 'positions' => json_encode(['member']),
+            'verification_status' => 'pending', 'is_active' => true]);
+
+        $this->assertSame(3, \App\Models\User::members()->count());
+        $this->get('/')->assertOk()->assertViewHas('verifiedMemberCount', 2);
     }
 }

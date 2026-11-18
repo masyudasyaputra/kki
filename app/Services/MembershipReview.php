@@ -27,7 +27,7 @@ class MembershipReview
 
     public function members(User $actor): Builder
     {
-        $query = User::where('role', 'member');
+        $query = User::members();
         // A pending non-karateka account also uses the restricted member role.
         // Registration type determines eligibility for membership verification.
         if ($query->getModel()->getConnection()->getSchemaBuilder()->hasColumn('users', 'registration_type')) {

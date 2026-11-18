@@ -34,7 +34,7 @@ class MemberController extends Controller
             'province_id' => ['nullable', 'integer'], 'city_id' => ['nullable', 'integer'],
             'dojo_id' => ['nullable', 'integer'], 'belt_level_id' => ['nullable', 'integer'],
         ]);
-        $base = app(\App\Services\Dashboard\DashboardSummary::class)->users($actor, $role)->where('role', 'member');
+        $base = app(\App\Services\Dashboard\DashboardSummary::class)->users($actor, $role)->members();
         $query = (clone $base)->with(['province', 'city', 'dojo', 'beltLevel']);
         if (!empty($filters['search'])) {
             $term = '%' . trim($filters['search']) . '%';
@@ -74,7 +74,7 @@ class MemberController extends Controller
         ]);
 
         $query = app(\App\Services\Dashboard\DashboardSummary::class)
-            ->users($actor, $role)->where('role', 'member')
+            ->users($actor, $role)->members()
             ->with(['province', 'city', 'dojo', 'beltLevel']);
         if (!empty($filters['search'])) {
             $term = '%' . trim($filters['search']) . '%';

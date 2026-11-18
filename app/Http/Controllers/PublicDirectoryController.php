@@ -88,7 +88,7 @@ class PublicDirectoryController extends Controller
         ]);
 
         $query = User::query()
-            ->where('role', 'member')
+            ->members()
             ->where('verification_status', 'approved')
             ->with(['province', 'city', 'dojo', 'beltLevel']);
 

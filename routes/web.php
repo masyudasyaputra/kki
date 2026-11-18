@@ -48,7 +48,7 @@ Route::get('/', function () {
         ->get();
 
     $verifiedMemberCount = User::query()
-        ->where('role', 'member')
+        ->members()
         ->where('verification_status', 'approved')
         ->count();
 

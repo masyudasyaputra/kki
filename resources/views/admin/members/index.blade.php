@@ -34,7 +34,12 @@
                                 <td>{{ $member->city?->name ?? '-' }}<p class="text-[11px] text-slate-500">Kec. {{ $member->district ?: '-' }}</p><p class="text-[11px] text-slate-500">{{ $member->province?->name ?? '-' }}</p></td>
                                 <td class="text-center"><span class="rounded-full px-2 py-1 text-[11px] {{ $member->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">{{ $member->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
                                 <td class="text-center"><x-member-verification-status :member="$member" /></td>
-                                <td class="text-right"><x-action-button icon="view" label="Detail anggota" onclick="document.getElementById('member-detail-{{ $member->id }}').showModal()" /></td>
+                                <td class="text-right"><div class="flex items-center justify-end gap-2">
+                                    <x-action-button icon="view" label="Detail anggota" onclick="document.getElementById('member-detail-{{ $member->id }}').showModal()" />
+                                    @if(auth()->user()->hasRole('super_admin'))
+                                        <x-action-button icon="edit" label="Edit anggota" :href="route('admin.users.edit', $member)" />
+                                    @endif
+                                </div></td>
                             </tr>
                         @empty
                             <tr><td colspan="7" class="text-center text-slate-500">Tidak ada anggota yang sesuai.</td></tr>
@@ -49,6 +54,9 @@
                         <p class="mt-2 break-words text-[11px] text-slate-600">{{ $member->dojo?->name ?? '-' }}</p><p class="text-[11px] text-slate-500">{{ $member->beltLevel?->display_name ?? 'Belum ditetapkan' }}</p>
                         <x-member-verification-status :member="$member" />
                         <div class="mt-2 flex items-center justify-between gap-1"><span class="text-[10px] {{ $member->is_active ? 'text-emerald-700' : 'text-slate-400' }}">{{ $member->is_active ? 'Aktif' : 'Nonaktif' }}</span><x-action-button icon="view" label="Detail anggota" onclick="document.getElementById('member-detail-{{ $member->id }}').showModal()" /></div>
+                        @if(auth()->user()->hasRole('super_admin'))
+                            <div class="mt-2 flex justify-end"><x-action-button icon="edit" label="Edit anggota" :href="route('admin.users.edit', $member)" /></div>
+                        @endif
                     </div>
                 @empty
                     <p class="col-span-2 py-6 text-center text-xs text-slate-500">Tidak ada anggota yang sesuai.</p>

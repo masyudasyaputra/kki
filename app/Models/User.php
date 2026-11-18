@@ -113,6 +113,17 @@ class User extends Authenticatable
     }
 
     // --- RELASI ---
+    public function scopeMembers(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        $schema = $this->getConnection()->getSchemaBuilder();
+        $columns = array_filter(['positions', 'roles'], fn ($column) => $schema->hasColumn($this->getTable(), $column));
+
+        return $query->where(function ($members) use ($columns) {
+            $members->where('role', 'member');
+            foreach ($columns as $column) $members->orWhereJsonContains($column, 'member');
+        });
+    }
+
 
     public function province()
     {
