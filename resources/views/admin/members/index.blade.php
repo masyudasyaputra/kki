@@ -24,7 +24,7 @@
             <div class="table-surface hidden md:block">
                 <table class="data-table" data-server-sort="true">
                     <thead><tr>
-                        <th data-sort-key="name" class="text-left">Anggota</th><th data-sort-key="belt" class="text-left">Sabuk</th><th data-sort-key="dojo" class="text-left">Dojo</th><th data-sort-key="city" class="text-left">Cabang / Provinsi</th><th data-sort-key="status" class="text-center">Status</th><th class="text-right">Aksi</th>
+                        <th data-sort-key="name" class="text-left">Anggota</th><th data-sort-key="belt" class="text-left">Sabuk</th><th data-sort-key="dojo" class="text-left">Dojo</th><th data-sort-key="city" class="text-left">Cabang / Provinsi</th><th data-sort-key="status" class="text-center">Status akun</th><th class="text-center">Verifikasi anggota</th><th class="text-right">Aksi</th>
                     </tr></thead>
                     <tbody>
                         @forelse ($members as $member)
@@ -32,11 +32,12 @@
                                 <td><x-member-identity :member="$member"><p class="font-semibold text-slate-800">{{ $member->name }}</p><x-member-contact :member="$member" /></x-member-identity></td>
                                 <td>{{ $member->beltLevel?->display_name ?? 'Belum ditetapkan' }}</td><td>{{ $member->dojo?->name ?? '-' }}</td>
                                 <td>{{ $member->city?->name ?? '-' }}<p class="text-[11px] text-slate-500">Kec. {{ $member->district ?: '-' }}</p><p class="text-[11px] text-slate-500">{{ $member->province?->name ?? '-' }}</p></td>
-                                <td class="text-center"><span class="rounded-full px-2 py-1 text-[11px] {{ $member->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">{{ $member->is_active ? 'Aktif' : 'Nonaktif' }}</span><x-member-verification-status :member="$member" /></td>
+                                <td class="text-center"><span class="rounded-full px-2 py-1 text-[11px] {{ $member->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">{{ $member->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
+                                <td class="text-center"><x-member-verification-status :member="$member" /></td>
                                 <td class="text-right"><x-action-button icon="view" label="Detail anggota" onclick="document.getElementById('member-detail-{{ $member->id }}').showModal()" /></td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="text-center text-slate-500">Tidak ada anggota yang sesuai.</td></tr>
+                            <tr><td colspan="7" class="text-center text-slate-500">Tidak ada anggota yang sesuai.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

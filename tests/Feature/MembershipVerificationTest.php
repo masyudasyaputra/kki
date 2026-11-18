@@ -172,7 +172,7 @@ class MembershipVerificationTest extends TestCase
         $this->assertSame(0, app(MembershipReview::class)->members($this->actor('verifikator_pengprov', null, null))->count());
     }
 
-    public function test_approval_requires_all_checks_and_keeps_an_audit_without_activating_membership(): void
+    public function test_approval_requires_all_checks_keeps_an_audit_and_activates_membership(): void
     {
         $member = $this->member(); $actor = $this->actor('verifikator_anggota_pb');
         $this->actingAs($actor)->post(route('admin.verifications.store', $member), $this->decision($member, ['checked' => ['name']]))->assertSessionHasErrors('checked');
