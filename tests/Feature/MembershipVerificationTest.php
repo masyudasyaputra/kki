@@ -105,6 +105,19 @@ class MembershipVerificationTest extends TestCase
         $this->actingAs($local)->get(route('admin.members.show', $outside))->assertForbidden();
     }
 
+    public function test_section_edit_is_super_admin_only_and_cannot_change_unrelated_fields(): void
+    {
+        $member = $this->member();
+        $this->actingAs($this->actor('super_admin'))->get(route('admin.members.show', ['member' => $member, 'edit' => 'profile']))
+            ->assertOk()->assertSee('name="parent_name"', false);
+        $this->put(route('admin.members.sections.update', [$member, 'profile']), ['name' => 'Nama baru', 'parent_name' => 'Wali', 'role' => 'super_admin', 'verification_status' => 'approved'])->assertRedirect();
+        $this->assertSame('Nama baru', $member->fresh()->name);
+        $this->assertSame('member', $member->fresh()->role);
+        $this->assertSame('pending', $member->fresh()->verification_status);
+        $this->get(route('admin.members.index'))->assertOk()->assertDontSee('aria-label="Edit anggota"', false);
+        $this->actingAs($this->actor('pengcab'))->put(route('admin.members.sections.update', [$member, 'profile']), ['name' => 'Tidak boleh'])->assertForbidden();
+    }
+
     private function decision(User $member, array $overrides = []): array
     {
         return array_replace(['status' => 'approved', 'checked' => MembershipReview::FIELDS,

@@ -210,6 +210,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
             });
 
             Route::get('/members/export', [MemberController::class, 'export'])->name('members.export');
+            Route::put('/members/{member}/sections/{section}', [MemberController::class, 'updateSection'])->name('members.sections.update');
 
             // Member details use a dedicated, region-scoped profile page.
             Route::resource('members', MemberController::class);

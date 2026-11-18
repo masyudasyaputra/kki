@@ -72,8 +72,45 @@ class MemberController extends Controller
         $qrPngBase64 = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(200)
             ->errorCorrection('H')->generate((string) ($member->member_number ?: $member->id)));
 
-        return response()->view('admin.members.show', compact('member', 'qrPngBase64')
+        $editOptions = $actor->hasRole('super_admin') ? [
+            'province_id' => Province::orderBy('name')->get(),
+            'city_id' => City::orderBy('name')->get(),
+            'dojo_id' => \App\Models\Dojo::orderBy('name')->get(),
+            'belt_level_id' => BeltLevel::active()->orderBy('order')->get(),
+        ] : [];
+        return response()->view('admin.members.show', compact('member', 'qrPngBase64', 'editOptions')
             + app(\App\Services\QualificationBadges::class)->forUser($member))->header('Cache-Control', 'private, no-store');
+    }
+
+    public function updateSection(Request $request, int $member, string $section)
+    {
+        abort_unless($request->user()->hasRole('super_admin'), 403);
+        abort_if($request->session()->has('impersonation'), 403);
+        $member = User::members()->findOrFail($member);
+        $sections = [
+            'profile' => ['name' => 'required|string|max:255', 'parent_name' => 'nullable|string|max:255'],
+            'training' => ['dojo_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('dojos', 'id')->where('city_id', $member->city_id)],
+                'belt_level_id' => ['nullable', 'integer', \Illuminate\Validation\Rule::exists('belt_levels', 'id')->where('is_active', true)], 'first_coach' => 'nullable|string|max:255'],
+            'contact' => ['email' => ['required', 'email', 'max:255', \Illuminate\Validation\Rule::unique('users')->ignore($member->id)],
+                'whatsapp' => ['nullable', 'regex:/^[0-9]{8,16}$/', \Illuminate\Validation\Rule::unique('users')->ignore($member->id)],
+                'address' => 'nullable|string|max:2000', 'province_id' => 'nullable|required_with:city_id|integer|exists:provinces,id',
+                'city_id' => ['nullable', 'required_with:district', 'integer', \Illuminate\Validation\Rule::exists('cities', 'id')->where('province_id', $request->input('province_id'))],
+                'district' => 'nullable|string|max:150'],
+            'region' => ['province_id' => 'nullable|required_with:city_id|integer|exists:provinces,id',
+                'city_id' => ['nullable', 'required_with:district', 'integer', \Illuminate\Validation\Rule::exists('cities', 'id')->where('province_id', $request->input('province_id'))],
+                'district' => 'nullable|string|max:150'],
+            'status' => ['is_active' => 'required|boolean'],
+        ];
+        abort_unless(isset($sections[$section]), 404);
+        $data = $request->validate($sections[$section]);
+        DB::transaction(function () use ($member, $data) {
+            $locked = User::whereKey($member->id)->lockForUpdate()->firstOrFail();
+            if (isset($data['email']) && $data['email'] !== $locked->email) $locked->email_verified_at = null;
+            if (array_key_exists('city_id', $data) && (string) $data['city_id'] !== (string) $locked->city_id) $locked->dojo_id = null;
+            $locked->fill($data)->save();
+        });
+        return redirect()->route('admin.members.show', ['member' => $member->id, 'tab' => $request->input('_tab', 'personal')])
+            ->with('status', 'Data anggota berhasil diperbarui. Perubahan wilayah, dojo, atau sabuk memerlukan verifikasi ulang.');
     }
 
     public function export(Request $request)

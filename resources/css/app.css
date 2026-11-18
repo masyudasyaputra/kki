@@ -26,6 +26,8 @@
 .member-detail-card-panel { padding:20px; background:white; border:1px solid #e2e8f0; border-top:0; border-radius:0 0 12px 12px; }
 .member-detail-section { min-width:0; padding:22px; border:1px solid #e2e8f0; border-radius:10px; background:white; }
 .member-detail-section h2 { margin:0 0 18px; font-size:15px; font-weight:700; color:#1e293b; }
+.member-detail-section-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; }
+.member-detail-section-heading h2 { margin:0; }
 .member-detail-section dl > div { display:grid; grid-template-columns:minmax(100px, .8fr) minmax(0, 1.2fr); gap:16px; padding:10px 0; border-bottom:1px solid #f1f5f9; font-size:12px; line-height:1.6; }
 .member-detail-section dl > div:last-child { border-bottom:0; }
 .member-detail-section dt { color:#64748b; }
