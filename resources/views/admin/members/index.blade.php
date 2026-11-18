@@ -35,7 +35,7 @@
                                 <td class="text-center"><span class="rounded-full px-2 py-1 text-[11px] {{ $member->is_active ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">{{ $member->is_active ? 'Aktif' : 'Nonaktif' }}</span></td>
                                 <td class="text-center"><x-member-verification-status :member="$member" /></td>
                                 <td class="text-right"><div class="flex items-center justify-end gap-2">
-                                    <x-action-button icon="view" label="Detail anggota" onclick="document.getElementById('member-detail-{{ $member->id }}').showModal()" />
+                                    <x-action-button icon="view" label="Detail anggota" :href="route('admin.members.show', $member)" />
                                     @if(auth()->user()->hasRole('super_admin'))
                                         <x-action-button icon="edit" label="Edit anggota" :href="route('admin.users.edit', $member)" />
                                     @endif
@@ -53,7 +53,7 @@
                         <x-member-identity :member="$member"><p class="break-words text-xs font-semibold text-slate-900">{{ $member->name }}</p><x-member-contact :member="$member" /></x-member-identity>
                         <p class="mt-2 break-words text-[11px] text-slate-600">{{ $member->dojo?->name ?? '-' }}</p><p class="text-[11px] text-slate-500">{{ $member->beltLevel?->display_name ?? 'Belum ditetapkan' }}</p>
                         <x-member-verification-status :member="$member" />
-                        <div class="mt-2 flex items-center justify-between gap-1"><span class="text-[10px] {{ $member->is_active ? 'text-emerald-700' : 'text-slate-400' }}">{{ $member->is_active ? 'Aktif' : 'Nonaktif' }}</span><x-action-button icon="view" label="Detail anggota" onclick="document.getElementById('member-detail-{{ $member->id }}').showModal()" /></div>
+                        <div class="mt-2 flex items-center justify-between gap-1"><span class="text-[10px] {{ $member->is_active ? 'text-emerald-700' : 'text-slate-400' }}">{{ $member->is_active ? 'Aktif' : 'Nonaktif' }}</span><x-action-button icon="view" label="Detail anggota" :href="route('admin.members.show', $member)" /></div>
                         @if(auth()->user()->hasRole('super_admin'))
                             <div class="mt-2 flex justify-end"><x-action-button icon="edit" label="Edit anggota" :href="route('admin.users.edit', $member)" /></div>
                         @endif
@@ -63,16 +63,7 @@
                 @endforelse
             </div>
             <x-pagination :paginator="$members" label="anggota" />
-            @foreach ($members as $member)
-                <dialog id="member-detail-{{ $member->id }}" class="create-fee-dialog" aria-label="Detail anggota {{ $member->name }}">
-                    <div class="create-form-heading"><h2>Detail Anggota</h2><button type="button" class="btn btn-secondary" onclick="this.closest('dialog').close()">Tutup</button></div>
-                    <dl class="grid grid-cols-[110px_1fr] gap-3 p-4 text-xs">
-                        @foreach (['Nama' => $member->name, 'Nomor anggota' => $member->member_number, 'Verifikasi' => ['pending' => 'Menunggu', 'approved' => 'Disetujui', 'revision' => 'Perlu perbaikan'][$member->verification_status ?? 'pending'], 'Status' => $member->is_active ? 'Aktif' : 'Nonaktif', 'WhatsApp' => $member->whatsapp, 'Email' => $member->email, 'Orang tua' => $member->parent_name, 'Sabuk' => $member->beltLevel?->display_name, 'Dojo' => $member->dojo?->name, 'Pelatih awal' => $member->first_coach, 'Kabupaten / Kota' => $member->city?->name, 'Kecamatan' => $member->district, 'Provinsi' => $member->province?->name] as $label => $value)
-                            <dt class="text-slate-500">{{ $label }}</dt><dd class="min-w-0 break-words font-medium text-slate-800">{{ $value ?: '-' }}</dd>
-                        @endforeach
-                    </dl>
-                </dialog>
-            @endforeach
+
         </div>
     </div>
 </x-app-layout>

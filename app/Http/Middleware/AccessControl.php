@@ -23,7 +23,7 @@ class AccessControl
             abort_unless($actor->hasRole(['super_admin', 'pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo']), 403);
         }
         if ($request->routeIs('admin.members.*', 'admin.payments.*')) {
-            abort_unless($actor->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo']), 403);
+            abort_unless($actor->hasRole(['super_admin', 'pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo']), 403);
         }
         if ($request->routeIs('admin.exams.register-member', 'admin.exams.remove-member', 'admin.exams.bulk-remove-member', 'admin.exams.bulk-payment')) {
             abort_unless($actor->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo', 'panitia_ujian']), 403);

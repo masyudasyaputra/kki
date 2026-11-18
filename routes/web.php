@@ -211,8 +211,8 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
 
             Route::get('/members/export', [MemberController::class, 'export'])->name('members.export');
 
-            // Kalau MemberController kamu tidak punya show(), jangan aktifkan show
-            Route::resource('members', MemberController::class)->except(['show']);
+            // Member details use a dedicated, region-scoped profile page.
+            Route::resource('members', MemberController::class);
 
             // =========================
             // EXAMS (VIEW ONLY)

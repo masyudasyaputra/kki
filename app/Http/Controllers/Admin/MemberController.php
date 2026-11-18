@@ -24,7 +24,7 @@ class MemberController extends Controller
     public function index(Request $request)
     {
         $actor = $request->user();
-        $role = collect(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo'])
+        $role = collect(['super_admin', 'pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo'])
             ->first(fn ($candidate) => $actor->hasRole($candidate));
         abort_unless($role, 403);
         $role = ['admin_pengprov' => 'pengprov', 'admin_pengcab' => 'pengcab'][$role] ?? $role;
@@ -59,10 +59,23 @@ class MemberController extends Controller
         return view('admin.members.index', compact('members', 'provinces', 'cities', 'dojos', 'beltLevels'));
     }
 
+    public function show(Request $request, int $member)
+    {
+        $actor = $request->user();
+        $role = collect(['super_admin', 'pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo'])
+            ->first(fn ($candidate) => $actor->hasRole($candidate));
+        abort_unless($role, 403);
+        $role = ['admin_pengprov' => 'pengprov', 'admin_pengcab' => 'pengcab'][$role] ?? $role;
+        $member = app(\App\Services\Dashboard\DashboardSummary::class)->users($actor, $role)->members()
+            ->with(['province', 'city', 'dojo', 'beltLevel'])->findOrFail($member);
+
+        return response()->view('admin.members.show', compact('member'))->header('Cache-Control', 'private, no-store');
+    }
+
     public function export(Request $request)
     {
         $actor = $request->user();
-        $role = collect(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo'])
+        $role = collect(['super_admin', 'pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo'])
             ->first(fn ($candidate) => $actor->hasRole($candidate));
         abort_unless($role, 403);
         $role = ['admin_pengprov' => 'pengprov', 'admin_pengcab' => 'pengcab'][$role] ?? $role;

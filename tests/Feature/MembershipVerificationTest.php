@@ -92,6 +92,17 @@ class MembershipVerificationTest extends TestCase
         $this->get(route('admin.verifications.show', $member))->assertOk()->assertSee(asset('storage/'.$member->photo));
     }
 
+    public function test_member_detail_page_is_scoped_and_available_to_super_admin(): void
+    {
+        $local = $this->member(1, 1); $outside = $this->member(2, 3);
+        $this->actingAs($this->actor('super_admin'))->get(route('admin.members.show', $outside))
+            ->assertOk()->assertSee('Alamat dan kontak')->assertSee($outside->name);
+        $this->get(route('admin.members.index'))->assertOk()->assertSee(route('admin.members.show', $outside));
+        $this->actingAs($this->actor('pengcab'))->get(route('admin.members.show', $local))->assertOk();
+        $this->get(route('admin.members.show', $outside))->assertNotFound();
+        $this->actingAs($local)->get(route('admin.members.show', $outside))->assertForbidden();
+    }
+
     private function decision(User $member, array $overrides = []): array
     {
         return array_replace(['status' => 'approved', 'checked' => MembershipReview::FIELDS,
