@@ -958,12 +958,20 @@ a.pp-stat:focus-visible { outline: 2px solid white; outline-offset: 4px; }
 .pp-dojo-directory-card .pp-link { margin-top: auto; padding-top: 16px; color: #762137; font-size: 12px; font-weight: 700; }
 .pp-dojo-directory-card .pp-map-link { margin-top: 8px; color: #606961; font-size: 11px; font-weight: 600; }
 .pp-member-directory-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.pp-member-directory-card { display: flex; min-width: 0; align-items: center; gap: 14px; padding: 17px; border: 1px solid #dce0d6; border-radius: 9px; background: white; }
+.pp-member-directory-card { position: relative; isolation: isolate; overflow: hidden; min-width: 0; padding: 22px; border: 1px solid #e3dadd; border-top: 3px solid #762137; border-radius: 14px; background: linear-gradient(125deg, #fff 45%, #faf5f6); box-shadow: 0 4px 18px #34131c06; }
+.pp-member-watermark { position: absolute; z-index: -1; right: -22px; bottom: 0; width: 170px; height: 170px; object-fit: contain; opacity: .065; transform: rotate(-12deg); pointer-events: none; }
+.pp-member-card-heading { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; font-size: 10px; font-weight: 700; letter-spacing: .08em; color: #762137; }
+.pp-member-verified { color: #286147; letter-spacing: 0; background: #eaf5ed; padding: 3px 8px; border-radius: 20px; }
+.pp-member-card-body { display: flex; align-items: center; gap: 18px; }
+.pp-member-card-body .member-avatar { width: 82px; height: 102px; flex: 0 0 82px; border-radius: 10px; border: 3px solid white; box-shadow: 0 2px 10px #34131c15; font-size: 28px; }
+.pp-member-card-footer { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 20px; padding-top: 14px; border-top: 1px solid #76213715; font-size: 10px; color: #74706e; }
+.pp-member-card-footer .pp-member-belt { flex-direction: row; gap: 7px; background: #fff9; }
+.pp-member-card-footer .pp-member-belt small { margin: 0; }
 .pp-member-avatar { display: grid; width: 46px; height: 46px; flex: 0 0 46px; place-items: center; border-radius: 50%; background: #f2e8ea; color: #762137; font-size: 18px; font-weight: 800; }
 .pp-member-card-main { min-width: 0; flex: 1; }
 .pp-member-number { color: #777f78; font-size: 10px; font-weight: 700; letter-spacing: .06em; }
-.pp-member-card-main h2 { overflow: hidden; margin: 2px 0 4px; color: #1b211d; font-size: 16px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
-.pp-member-card-main p { overflow: hidden; margin: 2px 0; color: #69716a; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.pp-member-card-main h2 { overflow-wrap: anywhere; margin: 4px 0 8px; color: #1b211d; font-size: 18px; font-weight: 700; line-height: 1.35; }
+.pp-member-card-main p { overflow-wrap: anywhere; margin: 3px 0; color: #69716a; font-size: 12px; line-height: 1.5; }
 .pp-member-belt { display: flex; flex: 0 0 auto; flex-direction: column; align-items: center; padding: 7px 10px; border: 1px solid #e5e7e1; border-radius: 7px; color: #343b35; font-size: 11px; font-weight: 700; }
 .pp-member-belt small { margin-top: 2px; color: #777f78; font-size: 9px; }
 .pp-section-action { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 25px; }

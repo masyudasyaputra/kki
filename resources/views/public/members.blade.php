@@ -28,14 +28,18 @@
             <div class="pp-member-directory-grid">
                 @foreach($members as $member)
                     <article class="pp-member-directory-card">
-                        <span class="pp-icon" aria-hidden="true">{{ mb_substr($member->name, 0, 1) }}</span>
+                        <img class="pp-member-watermark" src="{{ asset('images/logo-kki.png') }}" alt="" aria-hidden="true" width="140" height="140" loading="lazy">
+                        <div class="pp-member-card-heading"><span>KKI · INDONESIA</span><span class="pp-member-verified">✓ Terverifikasi</span></div>
+                        <div class="pp-member-card-body">
+                        <x-member-avatar :member="$member" />
                         <div class="pp-member-card-main">
                             <span class="pp-member-number">{{ $member->member_number }}</span>
                             <h2>{{ $member->name }}</h2>
                             <p>{{ $member->dojo?->name ?? 'Dojo belum tercatat' }}</p>
                             <p>{{ collect([$member->city?->name, $member->province?->name])->filter()->implode(' · ') ?: 'Wilayah belum tercatat' }}</p>
                         </div>
-                        @if($member->beltLevel)<span class="pp-member-belt">{{ $member->beltLevel->name }}<small>{{ $member->beltLevel->kyu_dan }}</small></span>@endif
+                        </div>
+                        <div class="pp-member-card-footer"><span>Kushin Ryu M Karate-Do</span>@if($member->beltLevel)<span class="pp-member-belt">{{ $member->beltLevel->name }}<small>{{ $member->beltLevel->kyu_dan }}</small></span>@else<span>Tingkat belum tercatat</span>@endif</div>
                     </article>
                 @endforeach
             </div>
