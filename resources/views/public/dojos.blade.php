@@ -3,8 +3,9 @@
 @section('title', 'Direktori Dojo')
 
 @section('content')
-<section class="pp-page-hero">
+<section class="pp-page-hero pp-dojo-hero">
     <div class="pp-wrap pp-page-hero-inner">
+        <img class="pp-dojo-hero-watermark" src="{{ asset('images/logo-kki-dark.png') }}" alt="" aria-hidden="true" width="300" height="300">
         <p class="pp-eyebrow">Jaringan perguruan</p>
         <h1 class="pp-display">Direktori Dojo</h1>
         <p>Jelajahi dojo KKI yang aktif berdasarkan nama, kota, dan provinsi. Informasi kontak yang tampil merupakan kontak dojo.</p>
@@ -12,7 +13,7 @@
     </div>
 </section>
 
-<section class="pp-section pp-directory">
+<section class="pp-section pp-directory pp-dojo-directory">
     <div class="pp-wrap">
         <form method="get" action="{{ route('public.dojos') }}" class="pp-search pp-filter-panel">
             <div class="pp-filter-grid pp-filter-grid-dojos">
@@ -27,10 +28,11 @@
             <div class="pp-dojo-directory-grid">
                 @foreach($dojos as $dojo)
                     <article class="pp-dojo-directory-card">
+                        <img class="pp-dojo-watermark" src="{{ asset('images/logo-kki.png') }}" alt="" aria-hidden="true" width="180" height="180" loading="lazy">
                         <div class="pp-dojo-card-top"><span class="pp-directory-icon" aria-hidden="true">道</span><span class="pp-directory-status">Aktif</span></div>
                         <h2>{{ $dojo->name }}</h2>
-                        <p><strong>No. Registrasi:</strong> {{ $dojo->registration_number }}</p>
-                        <p class="pp-dojo-location">{{ $dojo->city?->name ?? 'Kabupaten / kota belum tercatat' }}@if($dojo->city?->province) <span aria-hidden="true">·</span> {{ $dojo->city->province->name }}@endif</p>
+                        <p class="pp-dojo-registration"><span>No. Registrasi</span><strong>{{ $dojo->registration_number }}</strong></p>
+                        <p class="pp-dojo-region">{{ $dojo->city?->name ?? 'Kabupaten / kota belum tercatat' }}@if($dojo->city?->province) <span aria-hidden="true">·</span> {{ $dojo->city->province->name }}@endif</p>
                         @if($dojo->sensei_name)<p><strong>Pelatih:</strong> {{ $dojo->sensei_name }}</p>@endif
                         <p>{{ $dojo->address ?: 'Alamat belum dilengkapi.' }}</p>
                         @if($dojo->phone_number)<a class="pp-link" href="tel:{{ preg_replace('/[^+0-9]/', '', $dojo->phone_number) }}">Hubungi dojo <span aria-hidden="true">↗</span></a>@endif
