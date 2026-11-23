@@ -29,6 +29,7 @@
                     <article class="pp-dojo-directory-card">
                         <div class="pp-dojo-card-top"><span class="pp-directory-icon" aria-hidden="true">道</span><span class="pp-directory-status">Aktif</span></div>
                         <h2>{{ $dojo->name }}</h2>
+                        <p><strong>No. Registrasi:</strong> {{ $dojo->registration_number }}</p>
                         <p class="pp-dojo-location">{{ $dojo->city?->name ?? 'Kabupaten / kota belum tercatat' }}@if($dojo->city?->province) <span aria-hidden="true">·</span> {{ $dojo->city->province->name }}@endif</p>
                         @if($dojo->sensei_name)<p><strong>Pelatih:</strong> {{ $dojo->sensei_name }}</p>@endif
                         <p>{{ $dojo->address ?: 'Alamat belum dilengkapi.' }}</p>

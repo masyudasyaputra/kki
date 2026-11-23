@@ -96,8 +96,8 @@
                                         <span
                                             class="font-black text-slate-900 text-sm uppercase group-hover:text-red-600 transition-colors">{{ $dojo->name }}</span>
                                         <span
-                                            class="text-[9px] font-black text-slate-400 mt-1 uppercase tracking-tighter">ID:
-                                            #{{ $dojo->id }}</span>
+                                            class="text-[9px] font-black text-slate-400 mt-1 uppercase tracking-tighter">No. Registrasi:
+                                            {{ $dojo->registration_number }}</span>
                                     </div>
                                 </td>
                                 <td class="px-8 py-6">
@@ -160,6 +160,7 @@
                                         class="font-black text-slate-900 uppercase text-base leading-tight tracking-tight">
                                         {{ $dojo->name }}
                                     </h4>
+                                    <p class="mt-1 text-xs text-slate-500">No. Registrasi: {{ $dojo->registration_number }}</p>
                                     <div class="flex items-center gap-2 mt-1">
                                         <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
                                         <span

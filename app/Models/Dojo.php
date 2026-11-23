@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Dojo extends Model
 {
+    public function getRegistrationNumberAttribute(): ?string
+    {
+        return $this->getKey() === null
+            ? null
+            : 'KKI-DOJO-' . str_pad((string) $this->getKey(), 6, '0', STR_PAD_LEFT);
+    }
+
     protected $fillable = [
         'name',
         'province_id',

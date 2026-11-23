@@ -43,7 +43,7 @@
                         <p class="text-xs text-slate-500 mt-0.5">Perbarui data identitas, SK, atau lokasi dojo</p>
                     </div>
                     <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700">
-                        ID: #{{ $dojo->id }}
+                        No. Registrasi: {{ $dojo->registration_number }}
                     </span>
                 </div>
 

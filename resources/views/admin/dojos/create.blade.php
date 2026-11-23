@@ -49,6 +49,10 @@
 
                 <form action="{{ route('admin.dojos.store') }}" method="POST" enctype="multipart/form-data" class="p-6 sm:p-8 space-y-8">
                     @csrf
+                    <div class="rounded-lg bg-slate-50 p-4 text-xs text-slate-600">
+                        <span class="font-semibold">Nomor Registrasi Dojo</span>
+                        <p class="mt-1">Dibuat otomatis setelah dojo disimpan. Format: KKI-DOJO-000001.</p>
+                    </div>
 
                     {{-- Section 1: Informasi Dasar --}}
                     <div class="space-y-4">
