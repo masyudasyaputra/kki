@@ -51,7 +51,7 @@
                     @csrf
                     <div class="rounded-lg bg-slate-50 p-4 text-xs text-slate-600">
                         <span class="font-semibold">Nomor Registrasi Dojo</span>
-                        <p class="mt-1">Dibuat otomatis setelah dojo disimpan. Format: KKI-DOJO-000001.</p>
+                        <p class="mt-1">Dibuat otomatis sesuai provinsi dojo setelah disimpan. Contoh: KKI-SMT-DOJO-00001 (Sumatera Utara).</p>
                     </div>
 
                     {{-- Section 1: Informasi Dasar --}}

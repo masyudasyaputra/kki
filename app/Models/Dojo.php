@@ -8,9 +8,14 @@ class Dojo extends Model
 {
     public function getRegistrationNumberAttribute(): ?string
     {
-        return $this->getKey() === null
-            ? null
-            : 'KKI-DOJO-' . str_pad((string) $this->getKey(), 6, '0', STR_PAD_LEFT);
+        if ($this->getKey() === null) {
+            return null;
+        }
+
+        $province = $this->city?->province ?? $this->province;
+
+        return 'KKI-' . ($province?->member_prefix ?? 'UNK') . '-DOJO-'
+            . str_pad((string) $this->getKey(), 5, '0', STR_PAD_LEFT);
     }
 
     protected $fillable = [
@@ -35,6 +40,11 @@ class Dojo extends Model
     public function city()
     {
         return $this->belongsTo(City::class);
+    }
+
+    public function province()
+    {
+        return $this->belongsTo(Province::class);
     }
 
     public function members()
