@@ -100,8 +100,12 @@
                                 Tingkat Kepengurusan <span class="text-red-500">*</span>
                             </label>
 
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                @if (auth()->user()->role === 'pb')
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                @if (\App\Services\RoleAccess::managesUsers(auth()->user()))
+                                    <label class="relative flex flex-col p-3.5 rounded-lg border border-slate-200 cursor-pointer hover:border-slate-300 transition-all">
+                                        <div class="flex items-center gap-2"><input type="radio" name="level" value="pusat" class="text-red-600 focus:ring-red-500/20" {{ old('level', $official->level) === 'pusat' ? 'checked' : '' }} onchange="toggleWilayah(this.value)"><span class="text-xs font-semibold text-slate-800">Pengurus Pusat</span></div>
+                                        <span class="text-[11px] text-slate-400 ml-5 mt-0.5">Yurisdiksi seluruh Indonesia</span>
+                                    </label>
                                     <label class="relative flex flex-col p-3.5 rounded-lg border border-slate-200 cursor-pointer hover:border-slate-300 transition-all">
                                         <div class="flex items-center gap-2">
                                             <input type="radio" name="level" value="provinsi"
@@ -128,7 +132,7 @@
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
+                            <div id="province_container">
                                 <label class="block text-xs font-semibold text-slate-700 mb-1.5">
                                     Provinsi <span class="text-red-500">*</span>
                                 </label>
@@ -223,6 +227,10 @@
         const currentCityId = "{{ $official->city_id }}";
 
         function toggleWilayah(level) {
+            const isNational = level === 'pusat';
+            document.getElementById('province_container').classList.toggle('hidden', isNational);
+            if (provinceSelect) { provinceSelect.required = !isNational; provinceSelect.disabled = isNational; }
+            citySelect.disabled = level !== 'pengcab';
             if (level === 'pengcab') {
                 cityContainer.classList.remove('hidden');
                 citySelect.required = true;
@@ -234,6 +242,8 @@
             }
         }
 
+        const initialLevel = document.querySelector('input[name="level"]:checked');
+        if (initialLevel) toggleWilayah(initialLevel.value);
         function fetchCities(provinceId) {
             if (!provinceId) return;
 

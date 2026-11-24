@@ -28,7 +28,7 @@ class OfficialAppointmentTest extends TestCase
         Schema::create('cities', function (Blueprint $t) { $t->id(); $t->integer('province_id'); $t->string('name')->default('Kota'); });
         Schema::create('officials', function (Blueprint $t) {
             $t->id(); $t->string('name'); $t->string('position'); $t->string('level');
-            $t->integer('province_id'); $t->integer('city_id')->nullable();
+            $t->integer('province_id')->nullable(); $t->integer('city_id')->nullable();
             $t->string('phone_number')->nullable(); $t->string('sk_number');
             $t->date('sk_expiry_date'); $t->string('sk_document_path')->nullable(); $t->timestamps();
         });
@@ -52,6 +52,18 @@ class OfficialAppointmentTest extends TestCase
     private function payload(array $extra = []): array
     {
         return array_replace(['level' => 'pengcab', 'position' => 'Sekretaris', 'province_id' => 1, 'city_id' => 1, 'sk_number' => 'SK/001', 'sk_expiry_date' => now()->addYear()->toDateString()], $extra);
+    }
+
+    public function test_national_official_can_be_created_and_appointed_without_a_region(): void
+    {
+        $actor = $this->account('pb'); $user = $this->account('member');
+        $this->actingAs($actor)->get(route('admin.officials.create'))->assertOk()->assertSee('Pengurus Pusat');
+        $data = $this->payload(['level' => 'pusat', 'name' => 'Pengurus Nasional', 'province_id' => null, 'city_id' => null]);
+        $this->post(route('admin.officials.store'), $data)->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertDatabaseHas('officials', ['name' => 'Pengurus Nasional', 'level' => 'pusat', 'province_id' => null, 'city_id' => null]);
+        $this->post(route('admin.users.appoint', $user), $data)->assertSessionHasNoErrors()->assertRedirect();
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'role' => 'pb', 'province_id' => null, 'city_id' => null, 'is_active' => 1]);
+        $this->actingAs($this->account('pengprov'))->post(route('admin.officials.store'), $data)->assertSessionHasErrors('level');
     }
 
     public function test_appointment_activates_region_links_record_and_updates_without_duplicates(): void

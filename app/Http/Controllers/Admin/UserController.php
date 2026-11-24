@@ -69,17 +69,18 @@ class UserController extends Controller
         abort_if($user->hasRole(RoleAccess::NATIONAL), 403, 'Gunakan pengaturan akses untuk akun tingkat pusat.');
         $national = RoleAccess::managesUsers($request->user());
         $data = $request->validate([
-            'level' => ['required', Rule::in($national ? ['provinsi', 'pengcab'] : ['pengcab'])],
+            'level' => ['required', Rule::in($national ? ['pusat', 'provinsi', 'pengcab'] : ['pengcab'])],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'position' => ['required', 'string', 'max:255'],
-            'province_id' => ['required', 'integer', 'exists:provinces,id'],
-            'city_id' => ['nullable', 'required_if:level,pengcab', 'integer', Rule::exists('cities', 'id')->where('province_id', $request->province_id)],
+            'province_id' => ['exclude_if:level,pusat', 'required', 'integer', 'exists:provinces,id'],
+            'city_id' => ['exclude_unless:level,pengcab', 'required', 'integer', Rule::exists('cities', 'id')->where('province_id', $request->province_id)],
             'sk_number' => ['required', 'string', 'max:100'],
             'sk_expiry_date' => ['required', 'date', 'after_or_equal:today'],
             'sk_document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
         ]);
         abort_unless($national || (int) $data['province_id'] === (int) $request->user()->province_id, 403);
+        $data['province_id'] = $data['level'] === 'pusat' ? null : $data['province_id'];
         $newPath = $request->file('sk_document')?->store('sk-documents/officials', 'local');
         $oldPath = null;
         try {
@@ -90,7 +91,7 @@ class UserController extends Controller
                 $official = $user->official;
                 $before = $this->accessData($user) + ['official' => $official?->toArray()];
                 $oldPath = $official?->sk_document_path;
-                $role = $data['level'] === 'provinsi' ? 'pengprov' : 'pengcab';
+                $role = match ($data['level']) { 'pusat' => 'pb', 'provinsi' => 'pengprov', default => 'pengcab' };
                 $positions = array_values(array_diff($user->positions ?? [], ['pengprov', 'pengcab', 'admin_dojo']));
                 $positions[] = $role;
                 if ($user->registration_type === 'official') $positions = [$role];

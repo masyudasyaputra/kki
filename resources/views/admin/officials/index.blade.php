@@ -85,7 +85,7 @@
                                 <td class="px-8 py-6">
                                     <div class="flex flex-col">
                                         <span
-                                            class="text-xs font-bold text-slate-700 italic">{{ $official->level === 'pengcab' ? $official->city->name ?? '-' : $official->province->name ?? '-' }}</span>
+                                            class="text-xs font-bold text-slate-700 italic">{{ $official->level === 'pusat' ? 'Seluruh Indonesia' : ($official->level === 'pengcab' ? $official->city->name ?? '-' : $official->province->name ?? '-') }}</span>
                                         <span
                                             class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Level:
                                             {{ $official->level }}</span>
@@ -170,7 +170,7 @@
                                             Wilayah</p>
                                         <p
                                             class="text-[10px] font-black text-slate-700 truncate uppercase italic leading-tight">
-                                            {{ $official->level === 'pengcab' ? $official->city->name ?? '-' : $official->province->name ?? '-' }}
+                                            {{ $official->level === 'pusat' ? 'Seluruh Indonesia' : ($official->level === 'pengcab' ? $official->city->name ?? '-' : $official->province->name ?? '-') }}
                                         </p>
                                     </div>
                                 </div>

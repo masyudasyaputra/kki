@@ -71,15 +71,18 @@ class OfficialController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'level' => 'required|in:provinsi,pengcab',
-            'province_id' => 'required|exists:provinces,id',
-            'city_id' => 'required_if:level,pengcab|nullable|exists:cities,id',
+            'level' => ['required', \Illuminate\Validation\Rule::in(RoleAccess::managesUsers($request->user()) ? ['pusat', 'provinsi', 'pengcab'] : ['pengcab'])],
+            'province_id' => 'exclude_if:level,pusat|required|exists:provinces,id',
+            'city_id' => 'exclude_unless:level,pengcab|required|exists:cities,id',
             'position' => 'required|string',
             'phone_number' => 'nullable|string|max:20',
             'sk_number' => 'nullable|string|max:100',
             'sk_expiry_date' => 'required|date',
             'sk_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        $validated['province_id'] = $validated['level'] === 'pusat' ? null : $validated['province_id'];
+        $validated['city_id'] = $validated['level'] === 'pengcab' ? $validated['city_id'] : null;
 
         $validated['sk_document_path'] = $request->file('sk_document')?->store('sk-documents/officials', 'local');
         unset($validated['sk_document']);
@@ -115,15 +118,18 @@ class OfficialController extends Controller
         }
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'level' => 'required|in:provinsi,pengcab',
-            'province_id' => 'required|exists:provinces,id',
-            'city_id' => 'required_if:level,pengcab|nullable|exists:cities,id',
+            'level' => ['required', \Illuminate\Validation\Rule::in(RoleAccess::managesUsers($request->user()) ? ['pusat', 'provinsi', 'pengcab'] : ['pengcab'])],
+            'province_id' => 'exclude_if:level,pusat|required|exists:provinces,id',
+            'city_id' => 'exclude_unless:level,pengcab|required|exists:cities,id',
             'position' => 'required|string',
             'phone_number' => 'nullable|string|max:20',
             'sk_number' => 'nullable|string|max:100',
             'sk_expiry_date' => 'required|date',
             'sk_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
+
+        $validated['province_id'] = $validated['level'] === 'pusat' ? null : $validated['province_id'];
+        $validated['city_id'] = $validated['level'] === 'pengcab' ? $validated['city_id'] : null;
 
         $oldDocument = $official->sk_document_path;
         if ($request->hasFile('sk_document')) {
