@@ -128,6 +128,7 @@ export async function renderMemberCard(data, side) {
         }
         text(ctx, 'DOJO', 48, 448, 13, GOLD, 700);
         lines(ctx, data.dojo, 48, 475, 335, 21);
+        fitText(ctx, 'No. Reg. Dojo: ' + (data.dojoNumber ?? 'Belum tercatat'), 48, 537, 675, 17, 13, theme.muted);
         rule(ctx, 409, 446, 409, 524);
         text(ctx, 'TINGKATAN', 435, 448, 13, GOLD, 700);
         lines(ctx, data.rank, 435, 475, 280, 21);

@@ -12,7 +12,7 @@
                     Tambah Data Pengurus
                 </h1>
                 <p class="page-subtitle">
-                    Tingkat {{ $national ? 'Wilayah / Pusat' : 'Cabang (Pengcab)' }}
+                    Tingkat {{ $national ? 'Wilayah / Pusat' : 'Wilayah kerja' }}
                 </p>
             </div>
             <a href="{{ route('admin.officials.index') }}"
@@ -130,6 +130,8 @@
                                         <div class="flex items-center gap-2"><input type="radio" name="level" value="pusat" class="text-red-600 focus:ring-red-500/20" {{ $selectedLevel === 'pusat' ? 'checked' : '' }} onchange="toggleWilayah(this.value)"><span class="text-xs font-semibold text-slate-800">Pengurus Pusat</span></div>
                                         <span class="text-[11px] text-slate-400 ml-5 mt-0.5">Yurisdiksi seluruh Indonesia</span>
                                     </label>
+                                @endif
+                                @if(in_array('provinsi', \App\Services\RoleAccess::officialLevels(auth()->user()), true))
                                     <label class="relative flex flex-col p-3.5 rounded-lg border border-slate-200 cursor-pointer hover:border-slate-300 transition-all">
                                         <div class="flex items-center gap-2">
                                             <input type="radio" name="level" value="provinsi"
@@ -190,7 +192,7 @@
                                 </select>
                             </div>
                         </div>
-                        <x-sk-document-upload entity="official" label="Unggah dokumen SK Pengurus" />
+                        <x-sk-document-upload :record="$assignment" entity="official" label="Unggah dokumen SK Pengurus" />
                         @if($assignment?->sk_document_path)
                             <p class="text-xs text-slate-500"><a class="underline" href="{{ route('admin.sk-documents.show', ['entity' => 'official', 'id' => $assignment->id]) }}">Lihat SK tersimpan</a>. Kosongkan unggahan untuk mempertahankan dokumen.</p>
                         @endif

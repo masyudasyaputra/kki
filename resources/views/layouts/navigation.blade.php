@@ -14,7 +14,8 @@
     $isAdmin = $isSuperAdmin || $hasRole(['pb', 'pengprov', 'pengcab', 'admin_dojo', 'admin_pengprov', 'admin_pengcab']);
     $isStruktural = $isSuperAdmin || $hasRole(['pb', 'pengprov', 'pengcab']);
     $isSistemAdmin = $hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov']);
-    $pendingOfficialVerifications = $isSistemAdmin ? app(\App\Services\OfficialReview::class)->pendingCount($u) : 0;
+    $canVerifyOfficials = \App\Services\RoleAccess::reviewsOfficials($u);
+    $pendingOfficialVerifications = $canVerifyOfficials ? app(\App\Services\OfficialReview::class)->pendingCount($u) : 0;
     $canManageTemplates = \App\Services\RoleAccess::certificateTemplates($u);
 
     $homeHref = route('dashboard');
@@ -72,13 +73,13 @@
             <a href="{{ route('public.dojos') }}" class="sidebar-link"><x-sidebar-icon name="building" /><span>Direktori Dojo</span></a>
         @endif
 
-        @if ($isStruktural || $isSistemAdmin || $hasRole(\App\Services\QualificationReview::REVIEWERS))
+        @if ($isStruktural || $isSistemAdmin || $canVerifyOfficials || $hasRole(\App\Services\QualificationReview::REVIEWERS))
             <details name="kki-sidebar-menu" class="sidebar-group" @if($activeOfficials || $activeDojos || request()->routeIs('admin.official-verifications.*', 'admin.qualifications.*')) open @endif>
                 <summary><x-sidebar-icon name="organization" /><span>Organisasi</span>@if($pendingOfficialVerifications > 0)<span class="sidebar-notification-badge" aria-label="{{ $pendingOfficialVerifications }} pengajuan pengurus menunggu verifikasi">{{ $pendingOfficialVerifications }}</span>@endif<span class="sidebar-chevron" aria-hidden="true">⌄</span></summary>
                 <div class="sidebar-group-items">
                     <a href="{{ route('admin.officials.index') }}" class="sidebar-link {{ $activeOfficials ? 'is-active' : '' }}" @if($activeOfficials) aria-current="page" @endif><x-sidebar-icon name="people" /><span>Pengurus</span></a>
-                    @if ($isSistemAdmin)<a href="{{ route('admin.official-verifications.index') }}" class="sidebar-link {{ request()->routeIs('admin.official-verifications.*') ? 'is-active' : '' }}" @if(request()->routeIs('admin.official-verifications.*')) aria-current="page" @endif><x-sidebar-icon name="people" /><span class="min-w-0 flex-1">Verifikasi Pengurus</span>@if($pendingOfficialVerifications > 0)<span class="sidebar-notification-badge" aria-label="{{ $pendingOfficialVerifications }} pengajuan pengurus menunggu verifikasi">{{ $pendingOfficialVerifications }}</span>@endif</a>@endif
-                    <a href="{{ route('admin.dojos.index') }}" class="sidebar-link {{ $activeDojos ? 'is-active' : '' }}" @if($activeDojos) aria-current="page" @endif><x-sidebar-icon name="building" /><span>Dojo</span></a>
+                    @if ($canVerifyOfficials)<a href="{{ route('admin.official-verifications.index') }}" class="sidebar-link {{ request()->routeIs('admin.official-verifications.*') ? 'is-active' : '' }}" @if(request()->routeIs('admin.official-verifications.*')) aria-current="page" @endif><x-sidebar-icon name="people" /><span class="min-w-0 flex-1">Verifikasi Pengurus</span>@if($pendingOfficialVerifications > 0)<span class="sidebar-notification-badge" aria-label="{{ $pendingOfficialVerifications }} pengajuan pengurus menunggu verifikasi">{{ $pendingOfficialVerifications }}</span>@endif</a>@endif
+                    @if($isAdmin)<a href="{{ route('admin.dojos.index') }}" class="sidebar-link {{ $activeDojos ? 'is-active' : '' }}" @if($activeDojos) aria-current="page" @endif><x-sidebar-icon name="building" /><span>Dojo</span></a>@endif
                     @if($hasRole(\App\Services\QualificationReview::REVIEWERS))<a href="{{ route('admin.qualifications.index') }}" class="sidebar-link {{ request()->routeIs('admin.qualifications.*') ? 'is-active' : '' }}" @if(request()->routeIs('admin.qualifications.*')) aria-current="page" @endif><x-sidebar-icon name="certificate" /><span>Verifikasi Wasit/Juri</span></a>@endif
                 </div>
             </details>

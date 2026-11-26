@@ -13,19 +13,19 @@ class DojoRegistrationNumberTest extends TestCase
     {
         $dojo = new Dojo(['name' => 'Dojo Lama']);
         $dojo->id = 1;
-        $city = new City;
+        $city = new City(['code' => '12.71']);
         $city->setRelation('province', new Province(['name' => 'Sumatera Utara']));
         $dojo->setRelation('city', $city);
-        $this->assertSame('KKI-SMT-DOJO-00001', $dojo->registration_number);
+        $this->assertSame('KKI-SMT-1271-000001', $dojo->registration_number);
 
         $dojo->fill(['name' => 'Dojo Baru', 'city_id' => 2]);
-        $this->assertSame('KKI-SMT-DOJO-00001', $dojo->registration_number);
+        $this->assertSame('KKI-SMT-1271-000001', $dojo->registration_number);
 
         $other = new Dojo;
         $other->id = 1000000;
         $other->setRelation('city', null);
         $other->setRelation('province', new Province(['name' => 'Jawa Barat']));
-        $this->assertSame('KKI-JBR-DOJO-1000000', $other->registration_number);
+        $this->assertSame('KKI-JBR-UNK-1000000', $other->registration_number);
         $this->assertNotSame($dojo->registration_number, $other->registration_number);
     }
 
@@ -40,6 +40,6 @@ class DojoRegistrationNumberTest extends TestCase
         $dojo->id = 12;
         $dojo->setRelation('city', null);
         $dojo->setRelation('province', null);
-        $this->assertSame('KKI-UNK-DOJO-00012', $dojo->registration_number);
+        $this->assertSame('KKI-UNK-UNK-000012', $dojo->registration_number);
     }
 }

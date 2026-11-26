@@ -101,11 +101,13 @@
                             </label>
 
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                @if (\App\Services\RoleAccess::managesUsers(auth()->user()))
+                                @if (\App\Services\RoleAccess::nationalOfficials(auth()->user()))
                                     <label class="relative flex flex-col p-3.5 rounded-lg border border-slate-200 cursor-pointer hover:border-slate-300 transition-all">
                                         <div class="flex items-center gap-2"><input type="radio" name="level" value="pusat" class="text-red-600 focus:ring-red-500/20" {{ old('level', $official->level) === 'pusat' ? 'checked' : '' }} onchange="toggleWilayah(this.value)"><span class="text-xs font-semibold text-slate-800">Pengurus Pusat</span></div>
                                         <span class="text-[11px] text-slate-400 ml-5 mt-0.5">Yurisdiksi seluruh Indonesia</span>
                                     </label>
+                                @endif
+                                @if(in_array('provinsi', \App\Services\RoleAccess::officialLevels(auth()->user()), true))
                                     <label class="relative flex flex-col p-3.5 rounded-lg border border-slate-200 cursor-pointer hover:border-slate-300 transition-all">
                                         <div class="flex items-center gap-2">
                                             <input type="radio" name="level" value="provinsi"
@@ -137,7 +139,7 @@
                                     Provinsi <span class="text-red-500">*</span>
                                 </label>
 
-                                @if (auth()->user()->role === 'pengprov')
+                                @if (!\App\Services\RoleAccess::nationalOfficials(auth()->user()))
                                     <input type="hidden" name="province_id" value="{{ auth()->user()->province_id }}">
                                     <div class="w-full h-10 px-3.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 flex items-center">
                                         {{ auth()->user()->province->name }}

@@ -18,6 +18,7 @@ class MemberCardData
             'name' => $user->name,
             'number' => $user->member_number ?: 'Belum diterbitkan',
             'dojo' => $user->dojo?->name ?? 'Belum dipilih',
+            'dojoNumber' => $user->dojo?->registration_number ?? 'Belum tercatat',
             'rank' => $user->beltLevel?->display_name ?? 'Belum ditentukan',
             'province' => $user->province?->name ?? 'Belum diisi',
             'city' => $user->city?->name ?? 'Belum diisi',

@@ -11,28 +11,28 @@ class OfficialNumbers
 {
     public function automatic(Official $official): string
     {
-        return 'PGR-'.($official->province?->member_prefix ?? 'UNK').'-'.str_pad((string) ($official->user_id ?: $official->id), 6, '0', STR_PAD_LEFT);
+        $region = $official->level === 'pusat' ? 'PP' : ($official->province?->member_prefix ?? 'UNK');
+        if ($official->level === 'pengcab') $region .= '-'.($official->city?->registration_code ?? 'UNK');
+        $sequence = $official->registration_sequence ?? ($official->user_id ?: $official->id);
+        $year = $official->sk_expiry_date ? \Carbon\Carbon::parse($official->sk_expiry_date)->format('Y') : '0000';
+        return 'PGR-'.$region.'-'.str_pad((string) $sequence, 6, '0', STR_PAD_LEFT).'-'.$year;
     }
 
     public function issue(Official $official): void
     {
         if ($official->official_number || !$official->getConnection()->getSchemaBuilder()->hasColumn('officials', 'official_number')) return;
-        $base = $this->automatic($official);
-        $split = strrpos($base, '-');
-        $prefix = substr($base, 0, $split + 1);
-        $sequence = (int) substr($base, $split + 1);
-        for ($attempt = 0; $attempt < 1000; $attempt++, $sequence++) {
-            try {
-                DB::transaction(function () use ($official, $prefix, $sequence) {
-                    $locked = Official::whereKey($official->id)->lockForUpdate()->firstOrFail();
-                    if (!$locked->official_number) $locked->forceFill(['official_number' => $prefix.str_pad((string) $sequence, 6, '0', STR_PAD_LEFT)])->saveQuietly();
-                    $official->setRawAttributes($locked->getAttributes(), true);
-                });
-                return;
-            } catch (UniqueConstraintViolationException $exception) {
-                if ($attempt === 999) throw $exception;
+        DB::transaction(function () use ($official) {
+            $locked = Official::whereKey($official->id)->lockForUpdate()->firstOrFail();
+            if ($locked->official_number) return;
+            if ($locked->getConnection()->getSchemaBuilder()->hasColumn('officials', 'registration_sequence')) {
+                $minimum = (int) Official::max('registration_sequence');
+                do {
+                    $locked->forceFill(['registration_sequence' => app(RegistrationSequence::class)->next('official', $minimum)]);
+                } while (Official::where('official_number', $this->automatic($locked))->exists());
             }
-        }
+            $locked->forceFill(['official_number' => $this->automatic($locked)])->saveQuietly();
+            $official->setRawAttributes($locked->getAttributes(), true);
+        });
     }
 
     public function change(Official $official, User $actor, array $data): void

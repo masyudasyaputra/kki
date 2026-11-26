@@ -20,13 +20,9 @@ class OfficialController extends Controller
         // 1. Inisialisasi query dengan eager loading yang kamu butuhkan
         $query = Official::with(['province', 'city', 'city.dojos']);
 
-        // 2. PROTEKSI WILAYAH: Hanya tampilkan data di bawah Pengprov yang sedang login
-        if ($user->role === 'pengprov') {
-            $query->where('province_id', $user->province_id);
-        }
-        // Jika nanti ada role pengcab, ini proteksi tambahannya (opsional)
-        elseif ($user->role === 'pengcab') {
-            $query->where('city_id', $user->city_id);
+        if (!RoleAccess::nationalOfficials($user)) {
+            $query->where('province_id', $user->province_id ?: 0);
+            if (!$user->hasRole(['pengprov', 'admin_pengprov', 'verifikator_pengurus_provinsi'])) $query->where('city_id', $user->city_id ?: 0);
         }
 
         // 3. FITUR PENCARIAN: Jangan sampai hilang agar user tidak bingung
@@ -42,20 +38,12 @@ class OfficialController extends Controller
 
     public function create(Request $request)
     {
-        $national = RoleAccess::managesUsers($request->user());
-        $canAppoint = $request->user()->hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov']);
+        $national = RoleAccess::nationalOfficials($request->user());
+        $canAppoint = RoleAccess::reviewsOfficials($request->user());
         $candidates = collect();
         $candidate = null;
         if ($canAppoint) {
-            $query = User::where('registration_type', 'official');
-            if (!$national) {
-                $query->where('province_id', $request->user()->province_id ?: 0);
-            }
-            foreach (RoleAccess::NATIONAL as $role) {
-                $query->where('role', '!=', $role)
-                    ->where(fn ($q) => $q->whereNull('roles')->orWhereJsonDoesntContain('roles', $role))
-                    ->where(fn ($q) => $q->whereNull('positions')->orWhereJsonDoesntContain('positions', $role));
-            }
+            $query = app(\App\Services\OfficialReview::class)->applications($request->user());
             if ($request->filled('user_id')) {
                 $candidate = (clone $query)->with('official')->findOrFail($request->integer('user_id'));
             }
@@ -71,9 +59,9 @@ class OfficialController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'level' => ['required', \Illuminate\Validation\Rule::in(RoleAccess::managesUsers($request->user()) ? ['pusat', 'provinsi', 'pengcab'] : ['pengcab'])],
+            'level' => ['required', \Illuminate\Validation\Rule::in(RoleAccess::officialLevels($request->user()))],
             'province_id' => 'exclude_if:level,pusat|required|exists:provinces,id',
-            'city_id' => 'exclude_unless:level,pengcab|required|exists:cities,id',
+            'city_id' => ['exclude_unless:level,pengcab', 'required', \Illuminate\Validation\Rule::exists('cities', 'id')->where('province_id', $request->province_id)],
             'position' => 'required|string',
             'phone_number' => 'nullable|string|max:20',
             'sk_number' => 'nullable|string|max:100',
@@ -81,6 +69,7 @@ class OfficialController extends Controller
             'sk_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
+        app(\App\Services\OfficialReview::class)->authorizeRegion($request->user(), $validated);
         $validated['province_id'] = $validated['level'] === 'pusat' ? null : $validated['province_id'];
         $validated['city_id'] = $validated['level'] === 'pengcab' ? $validated['city_id'] : null;
 
@@ -97,10 +86,11 @@ class OfficialController extends Controller
      */
     public function edit(Official $official)
     {
+        $this->authorizeOfficial($official);
         if ($official->user_id) {
-            return redirect()->route('admin.users.edit', $official->user_id);
+            return redirect()->route('admin.officials.create', ['user_id' => $official->user_id]);
         }
-        $provinces = Province::orderBy('name')->get();
+        $provinces = Province::when(!RoleAccess::nationalOfficials(auth()->user()), fn ($q) => $q->whereKey(auth()->user()->province_id))->orderBy('name')->get();
         // Ambil data kota berdasarkan provinsi yang sedang dipilih si pengurus
         $cities = City::where('province_id', $official->province_id)->get();
 
@@ -112,15 +102,15 @@ class OfficialController extends Controller
      */
     public function update(Request $request, Official $official)
     {
+        $this->authorizeOfficial($official);
         if ($official->user_id) {
-            return redirect()->route('admin.users.edit', $official->user_id)
-                ->with('success', 'Perbarui pengurus melalui formulir penetapan agar data akun dan wilayah tersimpan bersama.');
+            return app(UserController::class)->appoint($request, $official->user);
         }
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'level' => ['required', \Illuminate\Validation\Rule::in(RoleAccess::managesUsers($request->user()) ? ['pusat', 'provinsi', 'pengcab'] : ['pengcab'])],
+            'level' => ['required', \Illuminate\Validation\Rule::in(RoleAccess::officialLevels($request->user()))],
             'province_id' => 'exclude_if:level,pusat|required|exists:provinces,id',
-            'city_id' => 'exclude_unless:level,pengcab|required|exists:cities,id',
+            'city_id' => ['exclude_unless:level,pengcab', 'required', \Illuminate\Validation\Rule::exists('cities', 'id')->where('province_id', $request->province_id)],
             'position' => 'required|string',
             'phone_number' => 'nullable|string|max:20',
             'sk_number' => 'nullable|string|max:100',
@@ -128,6 +118,7 @@ class OfficialController extends Controller
             'sk_document' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
+        app(\App\Services\OfficialReview::class)->authorizeRegion($request->user(), $validated);
         $validated['province_id'] = $validated['level'] === 'pusat' ? null : $validated['province_id'];
         $validated['city_id'] = $validated['level'] === 'pengcab' ? $validated['city_id'] : null;
 
@@ -148,8 +139,20 @@ class OfficialController extends Controller
      */
     public function destroy(Official $official)
     {
+        $this->authorizeOfficial($official);
+        abort_unless(auth()->user()->hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab']), 403);
         $official->delete();
         return redirect()->route('admin.officials.index')
             ->with('success', 'Data Pengurus berhasil dihapus!');
     }
+    private function authorizeOfficial(Official $official): void
+    {
+        $actor = auth()->user();
+        if (RoleAccess::nationalOfficials($actor)) return;
+        abort_unless($actor->province_id && (int) $actor->province_id === (int) $official->province_id, 403);
+        if (!$actor->hasRole(['pengprov', 'admin_pengprov', 'verifikator_pengurus_provinsi'])) {
+            abort_unless($actor->city_id && (int) $actor->city_id === (int) $official->city_id, 403);
+        }
+    }
+
 }

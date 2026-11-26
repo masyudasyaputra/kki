@@ -20,9 +20,9 @@
     </x-slot>
 
     @if(session('success'))<div class="mx-auto max-w-4xl px-6 pt-6 text-sm text-emerald-800" role="status">{{ session('success') }}</div>@endif
-    @unless($user->hasRole(\App\Services\RoleAccess::NATIONAL))
+    @if(!$user->hasRole(\App\Services\RoleAccess::NATIONAL) || $user->official)
         @include('admin.users.appointment')
-    @endunless
+    @endif
 
     <div class="py-6 sm:py-8">
         <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

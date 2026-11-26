@@ -45,9 +45,9 @@ class SkDocumentController extends Controller
     private function officialPath($actor, int $id): ?string
     {
         $official = Official::findOrFail($id);
-        $allowed = RoleAccess::managesUsers($actor)
-            || ($actor->hasRole(['pengprov', 'admin_pengprov']) && (int) $actor->province_id === (int) $official->province_id)
-            || ($official->city_id && $actor->hasRole(['pengcab', 'admin_pengcab']) && (int) $actor->city_id === (int) $official->city_id);
+        $allowed = RoleAccess::nationalOfficials($actor)
+            || ($actor->hasRole(['pengprov', 'admin_pengprov', 'verifikator_pengurus_provinsi']) && (int) $actor->province_id === (int) $official->province_id)
+            || ($official->city_id && $actor->hasRole(['pengcab', 'admin_pengcab', 'verifikator_pengurus_pengcab']) && (int) $actor->city_id === (int) $official->city_id);
         abort_unless($allowed, 403);
 
         return $official->sk_document_path;

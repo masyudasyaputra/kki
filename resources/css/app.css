@@ -1000,3 +1000,5 @@ img[src$="/images/logo-kki.png"]:not([aria-hidden="true"]) {
 .guide-workspace :is(a,button,summary):focus-visible { outline:2px solid #a85863; outline-offset:3px; }
 @media(max-width:1023px) { .guide-layout { grid-template-columns:minmax(0,1fr); } .guide-toc { display:none; } .guide-mobile-toc { display:block; margin-bottom:1rem; } }
 @media(max-width:639px) { .guide-hero { padding:1.4rem; } .guide-search > div:nth-child(2) { flex:1; } .guide-section summary { gap:.6rem; padding:1rem; } .guide-section summary h2 { font-size:.83rem; } .guide-section-body { padding:0 1rem 1rem; } .guide-search :is(input,select),.guide-mobile-toc select { font-size:16px; } }
+
+.kki-id-fields .kki-id-dojo-number { margin-top:.3em; font-size:.5em; color:var(--card-muted); overflow-wrap:anywhere; }

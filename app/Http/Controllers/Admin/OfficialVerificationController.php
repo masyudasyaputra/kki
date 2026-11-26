@@ -26,10 +26,8 @@ class OfficialVerificationController extends Controller
 
     public function show(Request $request, User $user)
     {
-        abort_unless($user->registration_type === 'official', 404);
-        if (!RoleAccess::managesUsers($request->user())) {
-            abort_unless($request->user()->province_id && (int) $user->province_id === (int) $request->user()->province_id && !$user->hasRole(RoleAccess::NATIONAL), 403);
-        }
+        abort_unless($user->registration_type === 'official' || $user->official, 404);
+        app(\App\Services\OfficialReview::class)->authorize($request->user(), $user);
         $user->load(['official', 'province', 'city']);
         return redirect()->route('admin.officials.create', ['user_id' => $user->id]);
     }

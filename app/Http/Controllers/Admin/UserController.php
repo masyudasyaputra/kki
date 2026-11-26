@@ -65,34 +65,35 @@ class UserController extends Controller
 
     public function appoint(Request $request, User $user)
     {
-        $this->authorizeTarget($user);
-        abort_if($user->hasRole(RoleAccess::NATIONAL), 403, 'Gunakan pengaturan akses untuk akun tingkat pusat.');
-        $national = RoleAccess::managesUsers($request->user());
+        app(\App\Services\OfficialReview::class)->authorize($request->user(), $user);
+        abort_if($user->hasRole(['super_admin', 'dewan_guru_pusat']) || ($user->hasRole('pb') && !$user->official), 403, 'Akun pusat tanpa penetapan pengurus diatur melalui pengaturan akses.');
+        abort_if($request->user()->id === $user->id && !RoleAccess::managesUsers($request->user()), 403, 'Verifikator tidak dapat menetapkan kepengurusan dirinya sendiri.');
         $data = $request->validate([
-            'level' => ['required', Rule::in($national ? ['pusat', 'provinsi', 'pengcab'] : ['pengcab'])],
+            'level' => ['required', Rule::in(RoleAccess::officialLevels($request->user()))],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'position' => ['required', 'string', 'max:255'],
             'province_id' => ['exclude_if:level,pusat', 'required', 'integer', 'exists:provinces,id'],
             'city_id' => ['exclude_unless:level,pengcab', 'required', 'integer', Rule::exists('cities', 'id')->where('province_id', $request->province_id)],
             'sk_number' => ['required', 'string', 'max:100'],
-            'sk_expiry_date' => ['required', 'date', 'after_or_equal:today'],
+            'sk_expiry_date' => array_merge(['required', 'date'], $user->official ? [] : ['after_or_equal:today']),
             'sk_document' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
         ]);
-        abort_unless($national || (int) $data['province_id'] === (int) $request->user()->province_id, 403);
+        app(\App\Services\OfficialReview::class)->authorizeRegion($request->user(), $data);
         $data['province_id'] = $data['level'] === 'pusat' ? null : $data['province_id'];
         $newPath = $request->file('sk_document')?->store('sk-documents/officials', 'local');
         $oldPath = null;
         try {
             DB::transaction(function () use ($request, $user, $data, $newPath, &$oldPath) {
                 $user = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
-                $this->authorizeTarget($user);
-                abort_if($user->hasRole(RoleAccess::NATIONAL), 403);
+                app(\App\Services\OfficialReview::class)->authorize($request->user(), $user);
+                abort_if($user->hasRole(['super_admin', 'dewan_guru_pusat']) || ($user->hasRole('pb') && !$user->official), 403);
                 $official = $user->official;
                 $before = $this->accessData($user) + ['official' => $official?->toArray()];
                 $oldPath = $official?->sk_document_path;
                 $role = match ($data['level']) { 'pusat' => 'pb', 'provinsi' => 'pengprov', default => 'pengcab' };
-                $positions = array_values(array_diff($user->positions ?? [], ['pengprov', 'pengcab', 'admin_dojo']));
+                abort_if($user->id === $request->user()->id && $user->hasRole('pb') && $role !== 'pb', 422, 'Pengurus pusat tidak dapat menurunkan akses dirinya sendiri.');
+                $positions = array_values(array_diff($user->positions ?? [], ['pb', 'pengprov', 'pengcab', 'admin_dojo']));
                 $positions[] = $role;
                 if ($user->registration_type === 'official') $positions = [$role];
                 $user->update([
@@ -120,7 +121,7 @@ class UserController extends Controller
         if ($request->input('return_to') === 'officials') {
             return redirect()->route('admin.officials.index')->with('success', 'Pengurus ditetapkan. Akun aktif, akses wilayah, dan data SK tersimpan sekaligus.');
         }
-        return redirect()->route($request->input('return_to') === 'official-verifications' ? 'admin.official-verifications.show' : 'admin.users.edit', $user)->with('success', 'Pengurus ditetapkan. Akun aktif, akses wilayah, dan data SK tersimpan sekaligus.');
+        return redirect()->route('admin.official-verifications.show', $user)->with('success', 'Pengurus ditetapkan. Akun aktif, akses wilayah, dan data SK tersimpan sekaligus.');
     }
 
     public function update(Request $request, User $user)
@@ -152,7 +153,7 @@ class UserController extends Controller
         $national = RoleAccess::managesUsers(auth()->user());
         $availablePositions = $national ? RoleAccess::POSITIONS : array_intersect_key(RoleAccess::POSITIONS, array_flip(['pengcab', 'admin_dojo', 'member']));
         $availablePermissions = $national ? RoleAccess::PERMISSIONS : array_intersect_key(RoleAccess::PERMISSIONS,
-            array_flip(['verifikator_pengprov', 'verifikator_pengcab', 'panitia_ujian', 'penguji']));
+            array_flip(['verifikator_pengprov', 'verifikator_pengcab', 'verifikator_pengurus_pengcab', 'panitia_ujian', 'penguji']));
         return ['availablePositions' => $availablePositions, 'availablePermissions' => $availablePermissions,
             'availableRoles' => $availablePositions + $availablePermissions,
             'provinces' => Province::when(!$national, fn ($q) => $q->whereKey(auth()->user()->province_id ?? 0))->orderBy('name')->get(),
@@ -185,9 +186,9 @@ class UserController extends Controller
         $positions = array_values(array_intersect(array_keys(RoleAccess::POSITIONS), $submitted));
         $permissions = array_values(array_intersect(array_keys(RoleAccess::PERMISSIONS), $submitted));
         if (!$positions) $positions = ['member'];
-        $regional = array_intersect($submitted, ['pengprov', 'pengcab', 'admin_dojo', 'verifikator_pengprov', 'verifikator_pengcab']);
+        $regional = array_intersect($submitted, ['pengprov', 'pengcab', 'admin_dojo', 'verifikator_pengprov', 'verifikator_pengcab', 'verifikator_pengurus_provinsi', 'verifikator_pengurus_pengcab']);
         $needsProvince = (bool) $regional || !array_intersect($submitted, RoleAccess::NATIONAL);
-        $needsCity = (bool) array_intersect($submitted, ['pengcab', 'admin_dojo', 'verifikator_pengcab']);
+        $needsCity = (bool) array_intersect($submitted, ['pengcab', 'admin_dojo', 'verifikator_pengcab', 'verifikator_pengurus_pengcab']);
         $request->validate(['province_id' => [Rule::requiredIf($needsProvince)], 'city_id' => [Rule::requiredIf($needsCity)],
             'dojo_id' => [Rule::requiredIf(in_array('admin_dojo', $positions, true))]]);
         if (!RoleAccess::managesUsers($request->user())) {

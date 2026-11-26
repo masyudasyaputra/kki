@@ -14,8 +14,8 @@ class Dojo extends Model
 
         $province = $this->city?->province ?? $this->province;
 
-        return 'KKI-' . ($province?->member_prefix ?? 'UNK') . '-DOJO-'
-            . str_pad((string) $this->getKey(), 5, '0', STR_PAD_LEFT);
+        return 'KKI-' . ($province?->member_prefix ?? 'UNK') . '-'.($this->city?->registration_code ?? 'UNK').'-'
+            . str_pad((string) $this->getKey(), 6, '0', STR_PAD_LEFT);
     }
 
     protected $fillable = [

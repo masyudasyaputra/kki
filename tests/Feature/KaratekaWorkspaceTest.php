@@ -51,6 +51,7 @@ class KaratekaWorkspaceTest extends TestCase
         $this->assertSame('Provinsi Kartu', $data['province']);
         $this->assertSame('Kota Kartu', $data['city']);
         $this->assertSame('Dojo Kartu', $data['dojo']);
+        $this->assertSame('KKI-KAR-0001-000001', $data['dojoNumber']);
         $this->assertSame('Aktif', $data['status']);
         $this->assertSame('Terverifikasi', $data['verification']);
         $this->assertSame(url('storage/photos/aktual.jpg'), $data['photo']);

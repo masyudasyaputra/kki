@@ -42,7 +42,7 @@ class CertificateController extends Controller
     public function issue(Request $request, Exam $exam, int $participant, ExamCertificates $service)
     {
         $service->authorizeIssuance($request->user(), $exam);
-        $identity = $request->validate(['birth_place' => ['required', 'string', 'max:150'], 'birth_date' => ['required', 'date', 'before_or_equal:today'], 'no_id_msh' => ['nullable', 'string', 'max:100'], 'photo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048']]);
+        $identity = $request->validate(['certificate_number' => ['nullable', 'string', 'max:255', 'regex:~^[A-Za-z0-9][A-Za-z0-9 ._/-]*$~D'], 'birth_place' => ['required', 'string', 'max:150'], 'birth_date' => ['required', 'date', 'before_or_equal:today'], 'no_id_msh' => ['nullable', 'string', 'max:100'], 'photo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048']]);
         $certificate = DB::transaction(function () use ($request, $exam, $participant, $service, $identity) {
             $exam = Exam::whereKey($exam->id)->lockForUpdate()->firstOrFail();
             $person = $service->participants($request->user(), $exam)->whereKey($participant)->lockForUpdate()->firstOrFail();
@@ -60,6 +60,7 @@ class CertificateController extends Controller
             } else {
                 $certificate->number = 'KKI/'.strtoupper($exam->exam_type).'/'.$exam->id.'/'.str_pad($person->id, 6, '0', STR_PAD_LEFT).'/'.$exam->execution_date->format('Y');
             }
+            $certificate->number = app(\App\Services\CertificateNumbers::class)->resolve($exam, $person, $identity['certificate_number'] ?? ($person->certificate_identity['certificate_number'] ?? null), $certificate);
             $snapshot['number'] = $certificate->number;
             $certificate->snapshot = $snapshot; $certificate->issued_by = $request->user()->id; $certificate->save();
             $snapshot = \App\Services\CertificateVerificationLinks::attach($snapshot, $certificate->id);
@@ -131,9 +132,23 @@ class CertificateController extends Controller
     {
         $service->authorizeIssuance($request->user(), $exam);
         $person = $service->participants($request->user(), $exam)->findOrFail($participant);
-        $identity = $request->validate(['birth_place' => ['nullable', 'string', 'max:150'], 'birth_date' => ['nullable', 'date', 'before_or_equal:today'], 'no_id_msh' => ['nullable', 'string', 'max:100'], 'photo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048']]);
-        $identity['photo'] = $request->hasFile('photo') ? $request->file('photo')->store('certificates/photos', 'public') : ($person->certificate_identity['photo'] ?? null);
-        $person->certificate_identity = $identity; $person->save();
+        $identity = $request->validate(['certificate_number' => ['nullable', 'string', 'max:255', 'regex:~^[A-Za-z0-9][A-Za-z0-9 ._/-]*$~D'], 'birth_place' => ['nullable', 'string', 'max:150'], 'birth_date' => ['nullable', 'date', 'before_or_equal:today'], 'no_id_msh' => ['nullable', 'string', 'max:100'], 'photo' => ['nullable', 'image', 'mimes:png,jpg,jpeg', 'max:2048']]);
+        DB::transaction(function () use ($request, $exam, $person, $identity) {
+            Exam::whereKey($exam->id)->lockForUpdate()->firstOrFail();
+            $person = $person->newQuery()->whereKey($person->id)->lockForUpdate()->firstOrFail();
+            $certificate = ExamCertificate::where('exam_participant_id', $person->id)->lockForUpdate()->first();
+            $number = app(\App\Services\CertificateNumbers::class)->resolve($exam, $person, $identity['certificate_number'] ?? null, $certificate);
+            if ($certificate && $certificate->number !== $number) {
+                $history = $certificate->previous_versions ?? [];
+                $history[] = ['revision' => $certificate->revision, 'snapshot' => $certificate->snapshot, 'issued_by' => $certificate->issued_by, 'issued_at' => $certificate->updated_at->toIso8601String(), 'sent_at' => $certificate->sent_at?->toIso8601String(), 'sent_by' => $certificate->sent_by];
+                $snapshot = $certificate->snapshot;
+                $snapshot['number'] = $number;
+                $certificate->forceFill(['number' => $number, 'snapshot' => $snapshot, 'previous_versions' => $history, 'revision' => $certificate->revision + 1, 'issued_by' => $request->user()->id, 'sent_at' => null, 'sent_by' => null])->save();
+            }
+            $identity['photo'] = $request->hasFile('photo') ? $request->file('photo')->store('certificates/photos', 'public') : ($person->certificate_identity['photo'] ?? null);
+            $person->certificate_identity = $identity;
+            $person->save();
+        });
         return redirect()->route('admin.exams.show', $exam)->with('success', 'Data sertifikat peserta disimpan.');
     }
 

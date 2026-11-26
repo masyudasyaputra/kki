@@ -31,7 +31,7 @@ class CertificateDelivery
                 if (in_array('no_id_msh', $keys, true) && empty($identity['no_id_msh'])) {
                     throw ValidationException::withMessages(['certificate' => 'Masukkan Nomor ID MSH KKI peserta melalui tombol Data sertifikat.']);
                 }
-                $number = 'KKI/'.strtoupper($exam->exam_type).'/'.$exam->id.'/'.str_pad($person->id, 6, '0', STR_PAD_LEFT).'/'.$exam->execution_date->format('Y');
+                $number = app(CertificateNumbers::class)->resolve($exam, $person, $identity['certificate_number'] ?? null);
                 $snapshot['number'] = $number;
                 $snapshot['photo'] = $identity['photo'] ?? null;
                 $certificate = ExamCertificate::create(['exam_participant_id' => $person->id, 'issued_by' => $actor->id, 'number' => $number, 'snapshot' => $snapshot]);

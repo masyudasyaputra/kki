@@ -34,6 +34,7 @@ class OfficialAppointmentTest extends TestCase
         });
         (require database_path('migrations/2026_11_15_000002_link_officials_to_users.php'))->up();
         (require database_path('migrations/2026_11_15_000003_add_official_numbers.php'))->up();
+        (require database_path('migrations/2026_11_26_000001_update_official_registration_numbers.php'))->up();
         Schema::create('access_audits', function (Blueprint $t) {
             $t->id(); $t->integer('actor_id')->nullable(); $t->integer('target_id')->nullable();
             $t->integer('exam_id')->nullable(); $t->string('event'); $t->json('before'); $t->json('after'); $t->timestamps();
@@ -163,10 +164,12 @@ class OfficialAppointmentTest extends TestCase
         $this->assertNull($user->official);
         $this->actingAs($actor)->post(route('admin.users.appoint', $user), $this->payload())->assertRedirect();
         $official = Official::where('user_id', $user->id)->firstOrFail();
-        $original = 'PGR-SMT-'.str_pad((string) $user->id, 6, '0', STR_PAD_LEFT);
+        $original = 'PGR-SMT-0001-000001-'.now()->addYear()->format('Y');
         $this->assertSame($original, $official->official_number);
         $this->post(route('admin.users.appoint', $user), $this->payload(['province_id' => 2, 'city_id' => 2]))->assertRedirect();
-        $this->assertSame($original, $official->fresh()->official_number);
+        $this->assertSame($official->registration_sequence, $official->fresh()->registration_sequence);
+        $this->assertNotSame($original, $official->fresh()->official_number);
+        $original = $official->fresh()->official_number;
         $data = ['mode' => 'manual', 'number' => 'pgr-smt-009999', 'expected_number' => $original, 'reason' => 'Koreksi arsip'];
         $this->put(route('admin.official-numbers.update', $official), $data)->assertForbidden();
         $admin = $this->account('super_admin');
@@ -193,4 +196,70 @@ class OfficialAppointmentTest extends TestCase
         $this->assertSame($original, $second->fresh()->official_number);
         $this->assertDatabaseMissing('access_audits', ['event' => 'official.number.updated']);
     }
+    public function test_central_assignment_can_be_revised_and_the_id_tracks_the_sk_year(): void
+    {
+        $actor = $this->account('pb'); $user = $this->account('member');
+        $data = $this->payload(['level' => 'pusat', 'province_id' => null, 'city_id' => null, 'sk_expiry_date' => '2030-12-31']);
+        $this->actingAs($actor)->post(route('admin.users.appoint', $user), $data)->assertSessionHasNoErrors();
+        $official = $user->official()->firstOrFail();
+        $this->assertSame('PGR-PP-000001-2030', $official->official_number);
+        $this->get(route('admin.officials.create', ['user_id' => $user->id]))->assertOk()->assertSee('Pengurus Pusat')->assertSee('2030-12-31');
+        Schema::create('belt_levels', function (Blueprint $t) { $t->id(); $t->string('name'); $t->boolean('is_active')->default(true); });
+        Schema::create('dojos', function (Blueprint $t) { $t->id(); $t->integer('city_id')->nullable(); $t->string('name'); });
+        $this->get(route('admin.users.edit', $user))->assertOk()->assertSee('Perbarui penetapan pengurus');
+        $this->put(route('admin.officials.update', $official), array_replace($data, ['position' => 'Ketua Bidang', 'sk_expiry_date' => '2032-12-31']))->assertSessionHasNoErrors();
+        $this->assertSame('PGR-PP-000001-2032', $official->fresh()->official_number);
+        $this->assertSame('Ketua Bidang', $official->fresh()->position);
+    }
+
+    public function test_deleted_official_sequence_is_reserved_and_manual_number_survives_revision(): void
+    {
+        $actor = $this->account('pb');
+        $data = $this->payload(['name' => 'Pengurus Manual', 'level' => 'provinsi', 'city_id' => null, 'sk_expiry_date' => '2030-12-31']);
+        $this->actingAs($actor)->post(route('admin.officials.store'), $data)->assertSessionHasNoErrors();
+        $first = Official::firstOrFail();
+        $this->assertStringEndsWith('-000001-2030', $first->official_number);
+        $this->delete(route('admin.officials.destroy', $first))->assertRedirect();
+        $this->post(route('admin.officials.store'), $data)->assertSessionHasNoErrors();
+        $second = Official::firstOrFail();
+        $this->assertSame(2, $second->registration_sequence);
+        $second->forceFill(['official_number' => 'PGR-ARSIP-001', 'official_number_manual' => true])->saveQuietly();
+        $this->put(route('admin.officials.update', $second), array_replace($data, ['sk_expiry_date' => '2031-01-01']))->assertSessionHasNoErrors();
+        $this->assertSame('PGR-ARSIP-001', $second->fresh()->official_number);
+    }
+
+    public function test_official_verification_permissions_are_scoped_to_their_levels_and_regions(): void
+    {
+        $province = $this->account('verifikator_pengurus_provinsi');
+        $branch = $this->account('verifikator_pengurus_pengcab'); $branch->update(['city_id' => 1]);
+        $central = $this->account('verifikator_pengurus_pusat');
+        $user = $this->account('member'); $user->update(['city_id' => 1]);
+        $outside = $this->account('member', 2); $outside->update(['city_id' => 2]);
+        $this->actingAs($branch)->get(route('dashboard'))->assertRedirect(route('admin.official-verifications.index', [], false));
+        $this->get(route('admin.officials.create', ['user_id' => $user->id]))->assertOk();
+        $this->post(route('admin.users.appoint', $user), $this->payload())->assertSessionHasNoErrors();
+        $this->post(route('admin.users.appoint', $outside), $this->payload(['province_id' => 2, 'city_id' => 2]))->assertForbidden();
+        $this->post(route('admin.users.appoint', $user), $this->payload(['level' => 'provinsi']))->assertSessionHasErrors('level');
+        $this->get(route('admin.users.index'))->assertForbidden();
+        $this->actingAs($province)->post(route('admin.users.appoint', $user), $this->payload(['level' => 'provinsi', 'city_id' => null]))->assertSessionHasNoErrors();
+        $this->post(route('admin.users.appoint', $user), $this->payload(['level' => 'pusat']))->assertSessionHasErrors('level');
+        $this->actingAs($central)->post(route('admin.users.appoint', $outside), $this->payload(['level' => 'pusat', 'province_id' => null, 'city_id' => null]))->assertSessionHasNoErrors();
+        $this->assertSame('pb', $outside->fresh()->role);
+        $this->actingAs($branch)->get(route('admin.officials.edit', $outside->official))->assertForbidden();
+    }
+
+    public function test_number_migration_updates_automatic_ids_and_preserves_manual_ids(): void
+    {
+        $migration = require database_path('migrations/2026_11_26_000001_update_official_registration_numbers.php');
+        $migration->down();
+        DB::table('officials')->insert([
+            ['name' => 'Pusat Lama', 'position' => 'Sekretaris', 'level' => 'pusat', 'sk_number' => 'SK/PP', 'sk_expiry_date' => '2030-12-31', 'official_number' => 'PGR-UNK-000001', 'official_number_manual' => false],
+            ['name' => 'Nomor Manual', 'position' => 'Sekretaris', 'level' => 'pusat', 'sk_number' => 'SK/PP', 'sk_expiry_date' => '2030-12-31', 'official_number' => 'PGR-ARSIP-123', 'official_number_manual' => true],
+        ]);
+        $migration->up();
+        $this->assertDatabaseHas('officials', ['name' => 'Pusat Lama', 'official_number' => 'PGR-PP-000001-2030', 'registration_sequence' => 1]);
+        $this->assertDatabaseHas('officials', ['name' => 'Nomor Manual', 'official_number' => 'PGR-ARSIP-123', 'registration_sequence' => 2]);
+        $this->assertDatabaseHas('registration_counters', ['type' => 'official', 'last_number' => 2]);
+    }
+
 }

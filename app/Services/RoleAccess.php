@@ -13,6 +13,9 @@ class RoleAccess
     ];
 
     public const PERMISSIONS = [
+        'verifikator_pengurus_pusat' => 'Admin Verifikasi Pengurus Pusat',
+        'verifikator_pengurus_provinsi' => 'Admin Verifikasi Pengurus Provinsi',
+        'verifikator_pengurus_pengcab' => 'Admin Verifikasi Pengurus Kabupaten / Kota',
         'verifikator_anggota_pb' => 'Verifikator Keanggotaan Pusat',
         'verifikator_pengprov' => 'Verifikator Keanggotaan Provinsi',
         'verifikator_pengcab' => 'Verifikator Keanggotaan Kabupaten / Kota',
@@ -21,7 +24,25 @@ class RoleAccess
         'pengelola_sertifikat_pb' => 'Pengelola Sertifikat Pengurus Pusat',
     ];
 
-    public const NATIONAL = ['super_admin', 'pb', 'dewan_guru_pusat', 'verifikator_anggota_pb', 'verifikator_ujian_pb', 'pengelola_sertifikat_pb'];
+    public const NATIONAL = ['super_admin', 'pb', 'dewan_guru_pusat', 'verifikator_anggota_pb', 'verifikator_ujian_pb', 'pengelola_sertifikat_pb', 'verifikator_pengurus_pusat'];
+
+    public const OFFICIAL_REVIEWERS = ['verifikator_pengurus_pusat', 'verifikator_pengurus_provinsi', 'verifikator_pengurus_pengcab'];
+
+    public static function reviewsOfficials(User $user): bool
+    {
+        return $user->hasRole(array_merge(['super_admin', 'pb', 'pengprov', 'admin_pengprov'], self::OFFICIAL_REVIEWERS));
+    }
+
+    public static function nationalOfficials(User $user): bool
+    {
+        return self::managesUsers($user) || $user->hasRole('verifikator_pengurus_pusat');
+    }
+
+    public static function officialLevels(User $user): array
+    {
+        if (self::nationalOfficials($user)) return ['pusat', 'provinsi', 'pengcab'];
+        return $user->hasRole('verifikator_pengurus_provinsi') ? ['provinsi', 'pengcab'] : ['pengcab'];
+    }
 
     public static function managesUsers(User $user): bool
     {

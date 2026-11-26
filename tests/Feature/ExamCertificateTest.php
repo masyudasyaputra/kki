@@ -661,4 +661,38 @@ class ExamCertificateTest extends TestCase
         $this->assertSame(2, $person->user->fresh()->belt_level_id);
         $this->assertDatabaseCount('belt_histories', 2);
     }
+    public function test_custom_certificate_number_is_used_in_issue_delivery_and_revision(): void
+    {
+        [$exam, $person, $score, $template] = $this->fixture();
+        $signer = $this->actor('member'); $signer->update(['belt_level_id' => 2]);
+        $template->update(['settings' => array_replace($template->settings, ['signer_left_user_id' => $signer->id, 'signer_right_user_id' => $signer->id])]);
+        $identity = ['certificate_number' => 'KKI/CUSTOM/0001/2030', 'birth_place' => 'Medan', 'birth_date' => '2000-01-01'];
+        $this->post(route('admin.exams.certificates.identity', [$exam, $person]), $identity)->assertSessionHasNoErrors();
+        $this->post(route('admin.exams.certificates.send', [$exam, $person]))->assertSessionHasNoErrors();
+        $certificate = ExamCertificate::where('exam_participant_id', $person->id)->firstOrFail();
+        $this->assertSame($identity['certificate_number'], $certificate->number);
+        $this->assertSame($certificate->number, $certificate->snapshot['number']);
+        $this->assertNotNull($certificate->sent_at);
+        $identity['certificate_number'] = 'KKI/CUSTOM/0002/2030';
+        $this->post(route('admin.exams.certificates.identity', [$exam, $person]), $identity)->assertSessionHasNoErrors();
+        $certificate->refresh();
+        $this->assertSame('KKI/CUSTOM/0002/2030', $certificate->number);
+        $this->assertSame($certificate->number, $certificate->snapshot['number']);
+        $this->assertNull($certificate->sent_at);
+        $this->assertSame('KKI/CUSTOM/0001/2030', $certificate->previous_versions[0]['snapshot']['number']);
+        $this->post(route('admin.exams.certificates.issue', [$exam, $person]), $identity)->assertSessionHasNoErrors();
+        $this->assertSame('KKI/CUSTOM/0002/2030', $certificate->fresh()->number);
+    }
+
+    public function test_custom_certificate_number_rejects_duplicates_and_out_of_scope_actors(): void
+    {
+        [$exam, $person] = $this->fixture();
+        ExamCertificate::create(['exam_participant_id' => 999, 'issued_by' => auth()->id(), 'number' => 'DUPLICATE/001', 'snapshot' => []]);
+        $url = route('admin.exams.certificates.identity', [$exam, $person]);
+        $this->post($url, ['certificate_number' => 'DUPLICATE/001'])->assertSessionHasErrors('certificate_number');
+        $this->assertNull($person->fresh()->certificate_identity);
+        $this->post($url, ['certificate_number' => '<invalid>'])->assertSessionHasErrors('certificate_number');
+        $this->actingAs($this->actor('pengprov', 2))->post($url, ['certificate_number' => 'OTHER/001'])->assertForbidden();
+    }
+
 }

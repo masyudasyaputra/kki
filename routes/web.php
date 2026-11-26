@@ -152,10 +152,12 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
             Route::get('/finance/export', [FinanceController::class, 'export'])->name('finance.export');
         });
 
-        Route::middleware('role:pb,super_admin,pengprov,admin_pengprov')->group(function () {
+        Route::middleware('role:pb,super_admin,pengprov,admin_pengprov,verifikator_pengurus_pusat,verifikator_pengurus_provinsi,verifikator_pengurus_pengcab')->group(function () {
             Route::get('/official-verifications', [\App\Http\Controllers\Admin\OfficialVerificationController::class, 'index'])->name('official-verifications.index');
             Route::get('/official-verifications/{user}', [\App\Http\Controllers\Admin\OfficialVerificationController::class, 'show'])->name('official-verifications.show');
             Route::post('/users/{user}/appointment', [UserController::class, 'appoint'])->name('users.appoint');
+        });
+        Route::middleware('role:pb,super_admin,pengprov,admin_pengprov')->group(function () {
             Route::resource('users', UserController::class)->except('show');
         });
         Route::middleware('role:pb,super_admin')->group(function () {
@@ -270,13 +272,14 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
                 ->name('payments.ujian.create');
         });
 
+        Route::resource('officials', OfficialController::class)->middleware('role:pb,super_admin,pengprov,pengcab,admin_pengprov,admin_pengcab,verifikator_pengurus_pusat,verifikator_pengurus_provinsi,verifikator_pengurus_pengcab');
+
         /**
          * 2) AKSES STRUKTURAL (PB, Pengprov, Pengcab)
          */
         Route::middleware(['role:pb,super_admin,pengprov,pengcab,admin_pengprov,admin_pengcab'])->group(function () {
 
             Route::resource('dojos', DojoController::class);
-            Route::resource('officials', OfficialController::class);
 
             Route::resource('exams', ExamController::class)->except(['index', 'show']);
 
