@@ -164,7 +164,7 @@ class OfficialAppointmentTest extends TestCase
         $this->assertNull($user->official);
         $this->actingAs($actor)->post(route('admin.users.appoint', $user), $this->payload())->assertRedirect();
         $official = Official::where('user_id', $user->id)->firstOrFail();
-        $original = 'PGR-SMT-0001-000001-'.now()->addYear()->format('Y');
+        $original = 'PGR-SMT-UNK-000001-'.now()->addYear()->format('Y');
         $this->assertSame($original, $official->official_number);
         $this->post(route('admin.users.appoint', $user), $this->payload(['province_id' => 2, 'city_id' => 2]))->assertRedirect();
         $this->assertSame($official->registration_sequence, $official->fresh()->registration_sequence);

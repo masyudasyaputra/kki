@@ -8,8 +8,8 @@ class City extends Model
 {
     public function getRegistrationCodeAttribute(): string
     {
-        $code = preg_replace('/[^A-Z0-9]/', '', strtoupper((string) $this->code));
-        return $code ?: ($this->id ? str_pad((string) $this->id, 4, '0', STR_PAD_LEFT) : 'UNK');
+        $code = trim((string) $this->code);
+        return preg_match('/^\d{2}\.?\d{2}$/D', $code) ? str_replace('.', '', $code) : 'UNK';
     }
 
     protected $fillable = ['province_id', 'code', 'name'];

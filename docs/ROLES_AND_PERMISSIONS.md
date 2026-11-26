@@ -42,7 +42,7 @@ Hak verifikasi pengurus dipilih di **Manajemen User → Hak akses tambahan**. Ha
 - Pengcab: `PGR-SMT-1271-000003-2030`.
 - Enam digit adalah nomor urut permanen pengurus; empat digit terakhir mengikuti tahun akhir SK. Perubahan wilayah/tahun SK memperbarui nomor otomatis tanpa mengganti urutannya. Nomor manual tetap dipertahankan sampai diubah di Manajemen Nomor ID.
 - Migrasi `2026_11_26_000001_update_official_registration_numbers` menyesuaikan nomor otomatis yang sudah ada. Nomor manual tidak diubah. Penghapusan pengurus tidak menurunkan penghitung di `registration_counters`; nomor urut yang terhapus tidak dipakai ulang.
-- Dojo: `KKI-SMT-1271-000001`, ditampilkan juga pada depan kartu anggota dan PNG. Kode provinsi memakai `member_prefix`, kode kota memakai `cities.code` tanpa tanda baca; jika belum diisi, sistem memakai ID kota empat digit. Urutan dojo memakai ID rekornya dan tidak mengurutkan ulang dojo lain ketika data dihapus.
+- Dojo: `KKI-SMT-1271-000001`, ditampilkan juga pada depan kartu anggota dan PNG. Kode provinsi memakai `member_prefix`, kode kota memakai `cities.code` tanpa tanda baca; jika belum diisi atau tidak valid, ditandai `UNK` sampai kode Kemendagri dilengkapi. Urutan dojo memakai ID rekornya dan tidak mengurutkan ulang dojo lain ketika data dihapus.
 - Nomor e-sertifikat dapat diisi pada **Data sertifikat → Nomor registrasi e-sertifikat (custom)**. Kosongkan untuk nomor otomatis pada penerbitan baru. Nomor harus unik. Mengubah nomor sertifikat terbit menyimpan riwayat, menaikkan revisi, dan membatalkan status kirim agar versi baru dikirim ulang.
 
 ## Penugasan dan proses ujian
