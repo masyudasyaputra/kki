@@ -9,6 +9,7 @@ class MembershipReview
 {
     public const ROLES = [
         'verifikator_anggota_pb' => 'Verifikator Keanggotaan Pusat',
+        'verifikator_sabuk_hitam' => 'Verifikator Data Sabuk Hitam (DAN)',
         'verifikator_pengprov' => 'Verifikator Keanggotaan Provinsi',
         'verifikator_pengcab' => 'Verifikator Keanggotaan Kabupaten / Kota',
     ];
@@ -20,7 +21,7 @@ class MembershipReview
     {
         if ($actor->hasRole(['super_admin', 'pb'])) return 'pb';
         foreach (array_keys(self::ROLES) as $role) {
-            if ($actor->hasRole($role)) return $role === 'verifikator_anggota_pb' ? 'pb' : str_replace('verifikator_', '', $role);
+            if ($actor->hasRole($role)) return in_array($role, ['verifikator_anggota_pb', 'verifikator_sabuk_hitam'], true) ? 'pb' : str_replace('verifikator_', '', $role);
         }
         abort(403);
     }
@@ -32,6 +33,15 @@ class MembershipReview
         // Registration type determines eligibility for membership verification.
         if ($query->getModel()->getConnection()->getSchemaBuilder()->hasColumn('users', 'registration_type')) {
             $query->where(fn ($q) => $q->whereNull('registration_type')->orWhere('registration_type', '!=', 'official'));
+        }
+        if ($actor->hasRole('verifikator_sabuk_hitam') && !$actor->hasRole(['super_admin', 'pb', 'verifikator_anggota_pb'])) {
+            $black = fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%hitam%']);
+            if ($query->getModel()->getConnection()->getSchemaBuilder()->hasColumn('users', 'requested_belt_level_id')) {
+                $query->where(fn ($q) => $q->whereHas('requestedBelt', $black)
+                    ->orWhere(fn ($r) => $r->whereNull('requested_belt_level_id')->whereHas('beltLevel', $black)));
+            } else {
+                $query->whereHas('beltLevel', $black);
+            }
         }
         if ($this->level($actor) !== 'pb') {
             if ($query->getModel()->getConnection()->getSchemaBuilder()->hasColumn('users', 'requested_belt_level_id')) {

@@ -110,7 +110,7 @@ class User extends Authenticatable
         $roles = array_merge($roles, is_array($this->positions) ? $this->positions : []);
         $roles[] = $this->role;
 
-        return array_values(array_unique(array_filter($roles)));
+        return \App\Services\RoleAccess::effectiveRoles($roles);
     }
 
     // --- RELASI ---

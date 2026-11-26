@@ -136,6 +136,11 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
             Route::get('/wasit-juri/{qualification}/edit', [\App\Http\Controllers\Admin\QualificationReviewController::class, 'show'])->name('qualifications.show');
             Route::post('/wasit-juri/{qualification}', [\App\Http\Controllers\Admin\QualificationReviewController::class, 'store'])->name('qualifications.store');
         });
+        Route::get('/layanan', [\App\Http\Controllers\Admin\ServiceDeskController::class, 'index'])->name('services.index');
+        Route::get('/layanan/arsip-sk', [\App\Http\Controllers\Admin\ServiceDeskController::class, 'archives'])->name('services.archives');
+        Route::get('/layanan/ekspor-wilayah', [\App\Http\Controllers\Admin\ServiceDeskController::class, 'exportRegions'])->name('services.export-regions');
+        Route::post('/layanan/sinkron-kode-wilayah', [\App\Http\Controllers\Admin\ServiceDeskController::class, 'syncRegions'])->middleware('throttle:3,1')->name('services.sync-regions');
+        Route::get('/access-audits', [\App\Http\Controllers\Admin\AccessAuditController::class, 'index'])->middleware('role:pb,super_admin,koordinator_nasional_sim_kki')->name('access-audits.index');
         Route::get('/sk-documents/{entity}/{id}', [\App\Http\Controllers\Admin\SkDocumentController::class, 'show'])->name('sk-documents.show');
 
         Route::middleware('role:super_admin')->group(function () {
@@ -162,12 +167,12 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
         });
         Route::middleware('role:pb,super_admin')->group(function () {
             Route::put('/exam-reviews/{exam}/reviewers', [\App\Http\Controllers\Admin\ExamReviewController::class, 'assign'])->name('exam-reviews.assign');
-            Route::get('/access-audits', [\App\Http\Controllers\Admin\AccessAuditController::class, 'index'])->name('access-audits.index');
+
             Route::post('/belt-levels/restore-defaults', [\App\Http\Controllers\Admin\BeltLevelController::class, 'restoreDefaults'])->name('belt-levels.restore-defaults');
             Route::resource('belt-levels', \App\Http\Controllers\Admin\BeltLevelController::class)->except(['show', 'destroy']);
         });
         Route::get('/oversight', [\App\Http\Controllers\Admin\OversightController::class, 'index'])->middleware('role:pb,super_admin,dewan_guru_pusat')->name('oversight');
-        Route::middleware('role:pb,super_admin,pengprov,admin_pengprov')->group(function () {
+        Route::middleware('role:pb,super_admin,pengprov,admin_pengprov,adaptasi_database_digitalisasi')->group(function () {
             Route::get('/regions', [\App\Http\Controllers\Admin\RegionController::class, 'index'])->name('regions.index');
             Route::post('/regions', [\App\Http\Controllers\Admin\RegionController::class, 'store'])->name('regions.store');
         });
@@ -186,7 +191,7 @@ Route::middleware(['auth', 'verified', \App\Http\Middleware\AccessControl::class
             Route::post('/certificate-templates/{template}/layout', [\App\Http\Controllers\Admin\CertificateTemplateController::class, 'saveLayout'])->name('certificate-templates.layout.save');
         });
 
-        Route::middleware('role:pb,super_admin,verifikator_anggota_pb,verifikator_pengprov,verifikator_pengcab')->group(function () {
+        Route::middleware('role:pb,super_admin,verifikator_anggota_pb,verifikator_sabuk_hitam,verifikator_pengprov,verifikator_pengcab')->group(function () {
             Route::get('/verifikasi-anggota', [\App\Http\Controllers\Admin\MembershipVerificationController::class, 'index'])->name('verifications.index');
             Route::get('/verifikasi-anggota/{member}', [\App\Http\Controllers\Admin\MembershipVerificationController::class, 'show'])->name('verifications.show');
             Route::post('/verifikasi-anggota/{member}', [\App\Http\Controllers\Admin\MembershipVerificationController::class, 'store'])->name('verifications.store');

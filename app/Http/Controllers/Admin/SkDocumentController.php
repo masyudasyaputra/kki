@@ -35,7 +35,7 @@ class SkDocumentController extends Controller
     private function provincePath($actor, int $id): ?string
     {
         $province = Province::findOrFail($id);
-        $allowed = RoleAccess::managesUsers($actor)
+        $allowed = RoleAccess::archives($actor)
             || ($actor->hasRole(['pengprov', 'admin_pengprov']) && (int) $actor->province_id === (int) $province->id);
         abort_unless($allowed, 403);
 
@@ -45,7 +45,7 @@ class SkDocumentController extends Controller
     private function officialPath($actor, int $id): ?string
     {
         $official = Official::findOrFail($id);
-        $allowed = RoleAccess::nationalOfficials($actor)
+        $allowed = (RoleAccess::nationalOfficials($actor) || RoleAccess::archives($actor))
             || ($actor->hasRole(['pengprov', 'admin_pengprov', 'verifikator_pengurus_provinsi']) && (int) $actor->province_id === (int) $official->province_id)
             || ($official->city_id && $actor->hasRole(['pengcab', 'admin_pengcab', 'verifikator_pengurus_pengcab']) && (int) $actor->city_id === (int) $official->city_id);
         abort_unless($allowed, 403);
@@ -56,7 +56,7 @@ class SkDocumentController extends Controller
     private function dojoPath($actor, int $id): ?string
     {
         $dojo = Dojo::with('city')->findOrFail($id);
-        $allowed = RoleAccess::managesUsers($actor)
+        $allowed = RoleAccess::archives($actor)
             || ($actor->hasRole(['pengprov', 'admin_pengprov']) && (int) $actor->province_id === (int) $dojo->city?->province_id)
             || ($actor->hasRole(['pengcab', 'admin_pengcab']) && (int) $actor->city_id === (int) $dojo->city_id)
             || ($actor->hasRole('admin_dojo') && (int) $actor->dojo_id === (int) $dojo->id);

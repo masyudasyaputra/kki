@@ -13,7 +13,7 @@ class RegionController extends Controller
     {
         $filters = $request->validate(['search' => ['nullable', 'string', 'max:150']]);
         $actor = $request->user();
-        $provinces = Province::when(!\App\Services\RoleAccess::managesUsers($actor), fn ($q) => $q->whereKey($actor->province_id ?? 0))->orderBy('name')->get();
+        $provinces = Province::when(!\App\Services\RoleAccess::managesRegionData($actor), fn ($q) => $q->whereKey($actor->province_id ?? 0))->orderBy('name')->get();
         $baseCities = City::whereIn('province_id', $provinces->modelKeys());
         $cityCount = (clone $baseCities)->count();
         $districtCount = District::whereIn('city_id', (clone $baseCities)->select('id'))->count();
@@ -36,7 +36,7 @@ class RegionController extends Controller
             'province_id' => 'required_if:type,city|nullable|exists:provinces,id',
             'city_id' => 'required_if:type,district|nullable|exists:cities,id']);
         $province = $data['type'] === 'city' ? (int) $data['province_id'] : (int) City::findOrFail($data['city_id'])->province_id;
-        abort_unless(\App\Services\RoleAccess::managesUsers($request->user()) || ($request->user()->province_id && (int) $request->user()->province_id === $province), 403);
+        abort_unless(\App\Services\RoleAccess::managesRegionData($request->user()) || ($request->user()->province_id && (int) $request->user()->province_id === $province), 403);
         $table = $data['type'] === 'city' ? 'cities' : 'districts';
         $parent = $data['type'] === 'city' ? 'province_id' : 'city_id';
         $request->validate(['name' => [Rule::unique($table)->where($parent, $data[$parent])]]);

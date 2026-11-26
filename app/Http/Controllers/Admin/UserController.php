@@ -206,7 +206,7 @@ class UserController extends Controller
             abort_unless($request->user()->province_id && (int)$request->province_id === (int)$request->user()->province_id, 403);
         }
         if ($target && $target->id === $request->user()->id && $target->hasRole(['pb', 'super_admin'])) {
-            abort_unless(array_intersect($positions, ['pb', 'super_admin']), 422, 'Akun pengelola tidak boleh mencabut akses pengelolaan dirinya sendiri.');
+            abort_unless(array_intersect(RoleAccess::effectiveRoles($positions), ['pb', 'super_admin']), 422, 'Akun pengelola tidak boleh mencabut akses pengelolaan dirinya sendiri.');
         }
         $result = collect($data)->only(['name', 'email', 'is_active', 'first_coach'])->all() + [
             'role' => RoleAccess::primary($positions), 'positions' => $positions, 'roles' => $permissions,

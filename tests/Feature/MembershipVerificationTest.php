@@ -331,4 +331,46 @@ class MembershipVerificationTest extends TestCase
         $this->actingAs($admin)->get(route('admin.users.edit', $admin))->assertOk();
         $this->get('/dashboard')->assertRedirect(route('admin.dashboard'));
     }
+    public function test_all_five_service_positions_are_assigned_nationally_with_their_operational_access(): void
+    {
+        $admin = $this->actor('pb');
+        $this->actingAs($admin)->get(route('admin.users.create'))->assertOk()->assertSee('Penanggung Jawab Layanan Bantuan');
+        foreach (\App\Services\RoleAccess::SERVICE_POSITIONS as $key => $label) {
+            $payload = ['name' => $label, 'email' => $key.'@example.test', 'password' => 'Password123!', 'positions' => [$key], 'roles' => []];
+            $this->actingAs($admin)->post(route('admin.users.store'), $payload)->assertSessionHasNoErrors()->assertRedirect(route('admin.users.index'));
+            $account = User::where('email', $payload['email'])->firstOrFail();
+            $this->assertSame([$key], $account->positions);
+            $this->assertSame($key, $account->role);
+            $this->assertSame([], $account->roles);
+            $this->assertNull($account->province_id);
+            $this->assertSame($key === 'admin_utama_bantuan_teknis', \App\Services\RoleAccess::managesUsers($account));
+            if ($key === 'admin_utama_bantuan_teknis') {
+                $this->actingAs($account)->put(route('admin.users.update', $account), $payload + ['is_active' => 1])->assertSessionHasNoErrors();
+                $this->assertSame($key, $account->fresh()->role);
+            }
+            $this->actingAs($account)->get(route('dashboard'))->assertRedirect(route('admin.services.index', [], false));
+            if ($key !== 'admin_utama_bantuan_teknis') $this->get(route('admin.users.index'))->assertForbidden();
+            $this->actingAs($this->actor('pengprov'))->put(route('admin.users.update', $account), $payload + ['is_active' => 1])->assertForbidden();
+        }
+        $regional = $this->actor('pengprov');
+        $this->actingAs($regional)->get(route('admin.users.create'))->assertOk()->assertDontSee('Penanggung Jawab Layanan Bantuan');
+        $this->post(route('admin.users.store'), ['name' => 'Tidak Berwenang', 'email' => 'forged-service@example.test', 'password' => 'Password123!', 'positions' => ['koordinator_nasional_sim_kki'], 'roles' => [], 'province_id' => 1])->assertSessionHasErrors('positions.0');
+    }
+
+    public function test_dan_service_can_verify_black_belts_but_cannot_access_colored_belts_or_accounts(): void
+    {
+        DB::table('belt_levels')->insert([['id' => 1, 'name' => 'Hitam', 'kyu_dan' => 'DAN I'], ['id' => 2, 'name' => 'Putih', 'kyu_dan' => 'Kyu 7']]);
+        $black = $this->member(); $black->update(['belt_level_id' => 1]);
+        $white = $this->member(); $white->update(['belt_level_id' => 2]);
+        $actor = $this->actor('verifikasi_data_sabuk_hitam');
+        $this->actingAs($actor)->get(route('admin.verifications.show', $black))->assertOk();
+        $this->get(route('admin.verifications.show', $white))->assertNotFound();
+        $this->post(route('admin.verifications.store', $white), $this->decision($white))->assertNotFound();
+        $this->post(route('admin.verifications.store', $black), $this->decision($black))->assertSessionHasNoErrors();
+        $this->assertSame('approved', $black->fresh()->verification_status);
+        $this->get(route('admin.users.index'))->assertForbidden();
+        $actor->update(['role' => 'member']);
+        $this->actingAs($actor->fresh())->get(route('admin.verifications.index'))->assertForbidden();
+    }
+
 }

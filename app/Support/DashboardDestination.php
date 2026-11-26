@@ -10,6 +10,7 @@ class DashboardDestination
     public static function url(User $user): string
     {
         $route = match (true) {
+            $user->hasRole(array_keys(\App\Services\RoleAccess::SERVICE_POSITIONS)) => 'admin.services.index',
             $user->hasRole(['super_admin', 'pb']) => 'admin.dashboard',
             $user->hasRole(\App\Services\RoleAccess::OFFICIAL_REVIEWERS) => 'admin.official-verifications.index',
             $user->hasRole('dewan_guru_pusat') => 'admin.oversight',

@@ -695,4 +695,17 @@ class ExamCertificateTest extends TestCase
         $this->actingAs($this->actor('pengprov', 2))->post($url, ['certificate_number' => 'OTHER/001'])->assertForbidden();
     }
 
+    public function test_correspondence_service_can_issue_certificates_but_cannot_edit_scores(): void
+    {
+        [$exam, $person, $score, $template] = $this->fixture();
+        $signer = $this->actor('member'); $signer->update(['belt_level_id' => 2]);
+        $template->update(['settings' => array_replace($template->settings, ['signer_left_user_id' => $signer->id, 'signer_right_user_id' => $signer->id])]);
+        $actor = $this->actor('bantuan_admin_surat_menyurat');
+        $this->actingAs($actor)->post(route('admin.exams.certificates.issue', [$exam, $person]), ['birth_place' => 'Medan', 'birth_date' => '2000-01-01', 'certificate_number' => 'KKI/ADMIN/SURAT/001'])->assertSessionHasNoErrors();
+        $this->assertDatabaseHas('exam_certificates', ['exam_participant_id' => $person->id, 'number' => 'KKI/ADMIN/SURAT/001', 'issued_by' => $actor->id]);
+        $exam->update(['status' => 'open', 'review_status' => 'draft']);
+        $this->post(route('admin.exams.scoring.store', $exam), [])->assertForbidden();
+        $this->get(route('admin.users.index'))->assertForbidden();
+    }
+
 }

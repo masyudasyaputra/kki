@@ -16,6 +16,18 @@ Jabatan disimpan dalam `users.positions`; hak tambahan dalam `users.roles`. Kolo
 
 ## Hak tambahan
 
+Peran **Penanggung Jawab Layanan Bantuan** langsung memberi fungsi berikut melalui hak efektif, tanpa menyalin izin ke database. Mencabut peran langsung mencabut hak turunannya, kecuali izin yang sama diberikan terpisah.
+
+| Peran | Fungsi |
+| --- | --- |
+| Koordinator Nasional SIM-KKI | Pemantauan nasional, ringkasan antrean/kelengkapan data, dan membaca audit |
+| Admin Utama & Bantuan Teknis Sistem | Hak pengelolaan Super Admin, termasuk akun, role, penugasan dan administrasi sistem |
+| Verifikasi Data Sabuk Hitam (DAN) | Memeriksa data anggota sabuk hitam dan pengajuan sabuk hitam beserta ijazah; tidak otomatis mengesahkan hasil ujian |
+| Bantuan Admin & Surat Menyurat | Template, penandatangan, nomor custom, penerbitan/revisi/pengiriman sertifikat serta membaca arsip SK; tidak mengubah nilai ujian atau mengelola akun |
+| Penyesuaian/Adaptasi Penggunaan Database & Digitalisasi | Laporan kelengkapan data, master wilayah, ekspor CSV wilayah, dan sinkronisasi kode dari master yang tersedia; tanpa akses akun, keputusan verifikasi, atau SQL bebas |
+
+Akun layanan masuk ke **Layanan Bantuan SIM-KKI**. Sinkronisasi dan ekspor wilayah dicatat pada audit. Sinkronisasi hanya mengisi kode untuk nama dan provinsi yang cocok; ID, relasi, dan kode yang konflik tetap dipertahankan.
+
 | Kode | Hak dan cakupan |
 | --- | --- |
 | `verifikator_pengurus_pusat` | Menetapkan dan merevisi pengurus pusat, provinsi, serta kabupaten/kota di seluruh wilayah |

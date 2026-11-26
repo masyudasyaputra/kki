@@ -144,6 +144,7 @@
                 </div>
             </details>
         @endif
+        @if(\App\Services\RoleAccess::serviceDesk($u))<a href="{{ route('admin.services.index') }}" class="sidebar-link sidebar-standalone-link {{ request()->routeIs('admin.services.*') ? 'is-active' : '' }}"><x-sidebar-icon name="organization" /><span>Layanan Bantuan SIM-KKI</span></a>@endif
         <a href="{{ route('guide') }}" class="sidebar-link sidebar-standalone-link {{ request()->routeIs('guide') ? 'is-active' : '' }}" @if(request()->routeIs('guide')) aria-current="page" @endif><x-sidebar-icon name="exam-cert" /><span>Panduan Sistem</span></a>
     </nav>
 </aside>
