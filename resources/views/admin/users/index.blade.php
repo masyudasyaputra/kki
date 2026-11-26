@@ -125,8 +125,7 @@
                                     'member' => 'bg-slate-100 text-slate-700 border-slate-200',
                                 ];
 
-                                $allRoles = collect($user->allRoles())
-                                    ->push($user->role)
+                                $allRoles = collect($user->displayRoles())
                                     ->filter()
                                     ->unique()
                                     ->values();
@@ -214,8 +213,7 @@
             <div class="md:hidden space-y-5">
                 @forelse ($users as $user)
                     @php
-                        $allRoles = collect($user->allRoles())
-                            ->push($user->role)
+                        $allRoles = collect($user->displayRoles())
                             ->filter()
                             ->unique()
                             ->values();
@@ -254,7 +252,7 @@
                                     <p class="text-[7px] font-black text-slate-400 uppercase tracking-widest mb-0.5">
                                         Roles</p>
                                     <p class="text-[10px] font-black text-slate-700 uppercase italic leading-tight">
-                                        {{ $allRoles->map(fn($r) => str_replace('_', ' ', $r))->implode(', ') }}
+                                        {{ $allRoles->map(fn($r) => \App\Services\RoleAccess::POSITIONS[$r] ?? \App\Services\RoleAccess::PERMISSIONS[$r] ?? str_replace('_', ' ', $r))->implode(', ') }}
                                     </p>
                                 </div>
 

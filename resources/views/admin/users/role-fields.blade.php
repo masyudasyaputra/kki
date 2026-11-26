@@ -1,5 +1,5 @@
 @php
-    $selectedPositions = old('positions', isset($user) ? ($user->positions ?? array_values(array_intersect($user->allRoles(), array_keys(\App\Services\RoleAccess::POSITIONS)))) : ['member']);
+    $selectedPositions = old('positions', isset($user) ? ($user->positions ?? array_values(array_intersect($user->assignedRoles(), array_keys(\App\Services\RoleAccess::POSITIONS)))) : ['member']);
     $selectedPermissions = old('roles', isset($user) ? $user->roles : []);
 @endphp
 <div class="space-y-5">

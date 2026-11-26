@@ -106,11 +106,24 @@ class User extends Authenticatable
      */
     public function allRoles(): array
     {
+        return \App\Services\RoleAccess::effectiveRoles($this->assignedRoles());
+    }
+
+    public function assignedRoles(): array
+    {
         $roles = is_array($this->roles) ? $this->roles : [];
         $roles = array_merge($roles, is_array($this->positions) ? $this->positions : []);
         $roles[] = $this->role;
 
-        return \App\Services\RoleAccess::effectiveRoles($roles);
+        return array_values(array_unique(array_filter($roles)));
+    }
+
+    public function displayRoles(): array
+    {
+        $roles = $this->assignedRoles();
+        $inherited = [];
+        foreach ($roles as $role) $inherited = array_merge($inherited, \App\Services\RoleAccess::SERVICE_PERMISSIONS[$role] ?? []);
+        return array_values(array_diff($roles, $inherited));
     }
 
     // --- RELASI ---
