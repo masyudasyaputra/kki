@@ -70,7 +70,7 @@ class MemberController extends Controller
             ->with(['province', 'city', 'dojo', 'beltLevel'])->findOrFail($member);
 
         $qrPngBase64 = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(200)
-            ->errorCorrection('H')->generate((string) ($member->member_number ?: $member->id)));
+            ->errorCorrection('H')->generate(\App\Support\MemberCardData::verificationUrl($member)));
 
         $editOptions = $actor->hasRole('super_admin') ? [
             'province_id' => Province::orderBy('name')->get(),

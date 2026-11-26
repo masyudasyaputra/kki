@@ -1,4 +1,9 @@
-<div class="membership-studio" data-card="{{ json_encode(['name' => $user->name, 'theme' => \App\Support\MemberCardTheme::forBelt($user->beltLevel?->name), 'qualification' => $cardQualificationLabel ?? null, 'number' => $user->member_number ?: 'Belum diterbitkan', 'dojo' => $user->dojo?->name ?? 'Belum dipilih', 'rank' => $user->beltLevel?->display_name ?? 'Belum ditentukan', 'logo' => asset('images/logo-kki-dark.png'), 'photo' => $user->photo ? url('storage/'.$user->photo) : null, 'qr' => 'data:image/svg+xml;base64,'.$qrPngBase64], JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }}" x-data="{
+@php
+    $cardData = \App\Support\MemberCardData::forUser($user);
+    $cardData['qualification'] = $cardQualificationLabel ?? null;
+    $cardData['qr'] = 'data:image/svg+xml;base64,'.$qrPngBase64;
+@endphp
+<div class="membership-studio" data-card="{{ json_encode($cardData, JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }}" x-data="{
     isDownloading: false,
     async downloadCard(side) {
         if (this.isDownloading) return;
@@ -22,10 +27,10 @@
             </section>
         @endforeach
     </div>
-    <p class="membership-download-note">Unduh kedua sisi untuk menyimpan kartu digital Anda. QR berisi nomor anggota atau ID akun jika nomor belum diterbitkan.</p>
+    <p class="membership-download-note">Unduh kedua sisi untuk menyimpan kartu digital Anda. Pindai QR untuk membuka halaman verifikasi anggota dan melihat status terbaru dari sistem KKI.</p>
     @if($showMemberDetails ?? true)
     <section class="membership-details"><div class="membership-details-heading"><h2>Data anggota</h2><a href="{{ route('profile.edit') }}">Perbarui profil <x-solid-arrow /></a></div><dl>
-        @foreach (['Nama karateka' => $user->name, 'Nomor anggota' => $user->member_number ?: 'Belum diterbitkan', 'Tingkatan' => $user->beltLevel?->display_name ?? 'Belum ditentukan', 'Dojo' => $user->dojo?->name ?? 'Belum dipilih', 'Kabupaten / kota' => $user->city?->name ?? 'Belum diisi', 'Kecamatan' => $user->district ?: 'Belum diisi', 'WhatsApp' => $user->whatsapp ?: 'Belum diisi', 'Nama orang tua' => $user->parent_name ?: 'Belum diisi'] as $label => $value)
+        @foreach (['Nama karateka' => $user->name, 'Nomor anggota' => $cardData['number'], 'ID akun' => $cardData['accountId'], 'Provinsi' => $cardData['province'], 'Status keanggotaan' => $cardData['status'], 'Verifikasi data' => $cardData['verification'], 'Berlaku hingga' => $cardData['expiry'], 'Tingkatan' => $user->beltLevel?->display_name ?? 'Belum ditentukan', 'Dojo' => $user->dojo?->name ?? 'Belum dipilih', 'Kabupaten / kota' => $user->city?->name ?? 'Belum diisi', 'Kecamatan' => $user->district ?: 'Belum diisi', 'WhatsApp' => $user->whatsapp ?: 'Belum diisi', 'Nama orang tua' => $user->parent_name ?: 'Belum diisi'] as $label => $value)
             <div><dt>{{ $label }}</dt><dd>{{ $value }}</dd></div>
         @endforeach
     </dl></section>

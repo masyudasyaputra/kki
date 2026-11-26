@@ -29,6 +29,60 @@ class KaratekaWorkspaceTest extends TestCase
         $this->assertFalse($white['stripe']);
     }
 
+    public function test_card_and_download_use_the_members_current_identity_and_attached_records(): void
+    {
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('member_number_override')->nullable();
+            $table->boolean('member_number_manual')->default(false);
+            $table->timestamp('expired_at')->nullable();
+        });
+        DB::table('provinces')->insert(['id' => 1, 'name' => 'Provinsi Kartu']);
+        DB::table('cities')->insert(['id' => 1, 'name' => 'Kota Kartu', 'province_id' => 1]);
+        DB::table('dojos')->insert(['id' => 1, 'name' => 'Dojo Kartu', 'city_id' => 1]);
+        DB::table('belt_levels')->insert(['id' => 1, 'name' => 'Biru']);
+        $member = User::create(['name' => 'Nama Kartu Aktual', 'email' => 'card@example.test', 'password' => 'password', 'role' => 'member', 'province_id' => 1, 'city_id' => 1, 'dojo_id' => 1, 'belt_level_id' => 1]);
+        $member->forceFill(['member_number_override' => 'KKI-REAL-0099', 'photo' => 'photos/aktual.jpg', 'verification_status' => 'approved', 'is_active' => true, 'expired_at' => now()->addYear()])->saveQuietly();
+        $response = $this->actingAs($member)->get(route('member.card'))->assertOk();
+        preg_match('/data-card="([^"]+)"/', $response->getContent(), $match);
+        $data = json_decode(html_entity_decode($match[1], ENT_QUOTES), true, flags: JSON_THROW_ON_ERROR);
+        $this->assertSame('KKI-REAL-0099', $data['number']);
+        $this->assertSame((string) $member->id, $data['accountId']);
+        $this->assertSame('Nama Kartu Aktual', $data['name']);
+        $this->assertSame('Provinsi Kartu', $data['province']);
+        $this->assertSame('Kota Kartu', $data['city']);
+        $this->assertSame('Dojo Kartu', $data['dojo']);
+        $this->assertSame('Aktif', $data['status']);
+        $this->assertSame('Terverifikasi', $data['verification']);
+        $this->assertSame(url('storage/photos/aktual.jpg'), $data['photo']);
+        $this->assertSame($member->expired_at->format('d/m/Y'), $data['expiry']);
+        $expectedQr = base64_encode(\SimpleSoftwareIO\QrCode\Facades\QrCode::format('svg')->size(200)->errorCorrection('H')->generate(\App\Support\MemberCardData::verificationUrl($member)));
+        $this->assertSame('data:image/svg+xml;base64,'.$expectedQr, $data['qr']);
+        $member->forceFill(['member_number_override' => 'KKI-UPDATED-0100', 'expired_at' => now()->subDay()])->saveQuietly();
+        $this->actingAs($member->fresh())->get(route('member.card'))->assertOk()->assertSee('KKI-UPDATED-0100')->assertSee('Masa berlaku habis')->assertDontSee('KKI-REAL-0099');
+    }
+
+    public function test_scanned_card_opens_public_verification_with_live_status_and_no_private_contacts(): void
+    {
+        $member = User::create(['name' => 'Anggota QR Resmi', 'email' => 'private-qr@example.test', 'password' => 'password', 'role' => 'member', 'whatsapp' => '081299998888', 'address' => 'Alamat Privat QR']);
+        $member->forceFill(['verification_status' => 'approved', 'is_active' => true])->saveQuietly();
+        $url = \App\Support\MemberCardData::verificationUrl($member);
+        $this->get($url)->assertOk()->assertSee('Anggota Terverifikasi')->assertSee($member->name)->assertSee($member->member_number)
+            ->assertSee('Aktif')->assertDontSee($member->email)->assertDontSee($member->whatsapp)->assertDontSee($member->address)
+            ->assertHeader('Cache-Control', 'no-store, private')->assertHeader('X-Robots-Tag', 'noindex, nofollow');
+        $this->get(route('members.verify', $member->id))->assertForbidden();
+        $this->get($url.'x')->assertForbidden();
+        $member->forceFill(['verification_status' => 'pending'])->saveQuietly();
+        $this->get($url)->assertOk()->assertSee('Anggota Belum Terverifikasi')->assertDontSee('Anggota Terverifikasi')->assertDontSee($member->name);
+        $member->forceFill(['verification_status' => 'revision'])->saveQuietly();
+        $this->get($url)->assertOk()->assertSee('Anggota Belum Terverifikasi');
+        $member->forceFill(['verification_status' => 'approved', 'is_active' => false])->saveQuietly();
+        $this->get($url)->assertOk()->assertSee('Anggota Terverifikasi')->assertSee('Tidak aktif');
+        $other = User::create(['name' => 'Bukan Anggota', 'email' => 'non-member@example.test', 'password' => 'password', 'role' => 'pb']);
+        $this->get(\App\Support\MemberCardData::verificationUrl($other))->assertNotFound();
+        $member->delete();
+        $this->get($url)->assertNotFound();
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

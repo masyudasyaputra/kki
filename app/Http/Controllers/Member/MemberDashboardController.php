@@ -33,7 +33,7 @@ class MemberDashboardController extends Controller
         $myExams = $section === 'exams' ? PageSize::paginate($participants->with(['exam', 'targetBelt'])->latest('id'), $request) : collect();
         $myPayments = $section === 'payments' ? PageSize::paginate($payments->latest('id'), $request) : collect();
         $qrPngBase64 = $section === 'card'
-            ? base64_encode(QrCode::format('svg')->size(200)->errorCorrection('H')->generate((string) ($user->member_number ?: $user->id)))
+            ? base64_encode(QrCode::format('svg')->size(200)->errorCorrection('H')->generate(\App\Support\MemberCardData::verificationUrl($user)))
             : null;
 
         return view('member.dashboard', compact('user', 'section', 'latestVerification', 'summary', 'myCertificates', 'myExams', 'myPayments', 'qrPngBase64')

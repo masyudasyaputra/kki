@@ -58,6 +58,8 @@ Route::get('/', function () {
 Route::get('/agenda-ukt', [PublicDirectoryController::class, 'agenda'])->name('public.agenda');
 Route::get('/direktori-dojo', [PublicDirectoryController::class, 'dojos'])->name('public.dojos');
 Route::get('/direktori-anggota', [PublicDirectoryController::class, 'members'])->name('public.members');
+Route::get('/verifikasi-kartu-anggota/{member}', [\App\Http\Controllers\MemberCardVerificationController::class, 'show'])
+    ->whereNumber('member')->middleware(['signed', 'throttle:60,1'])->name('members.verify');
 Route::view('/kebijakan-privasi', 'privacy.policy')->name('privacy.policy');
 Route::middleware('auth')->group(function () {
     Route::get('/privasi', [\App\Http\Controllers\PrivacyController::class, 'index'])->name('privacy.index');

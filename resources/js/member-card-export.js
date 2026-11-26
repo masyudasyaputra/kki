@@ -146,13 +146,11 @@ export async function renderMemberCard(data, side) {
         ctx.imageSmoothingEnabled = false;
         ctx.drawImage(qr, 66, 208, 216, 216);
         ctx.imageSmoothingEnabled = true;
-        text(ctx, 'PINDAI NOMOR ANGGOTA', 55, 451, 11, theme.muted);
-        text(ctx, 'SATU KELUARGA.', 367, 176, 31, theme.ink, 700);
-        text(ctx, 'SATU SEMANGAT.', 367, 221, 31, GOLD, 700);
-        ['Menjunjung tinggi kehormatan', 'Disiplin dalam setiap latihan', 'Tumbuh bersama keluarga KKI'].forEach((value, index) => {
-            const y = 307 + index * 49;
-            rounded(ctx, 369, y + 3, 9, 9, 2, GOLD);
-            text(ctx, value, 399, y, 21, theme.muted);
+        text(ctx, 'PINDAI UNTUK VERIFIKASI', 55, 451, 11, theme.muted);
+        [['ID AKUN', data.accountId], ['PROVINSI', data.province], ['KABUPATEN / KOTA', data.city], ['STATUS / VERIFIKASI', [data.status, data.verification].filter(Boolean).join(' / ')], ['BERLAKU HINGGA', data.expiry]].forEach(([label, value], index) => {
+            const y = 164 + index * 66;
+            text(ctx, label, 355, y, 12, GOLD, 700);
+            fitText(ctx, value ?? 'Belum tercatat', 355, y + 23, 602, 20, 14, theme.ink, 600);
         });
         rule(ctx, 55, 510, 961, 510);
         lines(ctx, 'Kartu ini adalah identitas pribadi anggota KKI dan tidak dapat dipindahtangankan.', 55, 531, 850, 15, 2, theme.muted);
