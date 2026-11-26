@@ -691,9 +691,12 @@ img[src$="/images/logo-kki.png"]:not([aria-hidden="true"]) {
 .kki-id-values h3 span { color:var(--card-gold); }
 .kki-id-values p { display:flex; align-items:center; gap:.8em; margin-top:.7em; font-size:.63em; color:#d4d0c6; }
 .kki-id-values svg { width:1.5em; height:1.5em; color:var(--card-gold); }
-.kki-id-record { flex:1; min-width:0; display:grid; gap:.55em; }
-.kki-id-record dt { color:var(--card-gold); font-size:.4em; font-weight:650; letter-spacing:.06em; }
-.kki-id-record dd { margin:.2em 0 0; color:var(--card-ink); font-size:.6em; line-height:1.3; overflow-wrap:anywhere; }
+.kki-id-back-brand { padding-bottom:.8em; border-bottom:1px solid #d7b66e30; }
+.kki-id-back .kki-id-qr { width:10.5em; height:10.5em; padding:.5em; }
+.kki-id-back-tagline { min-width:0; }
+.kki-id-back-tagline h3 { font-size:1.35em; font-weight:750; line-height:1.5; letter-spacing:.04em; color:var(--card-ink); }
+.kki-id-back-tagline h3 span { color:var(--card-gold); }
+.kki-id-back-tagline p { margin-top:1.1em; font-size:.64em; line-height:1.6; color:var(--card-muted); }
 .kki-id-back-footer { padding-top:1em; margin-top:auto; }
 .kki-id-back-footer p { max-width:80%; color:#b4ad9e; font-size:.5em; line-height:1.5; }
 .kki-id-back-footer strong { display:block; margin-top:.6em; color:var(--card-gold); font-size:.45em; font-weight:600; letter-spacing:.1em; }

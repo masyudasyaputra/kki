@@ -141,21 +141,24 @@ export async function renderMemberCard(data, side) {
         text(ctx, 'OFFICIAL MEMBERSHIP CARD', 48, 596, 11, GOLD);
         text(ctx, 'PP KKI · INDONESIA', 838, 596, 11, GOLD);
     } else {
-        ctx.fillStyle = '#050607'; ctx.fillRect(0, 45, WIDTH, 72);
-        text(ctx, 'IDENTITAS DIGITAL', 55, 168, 13, GOLD, 700);
-        rounded(ctx, 55, 197, 238, 238, 8, '#fff');
+        containImage(ctx, logo, 48, 36, 78, 94);
+        text(ctx, 'KKI', 146, 43, 48, theme.ink, 800);
+        text(ctx, 'KUSHIN RYU M. KARATE-DO INDONESIA', 148, 105, 15, GOLD, 700);
+        text(ctx, 'KARTU', 875, 56, 15, GOLD, 700);
+        text(ctx, 'ANGGOTA', 875, 82, 15, GOLD, 700);
+        rule(ctx, 48, 151, 968, 151);
+        text(ctx, 'IDENTITAS DIGITAL KKI', 55, 185, 13, GOLD, 700);
+        rounded(ctx, 55, 213, 280, 280, 8, '#fff');
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(qr, 66, 208, 216, 216);
+        ctx.drawImage(qr, 68, 226, 254, 254);
         ctx.imageSmoothingEnabled = true;
-        text(ctx, 'PINDAI UNTUK VERIFIKASI', 55, 451, 11, theme.muted);
-        [['ID AKUN', data.accountId], ['PROVINSI', data.province], ['KABUPATEN / KOTA', data.city], ['STATUS / VERIFIKASI', [data.status, data.verification].filter(Boolean).join(' / ')], ['BERLAKU HINGGA', data.expiry]].forEach(([label, value], index) => {
-            const y = 164 + index * 66;
-            text(ctx, label, 355, y, 12, GOLD, 700);
-            fitText(ctx, value ?? 'Belum tercatat', 355, y + 23, 602, 20, 14, theme.ink, 600);
-        });
-        rule(ctx, 55, 510, 961, 510);
-        lines(ctx, 'Kartu ini adalah identitas pribadi anggota KKI dan tidak dapat dipindahtangankan.', 55, 531, 850, 15, 2, theme.muted);
-        text(ctx, 'KUSHIN RYU M. KARATE-DO INDONESIA', 55, 592, 12, GOLD, 700);
+        text(ctx, 'PINDAI UNTUK VERIFIKASI', 55, 512, 12, theme.muted);
+        text(ctx, 'SATU KELUARGA.', 390, 279, 34, theme.ink, 700);
+        text(ctx, 'SATU SEMANGAT.', 390, 330, 34, GOLD, 700);
+        text(ctx, 'Karakter. Kehormatan. Integritas.', 390, 404, 19, theme.muted);
+        rule(ctx, 48, 576, 968, 576);
+        text(ctx, 'OFFICIAL MEMBERSHIP CARD', 48, 596, 11, GOLD);
+        text(ctx, 'PP KKI ? INDONESIA', 838, 596, 11, GOLD);
     }
     if (theme.stripe) { const stripe = ctx.createLinearGradient(975, 0, 987, 0); stripe.addColorStop(0, '#ac7b25'); stripe.addColorStop(.5, '#f5d782'); stripe.addColorStop(1, '#c49338'); ctx.fillStyle = stripe; ctx.fillRect(975, 18, 12, 607); }
     const gold = ctx.createLinearGradient(0, 0, WIDTH, 0);
