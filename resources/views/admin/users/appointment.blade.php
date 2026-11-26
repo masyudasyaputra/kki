@@ -8,6 +8,7 @@
         <p class="text-sm text-slate-500">Simpan jabatan dan SK sekaligus mengaktifkan akun serta akses pengurus pusat, provinsi, atau kabupaten/kota sesuai wilayah. Hak akses tambahan diatur melalui formulir akun di bawah.</p>
         @if($errors->any())<div role="alert" class="text-sm text-red-700"><ul>@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul></div>@endif
         <div class="grid gap-4 sm:grid-cols-2">
+            <div class="sm:col-span-2"><x-official-photo-field :url="$user->photo ? url('storage/'.$user->photo) : null" /></div>
             <div><x-input-label for="appointment-position" value="Jabatan organisasi *" /><x-text-input id="appointment-position" name="position" :value="old('position', $appointment?->position ?? $user->requested_position)" required maxlength="255" placeholder="Contoh: Sekretaris" /></div>
             <div><x-input-label for="appointment-level" value="Tingkat kepengurusan *" /><select id="appointment-level" name="level" x-model="level" class="w-full rounded-lg border-slate-300" required>
                 @if(\App\Services\RoleAccess::nationalOfficials(auth()->user()))<option value="pusat">Pengurus Pusat</option>@endif

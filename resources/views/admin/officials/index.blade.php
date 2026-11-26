@@ -73,12 +73,15 @@
                         @forelse ($officials as $official)
                             <tr data-record-key="{{ $official->id }}" class="hover:bg-slate-50 transition-all group">
                                 <td class="px-8 py-6">
-                                    <div class="flex flex-col">
-                                        <span
-                                            class="font-black text-slate-900 text-sm uppercase group-hover:text-red-600 transition-colors">{{ $official->name }} <span class="block font-mono text-xs text-slate-500">{{ $official->official_number }}</span></span>
-                                        <div class="inline-flex mt-1">
+                                    <div class="flex items-center gap-3">
+                                        @include('admin.officials._photo')
+                                        <div class="flex min-w-0 flex-col">
                                             <span
-                                                class="text-[9px] font-black bg-red-50 text-red-600 px-2 py-0.5 rounded uppercase tracking-widest border border-red-100">{{ $official->position }}</span>
+                                                class="font-black text-slate-900 text-sm uppercase group-hover:text-red-600 transition-colors">{{ $official->name }} <span class="block font-mono text-xs text-slate-500">{{ $official->official_number }}</span></span>
+                                            <div class="inline-flex mt-1">
+                                                <span
+                                                    class="text-[9px] font-black bg-red-50 text-red-600 px-2 py-0.5 rounded uppercase tracking-widest border border-red-100">{{ $official->position }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
@@ -129,6 +132,7 @@
                         {{-- Top Section --}}
                         <div class="p-5 pb-4">
                             <div class="flex justify-between items-start gap-4 mb-3">
+                                @include('admin.officials._photo')
                                 <div class="flex-1">
                                     <h4
                                         class="font-black text-slate-900 uppercase text-base leading-tight tracking-tight">

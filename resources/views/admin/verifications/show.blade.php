@@ -5,7 +5,7 @@
         $statusLabel = ['pending' => 'Menunggu verifikasi', 'approved' => 'Disetujui', 'revision' => 'Perlu perbaikan'][$member->verification_status] ?? 'Menunggu verifikasi';
         $latestReview = $history->first();
     @endphp
-    <div class="verification-workspace" x-data="{ checked: {{ Illuminate\Support\Js::from(old('checked', [])) }} }">
+    <div class="verification-workspace" x-data="verificationChecklist(@js(array_keys($fields)), @js(old('checked', [])))">
         <div class="vr-toolbar"><a class="vr-back" href="{{ route('admin.verifications.index') }}"><span aria-hidden="true">&larr;</span> Kembali ke daftar</a><span>Pemeriksaan keanggotaan</span></div>
         @if(session('success'))<p role="status" class="vr-feedback vr-feedback-success"><x-sidebar-icon name="audit" />{{ session('success') }}</p>@endif
         @if($errors->any())<div role="alert" class="vr-feedback vr-feedback-error">@foreach($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
@@ -18,6 +18,7 @@
             <input type="hidden" name="fingerprint" value="{{ $fingerprint }}">
             <section class="vr-data-panel">
                 <div class="vr-panel-heading"><div><h2>Data pendaftaran</h2><p>{{ $pending ? 'Periksa dan centang setiap data sebelum menyetujui.' : 'Data anggota saat ini. Keputusan sebelumnya tersimpan di riwayat.' }}</p></div>@if($pending)<span class="vr-check-count" aria-live="polite"><strong x-text="checked.length">{{ count(old('checked', [])) }}</strong>/{{ count($fields) }} diperiksa</span>@else<span class="vr-field-count">{{ count($fields) }} data</span>@endif</div>
+                @if($pending)<div class="px-4 py-3"><x-verification-select-all /></div>@endif
                 <div class="vr-data-grid">
                     @if($member->requested_belt_level_id && $member->belt_diploma_path)
                         <div class="p-4"><p class="text-sm">Sabuk tercatat: {{ $member->beltLevel?->display_name ?? 'Belum diisi' }}</p><a href="{{ route('profile.belt-diploma', $member) }}" target="_blank" rel="noopener" class="btn btn-secondary mt-2">Buka ijazah sabuk</a></div>

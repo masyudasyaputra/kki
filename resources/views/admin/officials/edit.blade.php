@@ -72,6 +72,7 @@
                                     required placeholder="Contoh: Dr. H. Ahmad Fauzi, M.Pd">
                             </div>
 
+                            <x-official-photo-field :url="$official->photo_url" />
                             <x-official-position-field :value="$official->position" :options="['Ketua Umum', 'Sekretaris', 'Bendahara', 'Ketua Bidang Prestasi', 'Anggota']" />
 
                             <div>

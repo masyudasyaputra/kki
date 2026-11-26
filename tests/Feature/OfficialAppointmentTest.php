@@ -15,16 +15,18 @@ class OfficialAppointmentTest extends TestCase
         parent::setUp();
         config(['database.default' => 'appointment_test', 'database.connections.appointment_test' => ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']]);
         Storage::fake('local');
+        Storage::fake('public');
         Schema::create('users', function (Blueprint $t) {
             $t->id(); $t->string('name'); $t->string('email'); $t->string('role');
             $t->json('positions')->nullable(); $t->json('roles')->nullable();
             $t->string('registration_type')->default('official'); $t->string('whatsapp')->nullable(); $t->string('requested_position')->nullable();
             $t->boolean('is_active')->default(false); $t->timestamp('email_verified_at')->nullable();
-            $t->string('verification_status')->default('pending');
+            $t->string('verification_status')->default('pending'); $t->string('photo')->nullable();
             foreach (['province_id', 'city_id', 'dojo_id'] as $column) $t->integer($column)->nullable();
             $t->timestamps();
         });
         Schema::create('provinces', function (Blueprint $t) { $t->id(); $t->string('name')->default('Provinsi'); });
+        Schema::create('dojos', function (Blueprint $t) { $t->id(); $t->integer('city_id')->nullable(); $t->string('name'); });
         Schema::create('cities', function (Blueprint $t) { $t->id(); $t->integer('province_id'); $t->string('name')->default('Kota'); });
         Schema::create('officials', function (Blueprint $t) {
             $t->id(); $t->string('name'); $t->string('position'); $t->string('level');
@@ -35,6 +37,7 @@ class OfficialAppointmentTest extends TestCase
         (require database_path('migrations/2026_11_15_000002_link_officials_to_users.php'))->up();
         (require database_path('migrations/2026_11_15_000003_add_official_numbers.php'))->up();
         (require database_path('migrations/2026_11_26_000001_update_official_registration_numbers.php'))->up();
+        (require database_path('migrations/2026_11_26_000002_add_official_photo_path.php'))->up();
         Schema::create('access_audits', function (Blueprint $t) {
             $t->id(); $t->integer('actor_id')->nullable(); $t->integer('target_id')->nullable();
             $t->integer('exam_id')->nullable(); $t->string('event'); $t->json('before'); $t->json('after'); $t->timestamps();
@@ -205,7 +208,6 @@ class OfficialAppointmentTest extends TestCase
         $this->assertSame('PGR-PP-000001-2030', $official->official_number);
         $this->get(route('admin.officials.create', ['user_id' => $user->id]))->assertOk()->assertSee('Pengurus Pusat')->assertSee('2030-12-31');
         Schema::create('belt_levels', function (Blueprint $t) { $t->id(); $t->string('name'); $t->boolean('is_active')->default(true); });
-        Schema::create('dojos', function (Blueprint $t) { $t->id(); $t->integer('city_id')->nullable(); $t->string('name'); });
         $this->get(route('admin.users.edit', $user))->assertOk()->assertSee('Perbarui penetapan pengurus');
         $this->put(route('admin.officials.update', $official), array_replace($data, ['position' => 'Ketua Bidang', 'sk_expiry_date' => '2032-12-31']))->assertSessionHasNoErrors();
         $this->assertSame('PGR-PP-000001-2032', $official->fresh()->official_number);
@@ -260,6 +262,49 @@ class OfficialAppointmentTest extends TestCase
         $this->assertDatabaseHas('officials', ['name' => 'Pusat Lama', 'official_number' => 'PGR-PP-000001-2030', 'registration_sequence' => 1]);
         $this->assertDatabaseHas('officials', ['name' => 'Nomor Manual', 'official_number' => 'PGR-ARSIP-123', 'registration_sequence' => 2]);
         $this->assertDatabaseHas('registration_counters', ['type' => 'official', 'last_number' => 2]);
+    }
+
+    public function test_manual_official_photo_is_uploaded_displayed_replaced_and_validated(): void
+    {
+        $this->actingAs($this->account('pb'));
+        $data = $this->payload(['name' => 'Pengurus Berfoto', 'photo' => UploadedFile::fake()->image('foto.jpg', 300, 400)]);
+        $this->post(route('admin.officials.store'), $data)->assertSessionHasNoErrors();
+        $official = Official::firstOrFail(); $old = $official->photo_path;
+        Storage::disk('public')->assertExists($old);
+        $this->get(route('admin.officials.index'))->assertOk()->assertSee(url('storage/'.$old));
+        $this->get(route('admin.officials.edit', $official))->assertOk()->assertSee('name="photo"', false)->assertSee(url('storage/'.$old));
+        $this->put(route('admin.officials.update', $official), array_replace($data, ['photo' => UploadedFile::fake()->image('baru.png')]))->assertSessionHasNoErrors();
+        Storage::disk('public')->assertMissing($old);
+        $new = $official->fresh()->photo_path;
+        Storage::disk('public')->assertExists($new);
+        foreach ([UploadedFile::fake()->create('dokumen.pdf', 20), UploadedFile::fake()->image('besar.jpg')->size(2049)] as $invalid) {
+            $this->put(route('admin.officials.update', $official), array_replace($data, ['photo' => $invalid]))->assertSessionHasErrors('photo');
+            $this->assertSame($new, $official->fresh()->photo_path);
+        }
+        $this->delete(route('admin.officials.destroy', $official))->assertRedirect();
+        Storage::disk('public')->assertMissing($new);
+    }
+
+    public function test_linked_official_uses_and_updates_the_account_photo_without_a_duplicate_copy(): void
+    {
+        $actor = $this->account('pb'); $user = $this->account('member');
+        $user->photo = UploadedFile::fake()->image('akun.jpg')->store('member-photos/'.$user->id, 'public'); $user->save();
+        $old = $user->photo;
+        $this->actingAs($actor)->post(route('admin.users.appoint', $user), $this->payload())->assertSessionHasNoErrors();
+        $official = $user->official()->firstOrFail();
+        $this->assertSame(url('storage/'.$old), $official->photo_url);
+        $this->get(route('admin.officials.create', ['user_id' => $user->id]))->assertOk()->assertSee(url('storage/'.$old));
+        $this->post(route('admin.users.appoint', $user), $this->payload(['photo' => UploadedFile::fake()->image('pengurus.png')]))->assertSessionHasNoErrors();
+        $new = $user->fresh()->photo;
+        $this->assertSame(url('storage/'.$new), $official->fresh()->photo_url);
+        $this->assertNull($official->fresh()->photo_path);
+        Storage::disk('public')->assertMissing($old);
+        Storage::disk('public')->assertExists($new);
+        $this->get(route('admin.officials.index'))->assertOk()->assertSee(url('storage/'.$new));
+        $this->post(route('admin.users.appoint', $user), $this->payload())->assertSessionHasNoErrors();
+        $this->assertSame($new, $user->fresh()->photo);
+        $this->delete(route('admin.officials.destroy', $official))->assertRedirect();
+        Storage::disk('public')->assertExists($new);
     }
 
 }

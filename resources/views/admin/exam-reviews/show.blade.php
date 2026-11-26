@@ -6,11 +6,13 @@
         <p>Status: {{ ['draft' => 'Belum dikirim', 'submitted' => 'Menunggu pengesahan', 'revision' => 'Perlu perbaikan', 'approved' => 'Disahkan'][$exam->review_status] ?? $exam->review_status }}</p>
         @if(!auth()->user()->hasRole('super_admin') || \App\Services\RoleAccess::nationalExamReader(auth()->user()))<div class="flex gap-3"><a class="btn btn-secondary" href="{{ route('admin.exams.show', $exam) }}">Data peserta & sertifikat</a><a class="btn btn-secondary" href="{{ route('admin.exams.scoring', $exam) }}">{{ app(\App\Services\ExamCertificates::class)->canScore(auth()->user(), $exam) ? 'Input nilai ujian' : 'Lihat nilai ujian' }}</a></div>@endif
         @if($canAssign && $exam->review_status !== 'approved')
-            <form method="post" action="{{ route('admin.exam-reviews.assign', $exam) }}" class="space-y-3 rounded-xl bg-white p-5">@csrf @method('put')
+            <form method="post" action="{{ route('admin.exam-reviews.assign', $exam) }}" class="space-y-3 rounded-xl bg-white p-5"
+                x-data="verificationChecklist(@js($reviewers->pluck('id')->values()), @js(old('reviewer_ids', $assigned)))">@csrf @method('put')
                 <h2 class="font-semibold">Penugasan Verifikator Ujian Pengurus Pusat</h2>
                 <p class="text-xs text-slate-500">Dapat ditugaskan kepada Dewan Guru atau pengguna lain yang memiliki hak Verifikator Ujian Pengurus Pusat. Panitia, penguji, dan pengirim sesi ini dikecualikan.</p>
                 <input type="hidden" name="reviewer_ids" value="">
-                @forelse($reviewers as $reviewer)<label class="flex gap-2"><input type="checkbox" name="reviewer_ids[]" value="{{ $reviewer->id }}" @checked(in_array($reviewer->id, $assigned))>{{ $reviewer->name }}{{ $reviewer->hasRole('dewan_guru_pusat') ? ' — Dewan Guru Pusat' : '' }}</label>@empty<p>Belum ada pengguna yang memenuhi syarat. Berikan hak Verifikator Ujian Pengurus Pusat melalui Manajemen User.</p>@endforelse
+                @if($reviewers->isNotEmpty())<x-verification-select-all label="Pilih semua verifikator" />@endif
+                @forelse($reviewers as $reviewer)<label class="flex gap-2"><input type="checkbox" name="reviewer_ids[]" value="{{ $reviewer->id }}" x-model="checked" @checked(in_array($reviewer->id, (array) old('reviewer_ids', $assigned)))>{{ $reviewer->name }}{{ $reviewer->hasRole('dewan_guru_pusat') ? ' — Dewan Guru Pusat' : '' }}</label>@empty<p>Belum ada pengguna yang memenuhi syarat. Berikan hak Verifikator Ujian Pengurus Pusat melalui Manajemen User.</p>@endforelse
                 <button class="btn btn-primary">Simpan penugasan</button>
             </form>
         @endif

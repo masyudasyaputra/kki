@@ -93,6 +93,7 @@
                                     required placeholder="Contoh: Dr. H. Ahmad Fauzi, M.Pd">
                             </div>
 
+                            <x-official-photo-field :url="$candidate?->photo ? url('storage/'.$candidate->photo) : $assignment?->photo_url" />
                             <x-official-position-field :value="$assignment?->position ?? $candidate?->requested_position" />
 
                             <div>

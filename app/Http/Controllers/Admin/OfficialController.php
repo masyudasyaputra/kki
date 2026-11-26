@@ -18,7 +18,7 @@ class OfficialController extends Controller
         $user = auth()->user();
 
         // 1. Inisialisasi query dengan eager loading yang kamu butuhkan
-        $query = Official::with(['province', 'city', 'city.dojos']);
+        $query = Official::with(['province', 'city', 'city.dojos', 'user']);
 
         if (!RoleAccess::nationalOfficials($user)) {
             $query->where('province_id', $user->province_id ?: 0);
@@ -59,6 +59,7 @@ class OfficialController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'level' => ['required', \Illuminate\Validation\Rule::in(RoleAccess::officialLevels($request->user()))],
             'province_id' => 'exclude_if:level,pusat|required|exists:provinces,id',
             'city_id' => ['exclude_unless:level,pengcab', 'required', \Illuminate\Validation\Rule::exists('cities', 'id')->where('province_id', $request->province_id)],
@@ -75,7 +76,17 @@ class OfficialController extends Controller
 
         $validated['sk_document_path'] = $request->file('sk_document')?->store('sk-documents/officials', 'local');
         unset($validated['sk_document']);
-        Official::create($validated);
+        unset($validated['photo']);
+        $photo = $request->file('photo')?->store('official-photos', 'public');
+        if ($photo === false) throw \Illuminate\Validation\ValidationException::withMessages(['photo' => 'Foto belum dapat disimpan. Silakan coba lagi.']);
+        if ($photo) $validated['photo_path'] = $photo;
+        try {
+            \Illuminate\Support\Facades\DB::transaction(fn () => Official::create($validated));
+        } catch (\Throwable $error) {
+            if ($photo) Storage::disk('public')->delete($photo);
+            if ($validated['sk_document_path']) Storage::disk('local')->delete($validated['sk_document_path']);
+            throw $error;
+        }
 
         return redirect()->route('admin.officials.index')
             ->with('success', 'Data Pengurus berhasil ditambahkan!');
@@ -108,6 +119,7 @@ class OfficialController extends Controller
         }
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'level' => ['required', \Illuminate\Validation\Rule::in(RoleAccess::officialLevels($request->user()))],
             'province_id' => 'exclude_if:level,pusat|required|exists:provinces,id',
             'city_id' => ['exclude_unless:level,pengcab', 'required', \Illuminate\Validation\Rule::exists('cities', 'id')->where('province_id', $request->province_id)],
@@ -127,7 +139,19 @@ class OfficialController extends Controller
             $validated['sk_document_path'] = $request->file('sk_document')->store('sk-documents/officials', 'local');
         }
         unset($validated['sk_document']);
-        $official->update($validated);
+        unset($validated['photo']);
+        $oldPhoto = $official->photo_path;
+        $photo = $request->file('photo')?->store('official-photos', 'public');
+        if ($photo === false) throw \Illuminate\Validation\ValidationException::withMessages(['photo' => 'Foto belum dapat disimpan. Silakan coba lagi.']);
+        if ($photo) $validated['photo_path'] = $photo;
+        try {
+            \Illuminate\Support\Facades\DB::transaction(fn () => $official->update($validated));
+        } catch (\Throwable $error) {
+            if ($photo) Storage::disk('public')->delete($photo);
+            if (!empty($validated['sk_document_path'])) Storage::disk('local')->delete($validated['sk_document_path']);
+            throw $error;
+        }
+        if ($photo && $oldPhoto && str_starts_with($oldPhoto, 'official-photos/')) Storage::disk('public')->delete($oldPhoto);
         if (!empty($validated['sk_document_path']) && $oldDocument) Storage::disk('local')->delete($oldDocument);
 
         return redirect()->route('admin.officials.index')
@@ -141,7 +165,9 @@ class OfficialController extends Controller
     {
         $this->authorizeOfficial($official);
         abort_unless(auth()->user()->hasRole(['pb', 'super_admin', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab']), 403);
+        $photo = $official->photo_path;
         $official->delete();
+        if ($photo && str_starts_with($photo, 'official-photos/')) Storage::disk('public')->delete($photo);
         return redirect()->route('admin.officials.index')
             ->with('success', 'Data Pengurus berhasil dihapus!');
     }

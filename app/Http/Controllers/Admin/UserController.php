@@ -70,6 +70,7 @@ class UserController extends Controller
         abort_if($request->user()->id === $user->id && !RoleAccess::managesUsers($request->user()), 403, 'Verifikator tidak dapat menetapkan kepengurusan dirinya sendiri.');
         $data = $request->validate([
             'level' => ['required', Rule::in(RoleAccess::officialLevels($request->user()))],
+            'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'name' => ['sometimes', 'required', 'string', 'max:255'],
             'phone_number' => ['nullable', 'string', 'max:20'],
             'position' => ['required', 'string', 'max:255'],
@@ -83,8 +84,10 @@ class UserController extends Controller
         $data['province_id'] = $data['level'] === 'pusat' ? null : $data['province_id'];
         $newPath = $request->file('sk_document')?->store('sk-documents/officials', 'local');
         $oldPath = null;
+        $oldPhoto = null;
+        $newPhoto = null;
         try {
-            DB::transaction(function () use ($request, $user, $data, $newPath, &$oldPath) {
+            DB::transaction(function () use ($request, $user, $data, $newPath, &$oldPath, &$oldPhoto, &$newPhoto) {
                 $user = User::whereKey($user->id)->lockForUpdate()->firstOrFail();
                 app(\App\Services\OfficialReview::class)->authorize($request->user(), $user);
                 abort_if($user->hasRole(['super_admin', 'dewan_guru_pusat']) || ($user->hasRole('pb') && !$user->official), 403);
@@ -96,6 +99,12 @@ class UserController extends Controller
                 $positions = array_values(array_diff($user->positions ?? [], ['pb', 'pengprov', 'pengcab', 'admin_dojo']));
                 $positions[] = $role;
                 if ($user->registration_type === 'official') $positions = [$role];
+                $oldPhoto = $user->photo;
+                if ($request->hasFile('photo')) {
+                    $newPhoto = $request->file('photo')->store('member-photos/'.$user->id, 'public');
+                    if (!$newPhoto) throw \Illuminate\Validation\ValidationException::withMessages(['photo' => 'Foto belum dapat disimpan. Silakan coba lagi.']);
+                    $user->photo = $newPhoto;
+                }
                 $user->update([
                     'name' => $data['name'] ?? $user->name,
                     'role' => $role, 'positions' => array_values(array_unique($positions)),
@@ -115,8 +124,10 @@ class UserController extends Controller
             });
         } catch (\Throwable $exception) {
             if ($newPath) Storage::disk('local')->delete($newPath);
+            if ($newPhoto) Storage::disk('public')->delete($newPhoto);
             throw $exception;
         }
+        if ($newPhoto && $oldPhoto && str_starts_with($oldPhoto, 'member-photos/'.$user->id.'/')) Storage::disk('public')->delete($oldPhoto);
         if ($newPath && $oldPath) Storage::disk('local')->delete($oldPath);
         if ($request->input('return_to') === 'officials') {
             return redirect()->route('admin.officials.index')->with('success', 'Pengurus ditetapkan. Akun aktif, akses wilayah, dan data SK tersimpan sekaligus.');

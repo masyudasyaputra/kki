@@ -22,6 +22,7 @@ class Official extends Model
 
     protected $fillable = [
         'user_id',
+        'photo_path',
         'name',
         'position',
         'phone_number',
@@ -40,6 +41,12 @@ class Official extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function getPhotoUrlAttribute(): ?string
+    {
+        $path = $this->user_id ? $this->user?->photo : $this->photo_path;
+        return $path ? url('storage/'.$path) : null;
     }
     public function city()
     {
