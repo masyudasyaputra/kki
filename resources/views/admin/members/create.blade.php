@@ -338,12 +338,12 @@
                                     {{-- Nama Ortu --}}
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">
-                                            Nama Orang Tua <span class="text-red-500">*</span>
+                                            Nama Orang Tua <span class="text-slate-400 font-normal">(Opsional)</span>
                                         </label>
                                         <input type="text" x-model="member.parent_name"
                                             :name="'members[' + index + '][parent_name]'"
                                             class="member-form-control w-full h-11 px-3.5 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-800 uppercase focus:ring-2 focus:ring-[#762137]/15 focus:border-[#762137] shadow-sm transition-all"
-                                            required placeholder="Ayah / Ibu">
+                                            placeholder="Ayah / Ibu">
                                     </div>
 
                                     {{-- WhatsApp --}}
@@ -459,7 +459,7 @@
                                 </button>
 
                                 <button type="submit"
-                                    :disabled="members.some(m => !m.name || !m.parent_name || !m.belt_level_id || m.errorWa || !m.whatsapp || !m.city_id) || (!province_id)"
+                                    :disabled="members.some(m => !m.name || !m.belt_level_id || m.errorWa || !m.whatsapp || !m.city_id) || (!province_id)"
                                     class="btn btn-primary inline-flex">
                                     <span>Lanjut Ke Review</span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

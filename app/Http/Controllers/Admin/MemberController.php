@@ -218,7 +218,7 @@ class MemberController extends Controller
         $validated = $request->validate([
             'members' => ['required', 'array', 'min:1'],
             'members.*.name' => ['required', 'string', 'max:255'],
-            'members.*.parent_name' => ['required', 'string', 'max:255'],
+            'members.*.parent_name' => ['nullable', 'string', 'max:255'],
             'members.*.whatsapp' => ['required', 'string', 'regex:/^[0-9]{8,16}$/', 'distinct', 'unique:users,whatsapp'],
             'members.*.belt_level_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('belt_levels', 'id')->where('is_active', true)],
             'members.*.email' => ['nullable', 'email', 'max:255', 'distinct', 'unique:users,email'],
@@ -303,7 +303,7 @@ class MemberController extends Controller
         $validated = $request->validate([
             'members' => ['required', 'array', 'min:1'],
             'members.*.name' => ['required', 'string', 'max:255'],
-            'members.*.parent_name' => ['required', 'string', 'max:255'],
+            'members.*.parent_name' => ['nullable', 'string', 'max:255'],
             'members.*.whatsapp' => ['required', 'string', 'regex:/^[0-9]{8,16}$/', 'distinct', 'unique:users,whatsapp'],
             'members.*.belt_level_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('belt_levels', 'id')->where('is_active', true)],
             'members.*.email' => ['nullable', 'email', 'max:255', 'distinct', 'unique:users,email'],
