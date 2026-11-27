@@ -9,6 +9,27 @@ use Illuminate\Validation\ValidationException;
 
 class MemberNumbers
 {
+    public function repairUnknownRegion(User $member): void
+    {
+        if ($member->role !== 'member' || $member->member_number_manual || $member->registration_type === 'official') return;
+        $before = $member->member_number_override;
+        if (!preg_match('/^(MSH-)?UNK-(\d{6,})$/D', $before ?? '', $matches)) return;
+        $member->load('province');
+        if (!$member->province) return;
+        $number = ($matches[1] ?? '').$member->province->member_prefix.'-'.$matches[2];
+        if (User::where('member_number_override', $number)->whereKeyNot($member->id)->exists()) return;
+        DB::transaction(function () use ($member, $before, $number) {
+            $locked = User::whereKey($member->id)->lockForUpdate()->firstOrFail();
+            if ($locked->member_number_override !== $before || $locked->member_number_manual ||
+                (int) $locked->province_id !== (int) $member->province_id) return;
+            $locked->forceFill(['member_number_override' => $number])->saveQuietly();
+            MemberNumberChange::create(['member_id' => $locked->id, 'actor_id' => auth()->id(),
+                'before_number' => $before, 'after_number' => $number, 'mode' => 'auto',
+                'reason' => 'Perbaikan kode UNK setelah provinsi anggota tersedia.']);
+            $member->setAttribute('member_number_override', $number);
+        });
+    }
+
     public function issue(User $member): void
     {
         if ($member->registration_type === 'official') return;

@@ -40,6 +40,37 @@ class MemberNumberManagementTest extends TestCase
         return array_replace(['mode' => 'manual', 'number' => 'KKI-ARSIP-001', 'reason' => 'Penyesuaian arsip', 'expected_number' => $member->member_number], $overrides);
     }
 
+    public function test_unknown_region_is_repaired_when_jakarta_is_assigned(): void
+    {
+        DB::table('provinces')->insert(['id' => 2, 'name' => 'DKI JAKARTA']);
+        $member = $this->user();
+        $member->forceFill(['province_id' => null, 'member_number_override' => 'MSH-UNK-000010'])->saveQuietly();
+        $member->update(['province_id' => 2]);
+        $this->assertSame('MSH-JKT-000010', $member->fresh()->member_number);
+        $this->assertDatabaseHas('member_number_changes', ['member_id' => $member->id,
+            'before_number' => 'MSH-UNK-000010', 'after_number' => 'MSH-JKT-000010']);
+    }
+
+    public function test_unknown_region_migration_preserves_manual_numbers_and_conflicts(): void
+    {
+        DB::table('provinces')->insert(['id' => 2, 'name' => 'DKI JAKARTA']);
+        $member = $this->user();
+        $member->forceFill(['province_id' => 2, 'member_number_override' => 'MSH-UNK-000010'])->saveQuietly();
+        $manual = $this->user();
+        $manual->forceFill(['province_id' => 2, 'member_number_override' => 'UNK-000020', 'member_number_manual' => true])->saveQuietly();
+        $conflict = $this->user();
+        $conflict->forceFill(['province_id' => 2, 'member_number_override' => 'UNK-000030'])->saveQuietly();
+        $taken = $this->user();
+        $taken->forceFill(['member_number_override' => 'JKT-000030'])->saveQuietly();
+        $migration = require database_path('migrations/2026_11_27_000001_repair_unknown_member_region_codes.php');
+        $migration->up();
+        $migration->up();
+        $this->assertSame('MSH-JKT-000010', $member->fresh()->member_number);
+        $this->assertSame('UNK-000020', $manual->fresh()->member_number);
+        $this->assertSame('UNK-000030', $conflict->fresh()->member_number);
+        $this->assertSame(1, MemberNumberChange::where('member_id', $member->id)->count());
+    }
+
     public function test_non_karateka_registration_does_not_issue_a_member_number(): void
     {
         Schema::table('users', fn (Blueprint $t) => $t->string('registration_type')->default('karateka'));

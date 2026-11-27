@@ -21,6 +21,7 @@ class MemberObserver
      */
     public function updated(User $user)
     {
+        if ($user->wasChanged('province_id')) app(\App\Services\MemberNumbers::class)->repairUnknownRegion($user);
         if ($user->wasChanged(['belt_level_id']) && $user->wasChanged('member_number_override') &&
             preg_match('/(^|-)MSH(-|$)/i', $user->getRawOriginal('member_number_override') ?? '') &&
             !$user->isBlackBelt() && $user->getConnection()->getSchemaBuilder()->hasTable('member_number_changes')) {
