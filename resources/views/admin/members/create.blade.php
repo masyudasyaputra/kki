@@ -327,7 +327,7 @@
                                     {{-- Nama Murid --}}
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">
-                                            Nama Murid <span class="text-red-500">*</span>
+                                            Nama <span class="text-red-500">*</span>
                                         </label>
                                         <input type="text" x-model="member.name"
                                             :name="'members[' + index + '][name]'"
