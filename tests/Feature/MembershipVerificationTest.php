@@ -64,6 +64,68 @@ class MembershipVerificationTest extends TestCase
             'province_id' => $province, 'city_id' => $city, 'district' => 'Medan Johor'])->fresh();
     }
 
+    public function test_super_admin_registration_form_lists_all_provinces_and_scoped_options(): void
+    {
+        Schema::table('belt_levels', fn (Blueprint $table) => $table->integer('order')->default(0));
+        Schema::create('districts', function (Blueprint $table) {
+            $table->id(); $table->string('name'); $table->integer('city_id');
+        });
+        $this->actingAs($this->actor('super_admin'));
+        $this->get(route('admin.members.create'))->assertOk()->assertViewHas('role', 'pb')
+            ->assertViewHas('provinces', fn ($items) => $items->count() === 2)
+            ->assertViewHas('cities', fn ($items) => $items->count() === 3)
+            ->assertSee('Pilih pada setiap murid');
+    }
+
+    public function test_super_admin_can_review_registration_in_a_selected_province(): void
+    {
+        Schema::create('fee_configurations', function (Blueprint $table) {
+            $table->id(); $table->integer('province_id'); $table->integer('belt_level_id'); $table->integer('amount');
+        });
+        DB::table('belt_levels')->insert(['id' => 1, 'name' => 'Putih', 'is_active' => true]);
+        DB::table('fee_configurations')->insert(['province_id' => 2, 'belt_level_id' => 1, 'amount' => 50000]);
+        $this->actingAs($this->actor('super_admin', 1));
+        $this->post(route('admin.members.review'), ['province_id' => 2, 'members' => [[
+            'name' => 'Murid Bandung', 'parent_name' => 'Orang Tua', 'whatsapp' => '+62 812-3456-7890',
+            'city_id' => 3, 'belt_level_id' => 1,
+        ]]])->assertOk()->assertViewHas('provinceId', 2)->assertViewHas('member_data',
+            fn ($members) => $members[0]['whatsapp'] === '6281234567890' && $members[0]['city_name'] === 'BANDUNG');
+    }
+
+    public function test_collective_registration_rejects_regions_outside_account_scope_on_review_and_store(): void
+    {
+        DB::table('belt_levels')->insert(['id' => 1, 'name' => 'Putih', 'is_active' => true]);
+        DB::table('dojos')->insert(['id' => 1, 'name' => 'Dojo Medan', 'province_id' => 1, 'city_id' => 1]);
+        $payload = ['province_id' => 1, 'members' => [[
+            'name' => 'Murid', 'parent_name' => 'Orang Tua', 'whatsapp' => '081234567890',
+            'belt_level_id' => 1, 'city_id' => 2, 'dojo_id' => 1,
+        ]]];
+        foreach (['admin.members.review', 'admin.members.store'] as $route) {
+            $this->actingAs($this->actor('pengcab'));
+            $this->post(route($route), $payload)->assertSessionHasErrors('members.0.city_id');
+            $this->actingAs($this->actor('super_admin'));
+            $this->post(route($route), $payload)->assertSessionHasErrors('members.0.dojo_id');
+            $payload['members'][0]['city_id'] = 3;
+            $payload['members'][0]['dojo_id'] = null;
+            $this->post(route($route), $payload)->assertSessionHasErrors('members.0.city_id');
+            $payload['members'][0]['city_id'] = 2;
+            $payload['members'][0]['dojo_id'] = 1;
+        }
+    }
+
+    public function test_collective_registration_rejects_duplicate_normalized_login_numbers(): void
+    {
+        DB::table('belt_levels')->insert(['id' => 1, 'name' => 'Putih', 'is_active' => true]);
+        $member = ['name' => 'Murid', 'parent_name' => 'Orang Tua', 'whatsapp' => '+62 812-3456-7890',
+            'belt_level_id' => 1, 'city_id' => 1];
+        $duplicate = array_merge($member, ['whatsapp' => '6281234567890']);
+        $this->actingAs($this->actor('super_admin'));
+        foreach (['admin.members.review', 'admin.members.store'] as $route) {
+            $this->post(route($route), ['province_id' => 1, 'members' => [$member, $duplicate]])
+                ->assertSessionHasErrors(['members.0.whatsapp', 'members.1.whatsapp']);
+        }
+    }
+
     public function test_official_applications_are_excluded_from_membership_list_badge_detail_and_approval(): void
     {
         $karateka = $this->member();

@@ -13,7 +13,7 @@
                 <p class="page-subtitle">
                     <span>Dojo:</span>
                     <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 text-slate-700">
-                        {{ auth()->user()->dojo->name ?? 'DOJO' }}
+                        {{ $role === 'admin_dojo' ? (auth()->user()->dojo?->name ?? 'Belum diatur') : 'Pilih pada setiap murid' }}
                     </span>
                 </p>
             </div>
@@ -32,56 +32,53 @@
     <div class="member-registration py-4 bg-slate-50 min-h-screen" x-data="{
         members: [],
         showPass: false,
-        rawDojoName: '{{ auth()->user()->dojo->name ?? 'DOJO' }}',
+        availableCities: @js($cities->map->only(['id', 'name', 'province_id'])->values()),
+        availableDojos: @js($dojos),
+        lockedCity: @js(in_array($role, ['pengcab', 'admin_dojo'])),
+        lockedDojo: @js($role === 'admin_dojo'),
+        draftKey: @js('collective_members_' . auth()->id()),
+        passwordFor(member) {
+            const dojo = this.availableDojos.find(d => String(d.id) === String(member.dojo_id));
+            return ((dojo?.name || 'DOJO').trim().split(/\s+/)[0]).toUpperCase() + '123';
+        },
 
         province_id: '{{ $role === 'pb'
             ? old('province_id') ?? (auth()->user()->province_id ?? (auth()->user()->dojo->province_id ?? ''))
             : auth()->user()->province_id ?? (auth()->user()->dojo->province_id ?? '') }}',
 
-        city_id: '{{ auth()->user()->city_id ?? '' }}',
+        city_id: @js(in_array($role, ['pengcab', 'admin_dojo']) ? (string) (auth()->user()->city_id ?? auth()->user()->dojo?->city_id ?? '') : ''),
         dojo_id: '{{ auth()->user()->dojo_id ?? '' }}',
         memberCities: [],
         regionError: '',
-        async loadMemberCities(reset = false) {
-            const selected = this.province_id;
-            this.memberCities = [];
-            this.regionError = '';
-            if (reset) this.members.forEach(member => { member.city_id = ''; member.district = ''; });
-            if (!selected) return;
-            try {
-                const response = await fetch(@js(url('/api/cities')) + '/' + selected);
-                if (!response.ok) throw new Error();
-                const cities = await response.json();
-                if (this.province_id === selected) this.memberCities = cities;
-            } catch { this.regionError = 'Kabupaten / Kota gagal dimuat. Muat ulang halaman untuk mencoba kembali.'; }
-        },
-
-        get defaultPass() {
-            let nameParts = (this.rawDojoName || 'DOJO').trim().split(' ');
-            return (nameParts[0] || 'DOJO').toUpperCase() + '123';
+        loadMemberCities(reset = false) {
+            this.memberCities = this.availableCities.filter(c => String(c.province_id) === String(this.province_id));
+            this.members.forEach(member => {
+                if (reset || !this.memberCities.some(c => String(c.id) === String(member.city_id))) {
+                    member.city_id = this.lockedCity ? this.city_id : '';
+                    member.district = ''; member.dojo_id = this.lockedDojo ? this.dojo_id : '';
+                }
+            });
         },
 
         async checkWa(index) {
-            let wa = this.members[index].whatsapp;
-
-            if (!wa || wa.length < 9) {
-                this.members[index].errorWa = '';
+            const member = this.members[index];
+            if (!member) return;
+            const wa = member.whatsapp.replace(/[+\s()-]/g, '');
+            member.errorWa = '';
+            if (!/^[0-9]{8,16}$/.test(wa)) {
+                member.errorWa = 'Gunakan 8?16 digit nomor WhatsApp.';
                 return;
             }
-
-            let isDuplicateLocal = this.members.some((m, idx) => m.whatsapp === wa && idx !== index);
-            if (isDuplicateLocal) {
-                this.members[index].errorWa = 'Nomor ini sudah ditulis di baris lain';
+            if (this.members.some(m => m !== member && m.whatsapp.replace(/[+\s()-]/g, '') === wa)) {
+                member.errorWa = 'Nomor ini sudah ditulis di baris lain';
                 return;
             }
-
             try {
-                let response = await fetch(`/api/check-whatsapp?number=${encodeURIComponent(wa)}`);
-                let data = await response.json();
-                this.members[index].errorWa = data.exists ? 'Nomor sudah terdaftar di sistem' : '';
-            } catch (e) {
-                console.error('WA check failed', e);
-            }
+                const response = await fetch(@js(url('/api/check-whatsapp')) + '?number=' + encodeURIComponent(wa));
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                if (member.whatsapp.replace(/[+\s()-]/g, '') === wa) member.errorWa = data.exists ? 'Nomor sudah terdaftar di sistem' : '';
+            } catch { member.errorWa = 'Pemeriksaan WhatsApp gagal. Coba isi kembali.'; }
         },
 
         addMember() {
@@ -92,7 +89,7 @@
                 whatsapp: '',
                 email: '',
                 city_id: this.city_id,
-                district: '', address: '', first_coach: '', dojo_id: '',
+                district: '', address: '', first_coach: '', dojo_id: this.lockedDojo ? this.dojo_id : '',
                 belt_level_id: '',
                 errorWa: ''
             });
@@ -108,9 +105,12 @@
         },
 
         init() {
-            const savedData = localStorage.getItem('dojo_collective_2026');
-            if (savedData) {
-                try { this.members = JSON.parse(savedData); } catch (e) { this.members = []; }
+            const oldMembers = @js(old('members'));
+            let savedData = null;
+            try { savedData = localStorage.getItem(this.draftKey); } catch {}
+            if (Array.isArray(oldMembers)) this.members = oldMembers.map((m, i) => ({ ...m, id: Date.now() + i, errorWa: '' }));
+            if (!Array.isArray(oldMembers) && savedData) {
+                try { const parsed = JSON.parse(savedData); this.members = Array.isArray(parsed) ? parsed : []; } catch (e) { this.members = []; }
             }
 
             if (this.members.length === 0) this.addMember();
@@ -119,7 +119,7 @@
             this.$watch('province_id', () => this.loadMemberCities(true));
 
             this.$watch('members', (val) => {
-                localStorage.setItem('dojo_collective_2026', JSON.stringify(val));
+                try { localStorage.setItem(this.draftKey, JSON.stringify(val)); } catch {}
             }, { deep: true });
 
             this.$nextTick(() => {
@@ -150,7 +150,7 @@
                                 Akses Login Akun Murid
                             </p>
                             <p class="text-xs text-slate-300 font-medium mt-0.5 truncate">
-                                Username: <span class="text-white font-semibold">No. WhatsApp</span> • Password: <span class="text-red-400 font-semibold" x-text="defaultPass"></span>
+                                Username: <span class="text-white font-semibold">No. WhatsApp</span> • Password: <span class="text-red-400 font-semibold">Sesuai dojo murid</span>
                             </p>
                         </div>
                     </div>
@@ -174,13 +174,18 @@
                         <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
                             Format Password Standar
                         </span>
-                        <p class="text-sm font-bold text-red-600 font-mono tracking-wide" x-text="defaultPass"></p>
+                        <p class="text-sm font-bold text-red-600 font-mono tracking-wide" >Kata pertama nama dojo + 123 (tanpa dojo: DOJO123)</p>
                         <p class="text-[11px] text-slate-500 mt-1">Dapat diubah oleh murid secara mandiri setelah login.</p>
                     </div>
                 </div>
             </div>
 
             {{-- Form Submission --}}
+            @if ($errors->any())
+                <div role="alert" class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                    <ul>@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                </div>
+            @endif
             <form action="{{ route('admin.members.review') }}" method="POST">
                 @csrf
 
@@ -193,7 +198,7 @@
                                 <h3 class="text-xs font-bold uppercase tracking-wider text-slate-900">
                                     Lokasi & Organisasi
                                 </h3>
-                                <p class="text-[11px] text-slate-500 font-medium">Data organisasi terikat secara otomatis dengan akun yang sedang login</p>
+                                <p class="text-[11px] text-slate-500 font-medium">Pilihan wilayah dan dojo mengikuti cakupan akses akun.</p>
                             </div>
                         </div>
                     </div>
@@ -220,7 +225,7 @@
                                         <p class="text-xs font-semibold text-slate-800 uppercase">
                                             {{ auth()->user()->province->name ?? (auth()->user()->dojo->province->name ?? 'PROVINSI') }}
                                         </p>
-                                        <p class="text-[11px] text-slate-500 mt-0.5">Terkunci otomatis</p>
+                                        <p class="text-[11px] text-slate-500 mt-0.5">Sesuai cakupan akses akun</p>
                                     </div>
                                 @endif
                             </div>
@@ -233,7 +238,7 @@
                                 <input type="hidden" name="city_id" x-bind:value="city_id">
                                 <div class="bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5">
                                     <p class="text-xs font-semibold text-slate-800 uppercase">
-                                        {{ auth()->user()->city->name ?? 'KAB/KOTA' }}
+                                        {{ in_array($role, ['pengcab', 'admin_dojo']) ? (auth()->user()->city?->name ?? auth()->user()->dojo?->city?->name ?? 'Belum diatur') : 'Pilih pada setiap murid' }}
                                     </p>
                                     <p class="text-[11px] text-slate-500 mt-0.5">Terkunci otomatis</p>
                                 </div>
@@ -247,7 +252,7 @@
                                 <input type="hidden" name="dojo_id" x-bind:value="dojo_id">
                                 <div class="bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5">
                                     <p class="text-xs font-semibold text-slate-800 uppercase">
-                                        {{ auth()->user()->dojo->name ?? 'DOJO' }}
+                                        {{ $role === 'admin_dojo' ? (auth()->user()->dojo?->name ?? 'Belum diatur') : 'Pilih pada setiap murid' }}
                                     </p>
                                     <p class="text-[11px] text-slate-500 mt-0.5">Terkunci otomatis</p>
                                 </div>
@@ -284,8 +289,6 @@
                     <template x-for="(member, index) in members" :key="member.id">
                         <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden relative">
 
-                            <input type="hidden" :name="'members[' + index + '][password]'" :value="defaultPass">
-
                             {{-- Card Header --}}
                             <div class="px-4 sm:px-5 py-3.5 bg-slate-50/80 border-b border-slate-200/80 flex items-center justify-between gap-3">
                                 <div class="flex items-center gap-3 min-w-0">
@@ -303,7 +306,7 @@
                                         :class="member.errorWa ? 'bg-rose-50 text-rose-700 border-rose-200' : (member.whatsapp ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200')">
                                         <span class="w-1.5 h-1.5 rounded-full"
                                             :class="member.errorWa ? 'bg-rose-500' : (member.whatsapp ? 'bg-emerald-500' : 'bg-slate-400')"></span>
-                                        <span x-text="member.errorWa ? 'Periksa WA' : (member.whatsapp ? 'Valid' : 'Draft')"></span>
+                                        <span x-text="member.errorWa ? 'Periksa WA' : (member.whatsapp ? 'Terisi' : 'Draft')"></span>
                                     </span>
 
                                     <x-action-button type="button" x-show="members.length > 1" @click="removeMember(member.id)" icon="delete" label="Hapus" />
@@ -372,20 +375,22 @@
 
                                     <div class="sm:col-span-1 xl:col-span-2">
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5" :for="'member-city-' + member.id">Kabupaten / Kota *</label>
-                                        <select :id="'member-city-' + member.id" :name="'members[' + index + '][city_id]'" x-model="member.city_id" @change="member.district = ''; member.dojo_id = ''" required class="member-form-control w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15">
+                                        <select :id="'member-city-' + member.id" :name="'members[' + index + '][city_id]'" x-model="member.city_id" :disabled="lockedCity" @change="member.district = ''; member.dojo_id = ''" required class="member-form-control w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15">
                                             <option value="">Pilih Kabupaten / Kota</option>
                                             <template x-for="city in memberCities" :key="city.id"><option :value="String(city.id)" :selected="String(city.id) === String(member.city_id)" x-text="city.name"></option></template>
                                         </select>
+                                        <input type="hidden" :disabled="!lockedCity" :name="'members[' + index + '][city_id]'" :value="member.city_id">
                                         <p x-show="regionError" x-text="regionError" class="text-xs text-red-600" role="alert"></p>
                                     </div>
                                     <div class="sm:col-span-1 xl:col-span-2">
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5" :for="'member-district-' + member.id">Kecamatan</label>
-                                        <datalist :id="'district-options-' + member.id"><template x-for="district in @js(\App\Models\District::orderBy('name')->get(['id', 'name', 'city_id'])).filter(d => String(d.city_id) === String(member.city_id))" :key="district.id"><option :value="district.name"></option></template></datalist><input :list="'district-options-' + member.id" :id="'member-district-' + member.id" type="text" :name="'members[' + index + '][district]'" x-model="member.district" maxlength="150" placeholder="Nama Kecamatan" class="member-form-control w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15">
+                                        <datalist :id="'district-options-' + member.id"><template x-for="district in @js($districts).filter(d => String(d.city_id) === String(member.city_id))" :key="district.id"><option :value="district.name"></option></template></datalist><input :list="'district-options-' + member.id" :id="'member-district-' + member.id" type="text" :name="'members[' + index + '][district]'" x-model="member.district" maxlength="150" placeholder="Nama Kecamatan" class="member-form-control w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15">
                                     </div>
 
                                     <div class="sm:col-span-1 xl:col-span-2"><label class="member-form-label">Pelatih awal<input type="text" :name="'members[' + index + '][first_coach]'" x-model="member.first_coach" maxlength="255" placeholder="Nama pelatih" class="member-form-control mt-1.5 w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15"></label></div>
                                     <div class="sm:col-span-2 xl:col-span-4"><label class="member-form-label">Alamat (opsional)<textarea :name="'members[' + index + '][address]'" x-model="member.address" maxlength="2000" rows="3" autocomplete="street-address" placeholder="Nama jalan, nomor rumah, RT/RW, kelurahan" class="member-form-control mt-1.5 w-full rounded-xl border-slate-200 px-3.5 py-3 text-sm focus:border-[#762137] focus:ring-[#762137]/15"></textarea></label></div>
-                                    <div class="sm:col-span-1 xl:col-span-2"><label class="member-form-label">Nama dojo<select :name="'members[' + index + '][dojo_id]'" x-model="member.dojo_id" class="member-form-control mt-1.5 w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15"><option value="">Pilih dojo</option><template x-for="dojo in @js(\App\Models\Dojo::orderBy('name')->get(['id', 'name', 'city_id'])).filter(d => String(d.city_id) === String(member.city_id))" :key="dojo.id"><option :value="String(dojo.id)" x-text="dojo.name"></option></template></select></label></div>
+                                    <div class="sm:col-span-1 xl:col-span-2"><label class="member-form-label">Nama dojo<select :name="'members[' + index + '][dojo_id]'" x-model="member.dojo_id" :disabled="lockedDojo" class="member-form-control mt-1.5 w-full h-11 rounded-xl border-slate-200 px-3.5 text-sm focus:border-[#762137] focus:ring-[#762137]/15"><option value="">Pilih dojo</option><template x-for="dojo in availableDojos.filter(d => String(d.city_id) === String(member.city_id))" :key="dojo.id"><option :value="String(dojo.id)" x-text="dojo.name"></option></template></select></label></div>
+                                    <input type="hidden" :disabled="!lockedDojo" :name="'members[' + index + '][dojo_id]'" :value="member.dojo_id">
                                     {{-- Sabuk Saat Ini --}}
                                     <div>
                                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">
@@ -413,7 +418,7 @@
                                                 <p class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                                     Password Akun Otomatis
                                                 </p>
-                                                <p class="text-sm font-bold text-slate-900 font-mono mt-0.5" x-text="defaultPass"></p>
+                                                <p class="text-sm font-bold text-slate-900 font-mono mt-0.5" x-text="passwordFor(member)"></p>
                                                 <p class="text-[11px] text-slate-500 mt-0.5">
                                                     Akun murid aktif segera setelah verifikasi pembayaran berhasil.
                                                 </p>
@@ -448,13 +453,13 @@
 
                             <div class="member-form-buttons flex flex-col sm:flex-row gap-2.5 shrink-0">
                                 <button type="button"
-                                    @click="if(confirm('Kosongkan semua data yang telah diinput?')){ members = []; addMember(); localStorage.removeItem('dojo_collective_2026'); }"
+                                    @click="if(confirm('Kosongkan semua data yang telah diinput?')){ members = []; addMember(); localStorage.removeItem(draftKey); }"
                                     class="btn btn-secondary inline-flex">
                                     Reset Form
                                 </button>
 
                                 <button type="submit"
-                                    :disabled="members.some(m => !m.name || !m.parent_name || !m.belt_level_id || m.errorWa || !m.whatsapp) || (!province_id)"
+                                    :disabled="members.some(m => !m.name || !m.parent_name || !m.belt_level_id || m.errorWa || !m.whatsapp || !m.city_id) || (!province_id)"
                                     class="btn btn-primary inline-flex">
                                     <span>Lanjut Ke Review</span>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -595,6 +600,7 @@
                 placeholder: 'PILIH PROVINSI...',
                 dropdownCssClass: 'custom-dropdown'
             });
+            $el.on('change.provinceSync', () => el.dispatchEvent(new Event('change', { bubbles: true })));
         };
     </script>
 </x-app-layout>

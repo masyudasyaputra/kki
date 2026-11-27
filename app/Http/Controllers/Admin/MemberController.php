@@ -172,28 +172,32 @@ class MemberController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $role = strtolower((string) $user->role);
+        $role = $this->registrationRole($user);
 
         $beltLevels = BeltLevel::active()->orderBy('order')->get();
 
         $provinces = Province::query()
             ->when($role !== 'pb', function ($q) use ($user) {
-                return $q->where('id', $user->province_id);
+                return $q->where('id', $this->resolveProvinceId($user, $this->registrationRole($user)));
             })
             ->orderBy('name')
             ->get();
 
         $cities = City::query()
-            ->when($role === 'pengprov', function ($q) use ($user) {
-                return $q->where('province_id', $user->province_id);
+            ->when($role !== 'pb', function ($q) use ($user, $role) {
+                return $q->where('province_id', $this->resolveProvinceId($user, $role));
             })
-            ->when($role === 'pengcab', function ($q) use ($user) {
-                return $q->where('id', $user->city_id);
+            ->when(in_array($role, ['pengcab', 'admin_dojo']), function ($q) use ($user) {
+                return $q->where('id', $user->city_id ?? $user->dojo?->city_id);
             })
             ->orderBy('name')
             ->get();
 
-        return view('admin.members.create', compact('provinces', 'beltLevels', 'cities', 'role'));
+        $dojos = \App\Models\Dojo::whereIn('city_id', $cities->pluck('id'))
+            ->when($role === 'admin_dojo', fn ($q) => $q->whereKey($user->dojo_id))
+            ->orderBy('name')->get(['id', 'name', 'city_id']);
+        $districts = \App\Models\District::whereIn('city_id', $cities->pluck('id'))->orderBy('name')->get(['id', 'name', 'city_id']);
+        return view('admin.members.create', compact('provinces', 'beltLevels', 'cities', 'dojos', 'districts', 'role'));
     }
 
     /**
@@ -203,7 +207,8 @@ class MemberController extends Controller
     public function review(Request $request)
     {
         $admin = auth()->user();
-        $role = strtolower((string) $admin->role);
+        $role = $this->registrationRole($admin);
+        $this->prepareRegistration($request, $admin, $role);
 
         if ($request->isMethod('get')) {
             return redirect()->route('admin.members.create')
@@ -213,10 +218,10 @@ class MemberController extends Controller
         $validated = $request->validate([
             'members' => ['required', 'array', 'min:1'],
             'members.*.name' => ['required', 'string', 'max:255'],
-            'members.*.parent_name' => ['nullable', 'string', 'max:255'],
-            'members.*.whatsapp' => ['required', 'string', 'max:30', 'regex:/^[0-9+\s()-]{8,30}$/'],
+            'members.*.parent_name' => ['required', 'string', 'max:255'],
+            'members.*.whatsapp' => ['required', 'string', 'regex:/^[0-9]{8,16}$/', 'distinct', 'unique:users,whatsapp'],
             'members.*.belt_level_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('belt_levels', 'id')->where('is_active', true)],
-            'members.*.email' => ['nullable', 'email', 'max:255'],
+            'members.*.email' => ['nullable', 'email', 'max:255', 'distinct', 'unique:users,email'],
             'members.*.city_id' => ['required', 'integer', 'exists:cities,id'],
             'members.*.district' => ['nullable', 'string', 'max:150'],
             'members.*.address' => ['nullable', 'string', 'max:2000'],
@@ -286,7 +291,8 @@ class MemberController extends Controller
     public function store(Request $request)
     {
         $admin = auth()->user();
-        $role = strtolower((string) $admin->role);
+        $role = $this->registrationRole($admin);
+        $this->prepareRegistration($request, $admin, $role);
 
         // guard: kalau akses store tanpa payload members, jangan balik ke previous (bisa lari ke create)
         if (!$request->has('members')) {
@@ -297,10 +303,10 @@ class MemberController extends Controller
         $validated = $request->validate([
             'members' => ['required', 'array', 'min:1'],
             'members.*.name' => ['required', 'string', 'max:255'],
-            'members.*.parent_name' => ['nullable', 'string', 'max:255'],
-            'members.*.whatsapp' => ['required', 'string', 'max:30', 'regex:/^[0-9+\s()-]{8,30}$/'],
+            'members.*.parent_name' => ['required', 'string', 'max:255'],
+            'members.*.whatsapp' => ['required', 'string', 'regex:/^[0-9]{8,16}$/', 'distinct', 'unique:users,whatsapp'],
             'members.*.belt_level_id' => ['required', 'integer', \Illuminate\Validation\Rule::exists('belt_levels', 'id')->where('is_active', true)],
-            'members.*.email' => ['nullable', 'email', 'max:255'],
+            'members.*.email' => ['nullable', 'email', 'max:255', 'distinct', 'unique:users,email'],
             'members.*.city_id' => ['required', 'integer', 'exists:cities,id'],
             'members.*.district' => ['nullable', 'string', 'max:150'],
             'members.*.address' => ['nullable', 'string', 'max:2000'],
@@ -328,12 +334,9 @@ class MemberController extends Controller
 
         $adminFee = (int) config('services.membership.admin_fee', 0);
 
-        $fullDojoName = $admin->dojo->name ?? 'DOJO';
-        $firstWord = strtoupper(explode(' ', trim($fullDojoName))[0] ?? 'DOJO');
-        $defaultPass = $firstWord . '123';
 
         try {
-            $payment = DB::transaction(function () use ($validated, $admin, $provinceId, $feeMap, $adminFee, $defaultPass) {
+            $payment = DB::transaction(function () use ($validated, $admin, $provinceId, $feeMap, $adminFee) {
                 $total = 0;
                 $paidForMembers = [];
 
@@ -360,7 +363,7 @@ class MemberController extends Controller
                         'parent_name' => $data['parent_name'] ?? null,
                         'email' => $email,
                         'whatsapp' => $data['whatsapp'],
-                        'password' => Hash::make($defaultPass),
+                        'password' => Hash::make($this->memberPassword($data['dojo_id'] ?? null)),
                         'role' => 'member',
                         'positions' => ['member'], 'roles' => [],
                         'is_active' => false,
@@ -368,7 +371,7 @@ class MemberController extends Controller
                         'city_id' => $data['city_id'],
                         'district' => $data['district'] ?? null,
                         'address' => $data['address'] ?? null,
-                        'dojo_id' => $data['dojo_id'] ?? $admin->dojo_id,
+                        'dojo_id' => $data['dojo_id'] ?? null,
                         'first_coach' => $data['first_coach'] ?? null,
                         'belt_level_id' => $beltLevelId,
                     ]);
@@ -444,12 +447,17 @@ class MemberController extends Controller
      */
     protected function validateMemberRegions(array $members, int $provinceId): void
     {
+        $admin = auth()->user();
+        $role = $this->registrationRole($admin);
         $cityIds = City::where('province_id', $provinceId)->pluck('id')->all();
         foreach ($members as $index => $member) {
+            if (in_array($role, ['pengcab', 'admin_dojo']) && (int) $member['city_id'] !== (int) ($admin->city_id ?? $admin->dojo?->city_id)) {
+                throw \Illuminate\Validation\ValidationException::withMessages(["members.$index.city_id" => 'Kabupaten / Kota di luar cakupan akun.']);
+            }
             if (!empty($member['dojo_id']) && !\App\Models\Dojo::whereKey($member['dojo_id'])->where('city_id', $member['city_id'])->exists()) {
                 throw \Illuminate\Validation\ValidationException::withMessages(["members.$index.dojo_id" => 'Dojo harus sesuai kabupaten / kota anggota.']);
             }
-            if (auth()->user()->hasRole('admin_dojo') && !auth()->user()->hasRole(['pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab'])
+            if ($role === 'admin_dojo'
                 && !empty($member['dojo_id']) && (int) $member['dojo_id'] !== (int) auth()->user()->dojo_id) abort(403);
             if (!in_array((int) $member['city_id'], $cityIds, true)) {
                 throw \Illuminate\Validation\ValidationException::withMessages([
@@ -457,6 +465,35 @@ class MemberController extends Controller
                 ]);
             }
         }
+    }
+
+    protected function registrationRole(User $user): string
+    {
+        foreach (['super_admin', 'pb', 'pengprov', 'admin_pengprov', 'pengcab', 'admin_pengcab', 'admin_dojo'] as $role) {
+            if ($user->hasRole($role)) return ['super_admin' => 'pb', 'admin_pengprov' => 'pengprov', 'admin_pengcab' => 'pengcab'][$role] ?? $role;
+        }
+        abort(403);
+    }
+
+    protected function prepareRegistration(Request $request, User $admin, string $role): void
+    {
+        $members = $request->input('members');
+        if (!is_array($members)) return;
+        foreach ($members as &$member) {
+            if (!is_array($member)) continue;
+            if (isset($member['whatsapp']) && is_string($member['whatsapp'])) {
+                $member['whatsapp'] = preg_replace('/[+\s()-]/', '', $member['whatsapp']);
+            }
+            if ($role === 'admin_dojo' && empty($member['dojo_id'])) $member['dojo_id'] = $admin->dojo_id;
+        }
+        unset($member);
+        $request->merge(['members' => $members]);
+    }
+
+    protected function memberPassword(?int $dojoId): string
+    {
+        $name = $dojoId ? \App\Models\Dojo::find($dojoId)?->name : null;
+        return strtoupper(preg_split('/\s+/', trim($name ?: 'DOJO'))[0]) . '123';
     }
 
     protected function resolveProvinceId($admin, string $role, int $overrideProvinceId = 0): int
